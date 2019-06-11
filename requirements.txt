@@ -1,6 +1,8 @@
-toml
+aiohttp
+base58
+msgpack
 pytest
 pytest-asyncio
-aiohttp
-sortedcontainers
 semver
+sortedcontainers
+toml
