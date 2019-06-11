@@ -1,122 +1,18 @@
 """ Agent """
-from contextlib import suppress
-import asyncio
 import logging
 
 from sortedcontainers import SortedSet
 
-from compat import create_task
-from config import Config
-from hooks import self_hook_point, hook
-from indy_sdk_utils import open_wallet
-
 class NoRegisteredRouteException(Exception):
     """ Thrown when message has no registered handlers """
 
-class MessageProcessingFailed(Exception):
-    """ Thrown when main message processing loop fails to proccess a message """
-
 class Agent:
-    """ Agent """
-    # TODO Move hook stuff into Hookable
-    hooks = {}
-
-    # Constructors and Set up {{{
-
+    """ The Base of an Agent. Handles routing messages to appropriate handlers. """
     def __init__(self):
-        # TODO Move hook stuff into Hookable
-        self.hooks = Agent.hooks.copy() # Copy statically configured hooks
-
-        # base fields
-        self.config = None
-        self.wallet_handle = None
-        self.logger = logging.getLogger(__name__)
-        self.conductor = None
-
-        # message routing
         self.routes = {}
         self.modules = {} # Protocol identifier URI to module
         self.module_versions = {} # Doc URI + Protocol to list of Module Versions
-
-        # async handling
-        self.main_task = None
-
-    @classmethod
-    async def from_config(cls, config: Config):
-        agent = cls()
-        agent.config = config
-        agent.logger.setLevel(config.log_level)
-        agent.wallet_handle = await open_wallet(
-            agent.config.wallet,
-            agent.config.passphrase,
-            agent.config.ephemeral
-        )
-        return agent
-
-    def set_conductor(self, conductor):
-        self.conductor = conductor
-
-    # }}}
-
-    # TODO Move hook stuff into Hookable
-    def hook(self, hook_name):
-        return hook(self, hook_name)
-
-    # TODO Move hook stuff into Hookable
-    def register_hook(self, hook_name, hook_fn):
-        hook(self, hook_name)(hook_fn)
-
-    # Async Handling {{{
-
-    async def start(self):
-        conductor_task = create_task(self.conductor.start())
-        main_loop = create_task(self._loop())
-        self.main_task = asyncio.gather(conductor_task, main_loop)
-
-        await self.main_task
-
-    async def shutdown(self):
-        await self.conductor.shutdown()
-        self.main_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await self.main_task
-
-    # }}}
-
-    # Main Loop {{{
-
-    async def _do_loop(self):
-        msg = await self.conductor.recv()
-        self.logger.debug('Handling Message: %s', msg.serialize())
-
-        try:
-            await self.handle(msg)
-        except Exception as err:
-            self.logger.exception(
-                'Message processing failed\nMessage: %s\nError: %s',
-                msg.serialize(),
-                err
-            )
-
-            if self.config.halt_on_error:
-                raise MessageProcessingFailed(
-                    'Failed while processing message: {}'.format(msg.serialize())
-                ) from err
-        finally:
-            self.logger.debug('Message handled: %s', msg.serialize())
-            await self.conductor.message_handled()
-
-    async def _loop(self):
-        if self.config.num_messages == -1:
-            while True:
-                await self._do_loop()
-        else:
-            for _ in range(0, self.config.num_messages):
-                await self._do_loop()
-
-    # }}}
-
-    # Message Routing {{{
+        self.logger = logging.getLogger(__name__)
 
     def route(self, msg_type):
         """ Register route decorator. """
@@ -128,6 +24,10 @@ class Agent:
         return register_route_dec
 
     def route_module(self, module_instance):
+        """ Register a module for routing.
+            Modules are routed to based on protocol and version. Newer versions
+            are favored over older versions. Major version number must match.
+        """
         # Register module
         self.modules[type(module_instance).protocol_identifer_uri] = module_instance
 
@@ -139,8 +39,9 @@ class Agent:
 
         self.module_versions[qualified_protocol].add(version_info)
 
-    @self_hook_point
     def get_closest_module_for_msg(self, msg):
+        """ Find the closest appropriate module for a given message.
+        """
         if not msg.qualified_protocol in self.module_versions:
             return None
 
@@ -153,7 +54,6 @@ class Agent:
 
         return None
 
-    @self_hook_point
     async def handle(self, msg, *args, **kwargs):
         """ Route message """
         if msg.type in self.routes:
@@ -181,16 +81,3 @@ class Agent:
                 return
 
         raise NoRegisteredRouteException
-
-    # }}}
-
-
-    # Shortcuts to Conductor {{{
-
-    async def send(self, msg, to_key, **kwargs):
-        return await self.conductor.send(msg, to_key, **kwargs)
-
-    async def put_message(self, message):
-        return await self.conductor.put_message(message)
-
-    # }}}
