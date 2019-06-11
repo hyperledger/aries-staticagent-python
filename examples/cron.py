@@ -1,9 +1,8 @@
 # This file is intended to be run as a cron script. Upon execution, it does it's thing and shuts down.
 import argparse
 import os
-import datetime
 
-from aries_staticagent.static_agent_connection import StaticAgentConnection
+from aries_staticagent import StaticAgentConnection, utils
 
 # Config Start
 
@@ -30,10 +29,10 @@ args = parser.parse_args()
 a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
 
 # TODO: the send() method will apply an id if not present
-a.send({
+a.send_blocking({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
-        "sent_time": datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat(' '),
+        "sent_time": utils.timestamp(),
         "content": "The Cron Script has ben executed."
 })
 
