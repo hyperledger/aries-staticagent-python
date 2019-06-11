@@ -1,6 +1,7 @@
 from collections import UserDict
 import json
 import re
+import uuid
 
 from .module import Semver
 
@@ -18,9 +19,16 @@ class Message(UserDict):
         except ValueError as err:
             raise InvalidMessageType('Invalid message type version') from err
 
+        if '@id' not in self.data:
+            self.data['@id'] = str(uuid.uuid4())
+
     @property
     def type(self):
         return self['@type']
+
+    @property
+    def id(self):
+        return self['@id']
 
     @property
     def qualified_protocol(self):

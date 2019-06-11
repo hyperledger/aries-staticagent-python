@@ -1,8 +1,8 @@
 import aiohttp
 
-import crypto
-
 from .agent import Agent
+from .messages import Message
+import crypto
 
 class StaticAgentConnection:
     def __init__(self, endpoint, their_vk, my_vk, my_sk):
@@ -23,6 +23,9 @@ class StaticAgentConnection:
         await self._agent.handle(msg)
 
     async def send(self, msg):
+        if isinstance(msg, dict):
+            msg = Message(msg)
+
         packed_msg = await crypto.pack_message(
             msg.serialize(),
             [self.their_vk],
