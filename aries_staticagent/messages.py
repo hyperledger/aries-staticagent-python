@@ -2,7 +2,7 @@ from collections import UserDict
 import json
 import re
 
-from module import Semver
+from .module import Semver
 
 class InvalidMessageType(Exception): pass
 

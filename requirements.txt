@@ -1,0 +1,6 @@
+toml
+pytest
+pytest-asyncio
+aiohttp
+sortedcontainers
+semver
