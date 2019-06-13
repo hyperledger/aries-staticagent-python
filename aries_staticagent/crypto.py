@@ -343,7 +343,7 @@ def locate_pack_recipient_key(
 
         recip_vk_b58 = recip["header"].get("kid")
 
-        if my_verkey != recip_vk_b58:
+        if bytes_to_b58(my_verkey) != recip_vk_b58:
             not_found.append(recip_vk_b58)
             continue
 

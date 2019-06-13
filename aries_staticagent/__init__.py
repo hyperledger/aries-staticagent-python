@@ -20,7 +20,8 @@ class StaticAgentConnection:
 
     async def handle(self, packed_message):
         """ Unpack and handle message. """
-        msg = crypto.unpack_message(packed_message, self.my_vk, self.my_sk)
+        (msg, sender_vk, recip_vk) = crypto.unpack_message(packed_message, self.my_vk, self.my_sk)
+        msg = Message.deserialize(msg)
         await self._agent.handle(msg)
 
     async def send(self, msg):
