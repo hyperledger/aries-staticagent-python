@@ -2,7 +2,7 @@
 import argparse
 import os
 
-from aries_staticagent import AriesAgentConnection, ariesutils
+from aries_staticagent import StaticAgentConnection, utils
 
 from aiohttp import web
 
@@ -22,29 +22,31 @@ def environ_or_required(key):
 parser = argparse.ArgumentParser()
 parser.add_argument('--endpoint', **environ_or_required('ARIES_ENDPOINT'))
 parser.add_argument('--endpointkey', **environ_or_required('ARIES_ENDPOINT_KEY'))
+parser.add_argument('--mypublickey', **environ_or_required('ARIES_MY_PUBLIC_KEY'))
 parser.add_argument('--myprivatekey', **environ_or_required('ARIES_MY_PRIVATE_KEY'))
+parser.add_argument('--port', **environ_or_required('PORT'))
 args = parser.parse_args()
 
 # Config End
 
-a = AriesAgentConnection(args.endpoint, args.endpointkey, args.myprivatekey)
+a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
+#a.returnroute = "thread"
 
-a.returnroute = "thread"
-
-@a.handle("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
-def basic_message(msg):
-    a.send({
+@a.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
+async def basic_message(agent, msg):
+    await a.send({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
-        "sent_time": ariesutils.timestamp_now(),
-        "content": "You Said: {}".format(msg.content)
+        "sent_time": utils.timestamp(),
+        "content": "You said: {}".format(msg['content'])
     })
 
 
 async def handle(request):
-    a.process_inbound_message(request.body)
+    await a.handle(await request.read())
+    raise web.HTTPAccepted()
 
 app = web.Application()
-app.add_routes([web.get('/', handle)])
+app.add_routes([web.post('/', handle)])
 
-web.run_app(app)
+web.run_app(app, port=args.port)
