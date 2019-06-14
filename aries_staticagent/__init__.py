@@ -25,6 +25,7 @@ class StaticAgentConnection:
         await self._agent.handle(msg)
 
     async def send(self, msg):
+        #TODO Support WS
         if isinstance(msg, dict):
             msg = Message(msg)
 
