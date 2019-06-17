@@ -46,8 +46,7 @@ Quick Start Guide
 #### Running the included examples
 
 You will need to pair the static agent with a full agent capable of basic DIDComm to complete the
-examples. The Indy Python Reference Agent can be used for these examples (support for setting
-up static connections can be found in [this fork and branch][3]).
+examples. The [Indy Python Reference Agent][3] can be used as the full agent for these examples.
 
 Create and activate python virtual environment:
 ```sh
@@ -83,7 +82,7 @@ a static connection. The second section is used to configure the static agent. T
 the first and second section are the _same_ key, representing the key the static agent will use
 for the connection. The `keygen` script does _not_ generate the keys that the full agent will use.
 
-If using the Indy Python Reference Agent (fork and branch linked above), open the web interface and
+If using the [Indy Python Reference Agent][3], open the web interface and
 click `Add Static Connection`. Enter the information output by `keygen.py` and a label of your
 choice. The endpoint of the static agent is optional and must match the hostname and port you
 configure for the static agent if running the web server example. After clicking `Add`, a new
@@ -105,7 +104,7 @@ In the full agent's BasicMessages, you should now see a message sent from the st
 > TODO: Include screencast of running the example with the Indy Python Reference Agent
 
 [2]: https://download.libsodium.org/doc/installation
-[3]: https://github.com/TelegramSam/indy-agent/tree/static_connection
+[3]: https://github.com/hyperledger/indy-agent/tree/master/python
 
 Using the library
 -----------------
