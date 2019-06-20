@@ -30,7 +30,7 @@ args = parser.parse_args()
 # Config End
 
 a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
-#a.returnroute = "thread"
+# TODO: a.returnroute = "thread"
 
 @a.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
 async def basic_message(agent, msg):
