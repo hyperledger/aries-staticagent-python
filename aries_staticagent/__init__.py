@@ -24,7 +24,7 @@ class StaticAgentConnection:
         msg = Message.deserialize(msg)
         await self._agent.handle(msg)
 
-    async def send(self, msg):
+    async def send_async(self, msg):
         #TODO Support WS
         if isinstance(msg, dict):
             msg = Message(msg)
@@ -42,6 +42,6 @@ class StaticAgentConnection:
                 if resp.status != 202:
                     await self.handle(await resp.read())
 
-    def send_blocking(self, msg):
+    def send(self, msg):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.send(msg))
