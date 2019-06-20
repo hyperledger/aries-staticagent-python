@@ -2,8 +2,5 @@ aiohttp
 base58
 msgpack
 pysodium
-pytest
-pytest-asyncio
 semver
 sortedcontainers
-toml
