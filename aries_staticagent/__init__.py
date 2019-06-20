@@ -45,3 +45,21 @@ class StaticAgentConnection:
     def send(self, msg):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.send(msg))
+
+
+def keygen():
+    """ Convenience method for generating and printing a keypair and DID.
+        DID is generated from the first 16 bytes of the VerKey.
+    """
+    vk_bytes, sk_bytes = crypto.create_keypair()
+
+    # TODO implement DID creation as described in the Peer DID Spec
+    # Link: https://openssi.github.io/peer-did-method-spec/index.html
+    did_bytes = vk_bytes[0:16]
+
+    vk = crypto.bytes_to_b58(vk_bytes)
+    sk = crypto.bytes_to_b58(sk_bytes)
+    did = crypto.bytes_to_b58(did_bytes)
+
+    print('For full agent:\n\tDID: {}\n\tVK: {}\n'.format(did, vk))
+    print('For static agent:\n\tVK: {}\n\tSK: {}'.format(vk, sk))
