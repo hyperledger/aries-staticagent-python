@@ -37,7 +37,7 @@ a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, arg
 async def ping_response(msg):
     print("Ping Response Returned")
 
-a.send_blocking({
+a.send({
     "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/trust_ping/1.0/ping",
     "response_requested": True
 })

@@ -130,7 +130,7 @@ for `endpointkey`.
 With the static agent connection `a`, to send messages to the full agent:
 
 ```python
-a.send_blocking({
+a.send({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
         "sent_time": utils.timestamp(),
@@ -140,7 +140,7 @@ a.send_blocking({
 
 An asynchronous method is also provided:
 ```python
-await a.send({
+await a.send_async({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
         "sent_time": utils.timestamp(),
@@ -168,7 +168,7 @@ a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, arg
 @a.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
 async def basic_message(agent, msg):
     # Respond to the received basic message by sending another basic message back
-    await a.send({
+    await a.send_async({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
         "sent_time": utils.timestamp(),
@@ -198,4 +198,4 @@ Static agents can only unpack messages sent by the full agent.
 
 ### Unresolved Questions
 * Are we allowing Agent routing between a static agent and it's full agent?
-  * How about we start with 'no', and revisit in the future if needed?
+  * We're starting with no and will revisit in the future.
