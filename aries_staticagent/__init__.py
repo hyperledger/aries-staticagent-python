@@ -56,7 +56,7 @@ class StaticAgentConnection:
     def send(self, msg):
         """ Send a message, blocking. """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.send(msg))
+        loop.run_until_complete(self.send_async(msg))
 
 
 def keygen():
