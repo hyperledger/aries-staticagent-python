@@ -38,10 +38,16 @@ class Semver(VersionInfo):
             parts['major'], parts['minor'], parts['patch'],
             parts['prerelease'], parts['build'])
 
-class Module(type):
-    DOC_URI = ''
-    PROTOCOL = ''
-    VERSION = '0.1'
+class MetaModule(type):
+    def __new__(cls, name, bases, dct):
+        if not 'DOC_URI' in dct:
+            raise InvalidModule('DOC_URI missing from module definition')
+        if not 'PROTOCOL' in dct:
+            raise InvalidModule("PROTOCOL missing from module definition")
+        if not 'VERSION' in dct:
+            raise InvalidModule('VERSION missing from module definition')
+
+        return type.__new__(cls, name, bases, dct)
 
     _normalized_version = None
     _version_info = None
@@ -79,16 +85,7 @@ class Module(type):
     def protocol_identifer_uri(cls):
         return cls.qualified_protocol + '/' + cls.normalized_version
 
-def module(cls):
-    if not hasattr(cls, 'DOC_URI'):
-        raise InvalidModule('DOC_URI missing from module definition')
-    if not hasattr(cls, 'PROTOCOL'):
-        raise InvalidModule("PROTOCOL missing from module definition")
-    if not hasattr(cls, 'VERSION'):
-        raise InvalidModule('VERSION missing from module definition')
-
-    class WrappedModule(cls, metaclass=Module):
-        pass
-
-    return WrappedModule
-
+class Module(metaclass=MetaModule):
+    DOC_URI = None
+    PROTOCOL = None
+    VERSION = None

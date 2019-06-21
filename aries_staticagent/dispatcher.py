@@ -1,20 +1,25 @@
-""" Agent """
+""" Dispatcher """
 import logging
+from typing import Optional
 
 from sortedcontainers import SortedSet
+
+from .message import Message
 
 class NoRegisteredRouteException(Exception):
     """ Thrown when message has no registered handlers """
 
-class Agent:
-    """ The Base of an Agent. Handles routing messages to appropriate handlers. """
+class Dispatcher:
+    """ One of the fundamental aspects of an agent responsible for dispatching messages to
+        appropriate handlers.
+    """
     def __init__(self):
         self.routes = {}
         self.modules = {} # Protocol identifier URI to module
         self.module_versions = {} # Doc URI + Protocol to list of Module Versions
         self.logger = logging.getLogger(__name__)
 
-    def route(self, msg_type):
+    def route(self, msg_type: str):
         """ Register route decorator. """
         def register_route_dec(func):
             self.logger.debug('Setting route for %s to %s', msg_type, func)
@@ -23,23 +28,23 @@ class Agent:
 
         return register_route_dec
 
-    def route_module(self, module_instance):
+    def route_module(self, mod):
         """ Register a module for routing.
             Modules are routed to based on protocol and version. Newer versions
             are favored over older versions. Major version number must match.
         """
         # Register module
-        self.modules[type(module_instance).protocol_identifer_uri] = module_instance
+        self.modules[type(mod).protocol_identifer_uri] = mod
 
         # Store version selection info
-        version_info = type(module_instance).version_info
-        qualified_protocol = type(module_instance).qualified_protocol
+        version_info = type(mod).version_info
+        qualified_protocol = type(mod).qualified_protocol
         if not qualified_protocol in self.module_versions:
             self.module_versions[qualified_protocol] = SortedSet()
 
         self.module_versions[qualified_protocol].add(version_info)
 
-    def get_closest_module_for_msg(self, msg):
+    def get_closest_module_for_msg(self, msg: Message):
         """ Find the closest appropriate module for a given message.
         """
         if not msg.qualified_protocol in self.module_versions:
@@ -54,26 +59,27 @@ class Agent:
 
         return None
 
-    async def handle(self, msg, *args, **kwargs):
-        """ Route message """
+    async def dispatch(self, msg: Message, *args, **kwargs):
+        """ Dispatch message to handler. """
         if msg.type in self.routes:
-            await self.routes[msg.type](self, msg, *args, **kwargs)
+            await self.routes[msg.type](msg, *args, **kwargs)
             return
 
-        module_instance = self.get_closest_module_for_msg(msg)
-        if module_instance:
+        mod = self.get_closest_module_for_msg(msg)
+        if mod:
 
-            if hasattr(module_instance, 'routes'):
-                await module_instance.routes[msg.type](module_instance, self, msg, *args, **kwargs)
+            # If routes have been statically defined in a module, attempt to route based on type
+            if hasattr(mod, 'routes') and \
+                    msg.type in mod.routes:
+                await mod.routes[msg.type](mod, msg, *args, **kwargs)
                 return
 
             # If no routes defined in module, attempt to route based on method matching
             # the message type name
-            if hasattr(module_instance, msg.short_type) and \
-                    callable(getattr(module_instance, msg.short_type)):
+            if hasattr(mod, msg.short_type) and \
+                    callable(getattr(mod, msg.short_type)):
 
-                await getattr(module_instance, msg.short_type)(
-                    self, #agent
+                await getattr(mod, msg.short_type)(
                     msg,
                     *args,
                     **kwargs

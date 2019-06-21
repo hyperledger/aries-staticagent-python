@@ -33,6 +33,6 @@ a.send({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
         "sent_time": utils.timestamp(),
-        "content": "The Cron Script has ben executed."
+        "content": "The Cron Script has been executed."
 })
 

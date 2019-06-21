@@ -54,19 +54,17 @@ $ python3 -m venv env
 $ source env/bin/activate
 ```
 
-Install requirements:
-```sh
-$ pip install -r requirements.txt
-```
-
-Install the library into the virtual environment:
+Install dependencies and the library into the virtual environment:
 ```sh
 $ pip install -e .
 ```
 
-Execute the included `keygen.py`:
+> A `requirements.dev.txt` is included with the library; if you intend to contribute to the library
+> itself, this will install the dependencies needed for testing.
+
+Execute `keygen()`:
 ```sh
-$ python keygen.py
+$ python -c "import aries_staticagent; aries_staticagent.keygen()"
 
 For full agent:
         DID: <Base58 encoded DID>

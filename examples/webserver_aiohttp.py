@@ -33,7 +33,7 @@ a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, arg
 # TODO: a.returnroute = "thread"
 
 @a.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
-async def basic_message(agent, msg):
+async def basic_message(msg):
     await a.send_async({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},

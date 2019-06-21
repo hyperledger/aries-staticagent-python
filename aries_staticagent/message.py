@@ -1,3 +1,4 @@
+""" Define Message base class. """
 from collections import UserDict
 import json
 import re
@@ -5,9 +6,13 @@ import uuid
 
 from .module import Semver
 
-class InvalidMessageType(Exception): pass
+class InvalidMessageType(Exception):
+    """ Thrown when message type is malformed. """
 
-class Message(UserDict):
+class Message(UserDict): # pylint: disable=too-many-ancestors
+    """ Message base class.
+        Inherits from UserDict meaning it behaves like a dictionary.
+    """
     MTURI_RE = re.compile(r'(.*?)([a-z0-9._-]+)/(\d[^/]*)/([a-z0-9._-]+)$')
 
     def __init__(self, *args, **kwargs):
@@ -24,18 +29,22 @@ class Message(UserDict):
 
     @property
     def type(self):
+        """ Shortcut for msg['@type'] """
         return self['@type']
 
     @property
-    def id(self):
+    def id(self): # pylint: disable=invalid-name
+        """ Shortcut for msg['@id'] """
         return self['@id']
 
     @property
     def qualified_protocol(self):
+        """ Shortcut for constructing qualified protocol identifier from doc_uri and protocol """
         return self.doc_uri + self.protocol
 
     @staticmethod
     def parse_type_info(message_type_uri):
+        """ Parse message type for doc_uri, portocol, version, and short type """
         matches = Message.MTURI_RE.match(message_type_uri)
         if not matches:
             raise InvalidMessageType()
@@ -44,20 +53,9 @@ class Message(UserDict):
 
     @staticmethod
     def deserialize(serialized: str):
+        """ Deserialize a message from a json string. """
         return Message(json.loads(serialized))
 
     def serialize(self):
+        """ Serialize a message into a json string. """
         return json.dumps(self.data)
-
-
-class Noop(Message):
-    """ noop message """
-    TYPE = 'did:none:0000000000000000/noop/1.0/noop'
-    def __init__(self, **kwargs):
-        return_route = kwargs.get('return_route', False)
-        if not return_route:
-            contents = {'@type': Noop.TYPE}
-        else:
-            contents = {'@type': Noop.TYPE, '~transport': {'return_route': 'all'}}
-
-        super().__init__(contents)
