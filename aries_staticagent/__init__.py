@@ -1,30 +1,41 @@
-import aiohttp
+""" Aries Static Agent Library.
+"""
 import asyncio
 
-from .agent import Agent
-from .messages import Message
+import aiohttp
+
+from .dispatcher import Dispatcher
+from .message import Message
 from . import crypto
 
 class StaticAgentConnection:
+    """ A Static Agent Connection to another agent. """
     def __init__(self, endpoint, their_vk, my_vk, my_sk):
+        """ Constructor
+
+            params:
+        """
         self.endpoint = endpoint
         self.their_vk = crypto.b58_to_bytes(their_vk)
         self.my_vk = crypto.b58_to_bytes(my_vk)
         self.my_sk = crypto.b58_to_bytes(my_sk)
 
-        self._agent = Agent()
+        self._dispatcher = Dispatcher()
 
     def route(self, msg_type):
         """ Wrap Agent.route """
-        return self._agent.route(msg_type)
+        return self._dispatcher.route(msg_type)
 
     async def handle(self, packed_message):
         """ Unpack and handle message. """
         (msg, sender_vk, recip_vk) = crypto.unpack_message(packed_message, self.my_vk, self.my_sk)
         msg = Message.deserialize(msg)
-        await self._agent.handle(msg)
+        await self._dispatcher.dispatch(msg)
 
     async def send_async(self, msg):
+        """ Send a message to the agent connected through this StaticAgentConnection.
+            This method should support both http and WS, eventually. Also Return Route.
+        """
         #TODO Support WS
         if isinstance(msg, dict):
             msg = Message(msg)
@@ -43,6 +54,7 @@ class StaticAgentConnection:
                     await self.handle(await resp.read())
 
     def send(self, msg):
+        """ Send a message, blocking. """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.send(msg))
 
