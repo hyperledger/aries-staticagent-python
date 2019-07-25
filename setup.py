@@ -9,14 +9,14 @@ def parse_requirements(filename):
 
 if __name__ == '__main__':
     with open('README.md', 'r') as fh:
-        long_description = fh.read()
+        LONG_DESCRIPTION = fh.read()
 
     setup(
         name='aries-staticagent',
-        version='0.2.0',
+        version='0.3.0',
         author='Daniel Bluhm <daniel.bluhm@sovrin.org>, Sam Curren <sam@sovrin.org>',
-        description='Library and example Python Static Agent for Aries',
-        long_description=long_description,
+        description='Python Static Agent Library and Examples for Aries',
+        long_description=LONG_DESCRIPTION,
         long_description_content_type='text/markdown',
         url='https://github.com/hyperledger/aries-staticagent-python',
         license='Apache 2.0',
