@@ -49,6 +49,9 @@ class Message(dict):
 
         if '@id' not in self:
             self['@id'] = generate_id()
+        elif not isinstance(self['@id'], str):
+            raise InvalidMessage('Message @id is invalid; must be str')
+
 
         self.doc_uri, self.protocol, self.version, self.short_type = \
             parse_type_info(self.type)
