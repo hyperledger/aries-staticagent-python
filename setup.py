@@ -22,6 +22,9 @@ if __name__ == '__main__':
         license='Apache 2.0',
         packages=find_packages(),
         install_requires=parse_requirements('requirements.txt'),
+        extras_require={
+            'test': parse_requirements('requirements.dev.txt')
+        },
         python_requires='>=3.6',
         classifiers=[
             'Programming Language :: Python :: 3',

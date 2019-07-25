@@ -59,8 +59,8 @@ Install dependencies and the library into the virtual environment:
 $ pip install -e .
 ```
 
-> A `requirements.dev.txt` is included with the library; if you intend to contribute to the library
-> itself, this will install the dependencies needed for testing.
+> If you want to run the included tests, install the `test` feature with pip:
+> `pip install -e .[test]`
 
 Execute `keygen()`:
 ```sh
