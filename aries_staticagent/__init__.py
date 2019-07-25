@@ -24,22 +24,39 @@ class StaticAgentConnection:
             endpoint: str,
             their_vk: Union[bytes, str],
             my_vk: Union[bytes, str],
-            my_sk: Union[bytes, str]
+            my_sk: Union[bytes, str],
+            dispatcher: Dispatcher = None
                 ):
         """ Constructor
 
             params:
+                endpoint - the http endpoint of the other agent
+                their_vk - the verification key of the other agent
+                my_vk - the verification key of the static agent
+                my_sk - the signing key of the static agent
         """
         self.endpoint = endpoint
         self.their_vk = their_vk if isinstance(their_vk, bytes) else crypto.b58_to_bytes(their_vk)
         self.my_vk = my_vk if isinstance(my_vk, bytes) else crypto.b58_to_bytes(my_vk)
         self.my_sk = my_sk if isinstance(my_sk, bytes) else crypto.b58_to_bytes(my_sk)
 
-        self._dispatcher = Dispatcher()
+        self._dispatcher = dispatcher if not None else Dispatcher()
 
     def route(self, msg_type):
-        """ Wrap Agent.route """
+        """ Wraps dispatcher.route """
         return self._dispatcher.route(msg_type)
+
+    def route_module(self, module):
+        """ Register a module for routing. Wraps dispatcher.route_module """
+        return self._dispatcher.route_module(module)
+
+    def clear_routes(self):
+        """ Clear registered routes. Wraps dispatcher.clear_routes """
+        return self._dispatcher.clear_routes()
+
+    def clear_modules(self):
+        """ Clear registered modules. Wraps dispatcher.clear_modules"""
+        return self._dispatcher.clear_modules()
 
     async def handle(self, packed_message):
         """ Unpack and handle message. """
