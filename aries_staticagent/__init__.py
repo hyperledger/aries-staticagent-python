@@ -40,7 +40,7 @@ class StaticAgentConnection:
         self.my_vk = my_vk if isinstance(my_vk, bytes) else crypto.b58_to_bytes(my_vk)
         self.my_sk = my_sk if isinstance(my_sk, bytes) else crypto.b58_to_bytes(my_sk)
 
-        self._dispatcher = dispatcher if not None else Dispatcher()
+        self._dispatcher = dispatcher if dispatcher else Dispatcher()
 
     def route(self, msg_type):
         """ Wraps dispatcher.route """
