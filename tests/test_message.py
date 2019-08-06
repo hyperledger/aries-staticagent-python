@@ -19,7 +19,7 @@ def test_valid_message():
     assert msg.doc_uri == 'test_type/'
     assert msg.protocol == 'protocol'
     assert msg.version == '1.0'
-    assert msg.short_type == 'test'
+    assert msg.name == 'test'
     assert msg.version_info == Semver(1, 0, 0)
 
 
@@ -33,7 +33,7 @@ def test_valid_message_no_doc_uri():
     assert msg.doc_uri == ''
     assert msg.protocol == 'protocol'
     assert msg.version == '1.0'
-    assert msg.short_type == 'test'
+    assert msg.name == 'test'
     assert msg.version_info == Semver(1, 0, 0)
 
 
@@ -52,7 +52,7 @@ def test_message_serialization():
     assert msg.doc_uri == 'test_type/'
     assert msg.protocol == 'protocol'
     assert msg.version == '1.0'
-    assert msg.short_type == 'test'
+    assert msg.name == 'test'
     assert msg.version_info == Semver(1, 0, 0)
 
     assert msg.serialize() == \

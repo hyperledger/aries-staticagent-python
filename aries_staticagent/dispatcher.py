@@ -93,7 +93,7 @@ class Dispatcher:
     def select_handler(self, msg: Message):
         """ Find the closest appropriate module for a given message.
         """
-        key = (msg.doc_uri, msg.protocol, msg.short_type)
+        key = (msg.doc_uri, msg.protocol, msg.name)
         if key not in self.handler_versions:
             return None
 
@@ -104,7 +104,7 @@ class Dispatcher:
                     msg.doc_uri,
                     msg.protocol,
                     str(version),
-                    msg.short_type
+                    msg.name
                 )
                 return self.handlers[full_type]
 

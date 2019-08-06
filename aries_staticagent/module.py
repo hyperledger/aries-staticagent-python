@@ -101,13 +101,13 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
     def __init__(self):
         self._routes = None
 
-    def type(self, short_type):
+    def type(self, name):
         """ Build a type string for this module. """
         return '{}{}/{}/{}'.format(
             self.__class__.doc_uri,
             self.__class__.protocol,
             self.__class__.version,
-            short_type
+            name
         )
 
     def _find_routes(self):

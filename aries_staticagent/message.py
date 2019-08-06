@@ -19,7 +19,7 @@ def generate_id():
 
 
 def parse_type_info(message_type_uri):
-    """ Parse message type for doc_uri, portocol, version, and short type.
+    """ Parse message type for doc_uri, portocol, version, and type name.
     """
     matches = MTURI_RE.match(message_type_uri)
     if not matches:
@@ -38,7 +38,7 @@ class Message(dict):
         'protocol',
         'version',
         'version_info',
-        'short_type'
+        'name'
     )
 
     def __init__(self, *args, **kwargs):
@@ -53,7 +53,7 @@ class Message(dict):
             raise InvalidMessage('Message @id is invalid; must be str')
 
 
-        self.doc_uri, self.protocol, self.version, self.short_type = \
+        self.doc_uri, self.protocol, self.version, self.name = \
             parse_type_info(self.type)
 
         try:
