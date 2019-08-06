@@ -1,68 +1,113 @@
 """ Dispatcher """
 import logging
-from typing import Optional
+from typing import Callable, Sequence
 
 from sortedcontainers import SortedSet
 
-from .message import Message
+from .message import Message, parse_type_info
+from .utils import Semver
 
-class NoRegisteredRouteException(Exception):
+
+class NoRegisteredHandlerException(Exception):
     """ Thrown when message has no registered handlers """
 
+
+class Handler:
+    """ A Message Handler. """
+    __slots__ = (
+        'doc_uri',
+        'protocol',
+        'version',
+        'name',
+        'type',
+        'handler',
+        'context'
+    )
+
+    def __init__(self, handler: Callable, **kwargs):
+        self.doc_uri = kwargs.get('doc_uri')
+        self.protocol = kwargs.get('protocol')
+        self.version = kwargs.get('version')
+        self.name = kwargs.get('name')
+        self.type = kwargs.get('type')
+
+        self.handler = handler
+        self.context = kwargs.get('context')
+
+        if self.version and isinstance(self.version, str):
+            self.version = Semver.from_str(self.version)
+
+        if self.type:
+            self.doc_uri, self.protocol, version_str, self.name = \
+                parse_type_info(kwargs['type'])
+            self.version = Semver.from_str(version_str)
+
+        self.type = '{}{}/{}/{}'.format(
+            self.doc_uri,
+            self.protocol,
+            str(self.version),
+            self.name
+        )
+
+        if self.doc_uri is None or self.protocol is None or \
+                self.version is None or self.name is None:
+            raise ValueError(
+                'Handler must be given type or '
+                'doc_uri, protocol, version, and name'
+            )
+
+    async def run(self, msg, *args, **kwargs):
+        """ Call the handler with message. """
+        args = [msg, *args] if not self.context else [self.context, msg, *args]
+        return await self.handler(*args, **kwargs)
+
+
 class Dispatcher:
-    """ One of the fundamental aspects of an agent responsible for dispatching messages to
-        appropriate handlers.
+    """ One of the fundamental aspects of an agent responsible for dispatching
+        messages to appropriate handlers.
     """
     def __init__(self):
-        self.routes = {}
-        self.modules = {} # Protocol identifier URI to module
-        self.module_versions = {} # Doc URI + Protocol to list of Module Versions
         self.logger = logging.getLogger(__name__)
+        self.handlers = {}
+        self.handler_versions = {}
 
-    def route(self, msg_type: str):
-        """ Register route decorator. """
-        def register_route_dec(func):
-            self.logger.debug('Setting route for %s to %s', msg_type, func)
-            self.routes[msg_type] = func
-            return func
-
-        return register_route_dec
-
-    def clear_routes(self):
+    def clear_handlers(self):
         """ Clear routes """
-        self.routes.clear()
+        self.handlers.clear()
+        self.handler_versions.clear()
 
-    def clear_modules(self):
-        """ Clear registered modules """
-        self.modules.clear()
-        self.module_versions.clear()
+    def add_handler(self, handler):
+        """ Add a handler to routing tables. """
+        self.handlers[handler.type] = handler
 
-    def route_module(self, mod):
-        """ Register a module for routing.
-            Modules are routed to based on protocol and version. Newer versions
-            are favored over older versions. Major version number must match.
-        """
-        # Register module
-        self.modules[type(mod).protocol_identifer_uri] = mod
+        key = (handler.doc_uri, handler.protocol, handler.name)
+        if key not in self.handler_versions:
+            self.handler_versions[key] = SortedSet()
+        self.handler_versions[key].add(handler.version)
 
-        # Store version selection info
-        version_info = type(mod).version_info
-        qualified_protocol = type(mod).qualified_protocol
-        if not qualified_protocol in self.module_versions:
-            self.module_versions[qualified_protocol] = SortedSet()
+    def add_handlers(self, handlers: Sequence[Handler]):
+        """ Add a list of handlers to routing tables. """
+        for handler in handlers:
+            self.add_handler(handler)
 
-        self.module_versions[qualified_protocol].add(version_info)
-
-    def get_closest_module_for_msg(self, msg: Message):
+    def select_handler(self, msg: Message):
         """ Find the closest appropriate module for a given message.
         """
-        if not msg.qualified_protocol in self.module_versions:
+        key = (msg.doc_uri, msg.protocol, msg.short_type)
+        if key not in self.handler_versions:
             return None
 
-        registered_version_set = self.module_versions[msg.qualified_protocol]
+        registered_version_set = self.handler_versions[key]
         for version in reversed(registered_version_set):
             if msg.version_info.major == version.major:
-                return self.modules[msg.qualified_protocol + '/' + str(version)]
+                full_type = '{}{}/{}/{}'.format(
+                    msg.doc_uri,
+                    msg.protocol,
+                    str(version),
+                    msg.short_type
+                )
+                return self.handlers[full_type]
+
             if msg.version_info.major > version.major:
                 break
 
@@ -70,29 +115,12 @@ class Dispatcher:
 
     async def dispatch(self, msg: Message, *args, **kwargs):
         """ Dispatch message to handler. """
-        if msg.type in self.routes:
-            await self.routes[msg.type](msg, *args, **kwargs)
-            return
-
-        mod = self.get_closest_module_for_msg(msg)
-        if mod:
-
-            # If routes have been statically defined in a module, attempt to route based on type
-            if hasattr(mod, 'routes') and \
-                    msg.type in mod.routes:
-                await mod.routes[msg.type](mod, msg, *args, **kwargs)
-                return
-
-            # If no routes defined in module, attempt to route based on method matching
-            # the message type name
-            if hasattr(mod, msg.short_type) and \
-                    callable(getattr(mod, msg.short_type)):
-
-                await getattr(mod, msg.short_type)(
-                    msg,
-                    *args,
-                    **kwargs
+        handler = self.select_handler(msg)
+        if not handler:
+            raise NoRegisteredHandlerException(
+                'No suitable handler for message of type {}'.format(
+                    msg.type
                 )
-                return
+            )
 
-        raise NoRegisteredRouteException
+        await handler.run(msg, *args, **kwargs)

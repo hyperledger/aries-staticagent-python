@@ -1,13 +1,32 @@
 """ Module base class """
 
+from typing import Union, Callable
 from .utils import Semver
 
 
-def route_def(routes, msg_type):
-    """ Route definition decorator """
-    def _route_def(func):
-        routes[msg_type] = func
-    return _route_def
+def route(type_or_func: Union[Callable, str]):
+    """ Route definition decorator
+        if just @route is used, type_or_func is the decorated function
+        if @route(type) is used, type_or_func is the type string.
+    """
+    if callable(type_or_func):
+        func = type_or_func
+        func.handler_for = None
+        return func
+
+    if isinstance(type_or_func, str):
+        msg_type = type_or_func
+
+        def _route(func):
+            func.handler_for = msg_type
+            return func
+
+        return _route
+
+    raise ValueError(
+        'Expecting @route before a function or @route(msg_type) '
+        'before a function!'
+    )
 
 
 class InvalidModule(Exception):
@@ -79,6 +98,9 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
     PROTOCOL = None
     VERSION = None
 
+    def __init__(self):
+        self._routes = None
+
     def type(self, short_type):
         """ Build a type string for this module. """
         return '{}{}/{}/{}'.format(
@@ -87,3 +109,26 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
             self.__class__.version,
             short_type
         )
+
+    def _find_routes(self):
+        found = {}
+        for key in dir(self):
+            if key == 'routes' or key.startswith('__'):
+                continue
+            val = getattr(self, key)
+            if hasattr(val, 'handler_for'):
+                msg_type = val.handler_for
+                if msg_type is None:
+                    msg_type = self.type(key)
+                found[msg_type] = val
+
+        return found
+
+    @property
+    def routes(self):
+        """ Get the routes statically defined for this module and
+            save in instance.
+        """
+        if self._routes is None:
+            self._routes = self._find_routes()
+        return self._routes

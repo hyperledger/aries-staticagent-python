@@ -3,159 +3,105 @@ import asyncio
 from collections import namedtuple
 import pytest
 
-from aries_staticagent.dispatcher import Dispatcher, NoRegisteredRouteException
-from aries_staticagent.module import Module, route_def
+from aries_staticagent.dispatcher import (
+    Dispatcher,
+    Handler,
+    NoRegisteredHandlerException
+)
 from aries_staticagent.message import Message
 
 MockMessage = namedtuple('MockMessage', ['type', 'test'])
 
+
 @pytest.mark.asyncio
-async def test_routing():
+async def test_good_handler():
+    """ Test handler creation and run. """
+    called_event = asyncio.Event()
+
+    async def test(msg, **kwargs):
+        assert msg == 'test'
+        kwargs['event'].set()
+
+    handler = Handler(
+        test,
+        doc_uri='',
+        protocol='test_protocol',
+        version='1.0',
+        name='testing_type'
+    )
+    await handler.run('test', event=called_event)
+    assert called_event.is_set()
+
+
+@pytest.mark.asyncio
+async def test_good_handler_from_type():
+    """ Test handler creation from a type string. """
+    called_event = asyncio.Event()
+
+    async def test(msg, **kwargs):
+        assert msg == 'test'
+        kwargs['event'].set()
+
+    handler = Handler(
+        test,
+        type='test_protocol/1.0/testing_type'
+    )
+    await handler.run('test', event=called_event)
+    assert called_event.is_set()
+
+
+@pytest.mark.asyncio
+async def test_bad_handler():
+    """ Test malformed handler creation raises ValueError """
+    with pytest.raises(ValueError):
+        Handler(lambda: print('blah'), doc_uri='')
+
+
+@pytest.mark.asyncio
+async def test_dispatching():
     """ Test that routing works in agent. """
     dispatcher = Dispatcher()
 
     called_event = asyncio.Event()
 
-    @dispatcher.route('testing_type')
-    async def route_gets_called(msg, **kwargs):
+    async def route_gets_called(_msg, **kwargs):
         kwargs['event'].set()
 
-    test_msg = MockMessage('testing_type', 'test')
+    dispatcher.add_handler(Handler(
+        route_gets_called, type='test_protocol/1.0/testing_type'
+    ))
+
+    test_msg = Message({
+        '@type': 'test_protocol/1.0/testing_type', 'test': 'test'
+    })
     await dispatcher.dispatch(test_msg, event=called_event)
 
     assert called_event.is_set()
 
-@pytest.mark.asyncio
-async def test_module_routing_explicit_def():
-    """ Test that routing to a module works. """
 
+@pytest.mark.asyncio
+async def test_dispatching_selection():
+    """ Test that routing works in agent. """
     dispatcher = Dispatcher()
+
     called_event = asyncio.Event()
 
-    class TestModule(Module):
-        DOC_URI = ''
-        PROTOCOL = 'test_protocol'
-        VERSION = '1.0'
+    async def route_gets_called(_msg, **kwargs):
+        kwargs['event'].set()
 
-        routes = {}
+    async def route_not_called(_msg, **_kwargs):
+        print('this should not be called')
 
-        @route_def(routes, 'test_protocol/1.0/testing_type')
-        async def route_gets_called(self, msg, **kwargs):
-            kwargs['event'].set()
+    dispatcher.add_handler(Handler(
+        route_gets_called, type='test_protocol/2.0/testing_type'
+    ))
+    dispatcher.add_handler(Handler(
+        route_not_called, type='test_protocol/1.0/testing_type'
+    ))
 
-    mod = TestModule()
-    dispatcher.route_module(mod)
-
-    test_msg = Message({'@type': 'test_protocol/1.0/testing_type', 'test': 'test'})
-    await dispatcher.dispatch(test_msg, event=called_event)
-
-    assert called_event.is_set()
-
-@pytest.mark.asyncio
-async def test_module_routing_simple():
-    """ Test that routing to a module works. """
-    dispatcher = Dispatcher()
-    called_event = asyncio.Event()
-
-    class TestModule(Module):
-        DOC_URI = ''
-        PROTOCOL = 'test_protocol'
-        VERSION = '1.0'
-
-        async def testing_type(self, msg, *args, **kwargs):
-            kwargs['event'].set()
-
-    mod = TestModule()
-    dispatcher.route_module(mod)
-
-    test_msg = Message({'@type': 'test_protocol/1.0/testing_type', 'test': 'test'})
-    await dispatcher.dispatch(test_msg, event=called_event)
-
-    assert called_event.is_set()
-
-@pytest.mark.asyncio
-async def test_module_routing_many():
-    """ Test that routing to a module works. """
-    dispatcher = Dispatcher()
-    dispatcher.called_module = None
-    routed_event = asyncio.Event()
-
-    class TestModule1(Module):
-        DOC_URI = ''
-        PROTOCOL = 'test_protocol'
-        VERSION = '1.0'
-
-        async def testing_type(self, msg, *args, **kwargs):
-            kwargs['dispatcher'].called_module = 1
-            kwargs['event'].set()
-
-    class TestModule2(Module):
-        DOC_URI = ''
-        PROTOCOL = 'test_protocol'
-        VERSION = '2.0'
-
-        async def testing_type(self, msg, *args, **kwargs):
-            kwargs['dispatcher'].called_module = 2
-            kwargs['event'].set()
-
-    dispatcher.route_module(TestModule1())
-    dispatcher.route_module(TestModule2())
-
-    test_msg = Message({'@type': 'test_protocol/1.0/testing_type', 'test': 'test'})
-    await dispatcher.dispatch(test_msg, event=routed_event, dispatcher=dispatcher)
-    await routed_event.wait()
-
-    assert routed_event.is_set()
-    assert dispatcher.called_module == 1
-
-    routed_event.clear()
-
-    test_msg = Message({'@type': 'test_protocol/2.0/testing_type', 'test': 'test'})
-    await dispatcher.dispatch(test_msg, event=routed_event, dispatcher=dispatcher)
-    await routed_event.wait()
-
-    assert routed_event.is_set()
-    assert dispatcher.called_module == 2
-
-@pytest.mark.asyncio
-async def test_module_routing_no_matching_version():
-    """ Test that routing to a module works. """
-    dispatcher = Dispatcher()
-    called_event = asyncio.Event()
-
-    class TestModule(Module):
-        DOC_URI = ''
-        PROTOCOL = 'test_protocol'
-        VERSION = '1.0'
-
-        async def testing_type(self, msg, *args, **kwargs):
-            kwargs['event'].set()
-
-    mod = TestModule()
-    dispatcher.route_module(mod)
-
-    test_msg = Message({'@type': 'test_protocol/3.0/testing_type', 'test': 'test'})
-    with pytest.raises(NoRegisteredRouteException):
-        await dispatcher.dispatch(test_msg, event=called_event)
-
-@pytest.mark.asyncio
-async def test_module_routing_minor_version_different():
-    """ Test that routing to a module works. """
-    dispatcher = Dispatcher()
-    called_event = asyncio.Event()
-
-    class TestModule(Module):
-        DOC_URI = ''
-        PROTOCOL = 'test_protocol'
-        VERSION = '1.4'
-
-        async def testing_type(self, msg, *args, **kwargs):
-            kwargs['event'].set()
-
-    mod = TestModule()
-    dispatcher.route_module(mod)
-
-    test_msg = Message({'@type': 'test_protocol/1.0/testing_type', 'test': 'test'})
+    test_msg = Message({
+        '@type': 'test_protocol/2.0/testing_type', 'test': 'test'
+    })
     await dispatcher.dispatch(test_msg, event=called_event)
 
     assert called_event.is_set()
