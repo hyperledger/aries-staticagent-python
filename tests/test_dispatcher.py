@@ -8,6 +8,7 @@ from aries_staticagent.dispatcher import (
     Handler,
     NoRegisteredHandlerException
 )
+from aries_staticagent.type import Type
 from aries_staticagent.message import Message
 
 MockMessage = namedtuple('MockMessage', ['type', 'test'])
@@ -23,39 +24,23 @@ async def test_good_handler():
         kwargs['event'].set()
 
     handler = Handler(
-        test,
-        doc_uri='',
-        protocol='test_protocol',
-        version='1.0',
-        name='testing_type'
+        Type.from_str('test_protocol/1.0/testing_type'),
+        test
     )
     await handler.run('test', event=called_event)
     assert called_event.is_set()
 
 
-@pytest.mark.asyncio
-async def test_good_handler_from_type():
-    """ Test handler creation from a type string. """
-    called_event = asyncio.Event()
-
-    async def test(msg, **kwargs):
-        assert msg == 'test'
-        kwargs['event'].set()
-
-    handler = Handler(
-        test,
-        type='test_protocol/1.0/testing_type'
-    )
-    await handler.run('test', event=called_event)
-    assert called_event.is_set()
-
-
-@pytest.mark.asyncio
-async def test_bad_handler():
+def test_bad_handler_invalid_type():
     """ Test malformed handler creation raises ValueError """
     with pytest.raises(ValueError):
-        Handler(lambda: print('blah'), doc_uri='')
+        Handler('test', lambda: print('blah'))
 
+
+def test_bad_handler_invalid_handler():
+    """ Test malformed handler creation raises ValueError """
+    with pytest.raises(ValueError):
+        Handler('test', 1)
 
 @pytest.mark.asyncio
 async def test_dispatching():
@@ -68,7 +53,7 @@ async def test_dispatching():
         kwargs['event'].set()
 
     dispatcher.add_handler(Handler(
-        route_gets_called, type='test_protocol/1.0/testing_type'
+        Type.from_str('test_protocol/1.0/testing_type'), route_gets_called
     ))
 
     test_msg = Message({
@@ -93,10 +78,10 @@ async def test_dispatching_selection():
         print('this should not be called')
 
     dispatcher.add_handler(Handler(
-        route_gets_called, type='test_protocol/2.0/testing_type'
+        Type.from_str('test_protocol/2.0/testing_type'), route_gets_called,
     ))
     dispatcher.add_handler(Handler(
-        route_not_called, type='test_protocol/1.0/testing_type'
+        Type.from_str('test_protocol/1.0/testing_type'), route_not_called,
     ))
 
     test_msg = Message({

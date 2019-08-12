@@ -14,6 +14,7 @@ from .mtc import (
     AUTHENTICATED_ORIGIN,
     NONREPUDIATION
 )
+from .type import Type
 from . import crypto
 
 
@@ -48,7 +49,9 @@ class StaticAgentConnection:
     def route(self, msg_type: str):
         """ Register route decorator. """
         def register_route_dec(func):
-            self._dispatcher.add_handler(Handler(func, type=msg_type))
+            self._dispatcher.add_handler(
+                Handler(Type.from_str(msg_type), func)
+            )
             return func
 
         return register_route_dec
@@ -56,7 +59,7 @@ class StaticAgentConnection:
     def route_module(self, module):
         """ Register a module for routing. """
         handlers = [
-            Handler(func, type=msg_type)
+            Handler(msg_type, func)
             for msg_type, func in module.routes.items()
         ]
         return self._dispatcher.add_handlers(handlers)

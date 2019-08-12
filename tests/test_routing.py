@@ -8,6 +8,7 @@ from aries_staticagent.dispatcher import (
 )
 from aries_staticagent.message import Message
 from aries_staticagent.module import Module, route
+from aries_staticagent.type import Type
 
 # pylint: disable=redefined-outer-name
 
@@ -57,7 +58,55 @@ async def test_simple_route(event, dispatcher, agent):
 
 
 @pytest.mark.asyncio
-async def test_routing_module_explicit_def(event, dispatcher, agent):
+@pytest.mark.parametrize(
+    'route_args, route_kwargs, send_type',
+    [
+        (
+            ['test_protocol/1.0/testing_type'],
+            {},
+            'test_protocol/1.0/testing_type'
+        ),
+        (
+            [Type.from_str('test_protocol/1.0/testing_type')],
+            {},
+            'test_protocol/1.0/testing_type'
+        ),
+        (
+            [],
+            {'name': 'not_testing_type'},
+            'test_protocol/1.0/not_testing_type'
+        ),
+        (
+            [],
+            {
+                'name': 'not_testing_type',
+                'protocol': 'not_test_protocol'
+            },
+            'not_test_protocol/1.0/not_testing_type'
+        ),
+        (
+            [],
+            {
+                'name': 'not_testing_type',
+                'protocol': 'not_test_protocol',
+                'version': '2.0'
+            },
+            'not_test_protocol/2.0/not_testing_type'
+        ),
+        (
+            [],
+            {
+                'name': 'not_testing_type',
+                'protocol': 'not_test_protocol',
+                'version': '2.0',
+                'doc_uri': 'doc;'
+            },
+            'doc;not_test_protocol/2.0/not_testing_type'
+        )
+    ]
+)
+async def test_routing_module_explicit_def(
+        event, dispatcher, agent, route_args, route_kwargs, send_type):
     """ Test that routing to a module works. """
 
     class TestModule(Module):
@@ -66,7 +115,7 @@ async def test_routing_module_explicit_def(event, dispatcher, agent):
         PROTOCOL = 'test_protocol'
         VERSION = '1.0'
 
-        @route('test_protocol/1.0/testing_type')
+        @route(*route_args, **route_kwargs)
         async def route_gets_called(self, _msg, **kwargs):
             """ Test that this method is called """
             kwargs['event'].set()
@@ -75,9 +124,8 @@ async def test_routing_module_explicit_def(event, dispatcher, agent):
     agent.route_module(mod)
 
     test_msg = Message({
-        '@type': 'test_protocol/1.0/testing_type', 'test': 'test'
+        '@type': send_type, 'test': 'test'
     })
-    await dispatcher.dispatch(test_msg, event=event)
     await dispatcher.dispatch(test_msg, event=event)
 
     assert event.is_set()

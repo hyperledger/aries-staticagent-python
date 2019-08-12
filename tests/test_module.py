@@ -1,7 +1,8 @@
 """ Test module module """
 import pytest
 
-from aries_staticagent.module import Module, Semver, InvalidModule, route
+from aries_staticagent.module import Module, InvalidModule, route
+from aries_staticagent.type import Semver, Type
 
 
 def test_module_def():
@@ -17,9 +18,6 @@ def test_module_def():
     assert TestModule.version_info == Semver(1, 0, 0)
     assert TestModule.protocol == 'test_protocol'
     assert TestModule.doc_uri == 'test_doc_uri/'
-    assert TestModule.qualified_protocol == 'test_doc_uri/test_protocol'
-    assert TestModule.protocol_identifer_uri == \
-        'test_doc_uri/test_protocol/1.0.0'
 
 
 def test_module_missing_attrs():
@@ -65,5 +63,5 @@ def test_routes_construction():
 
     mod = TestModule()
     assert mod.routes
-    assert 'test_doc_uri/test_protocol/1.0/test' in mod.routes
-    assert 'test_doc_uri/test_protocol/1.0/test1' in mod.routes
+    assert 'test_doc_uri/test_protocol/1.0.0/test' in mod.routes
+    assert 'test_doc_uri/test_protocol/1.0.0/test1' in mod.routes

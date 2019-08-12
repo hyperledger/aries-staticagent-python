@@ -4,8 +4,8 @@ from typing import Callable, Sequence
 
 from sortedcontainers import SortedSet
 
-from .message import Message, parse_type_info
-from .utils import Semver
+from .message import Message
+from .type import Type
 
 
 class NoRegisteredHandlerException(Exception):
@@ -15,46 +15,20 @@ class NoRegisteredHandlerException(Exception):
 class Handler:
     """ A Message Handler. """
     __slots__ = (
-        'doc_uri',
-        'protocol',
-        'version',
-        'name',
         'type',
         'handler',
         'context'
     )
 
-    def __init__(self, handler: Callable, **kwargs):
-        self.doc_uri = kwargs.get('doc_uri')
-        self.protocol = kwargs.get('protocol')
-        self.version = kwargs.get('version')
-        self.name = kwargs.get('name')
-        self.type = kwargs.get('type')
+    def __init__(self, type_: Type, handler: Callable, context=None):
+        if not isinstance(type_, Type):
+            raise ValueError('type parameter must be Type object')
+        if not callable(handler):
+            raise ValueError('handler parameter must be callable')
 
+        self.type = type_
         self.handler = handler
-        self.context = kwargs.get('context')
-
-        if self.version and isinstance(self.version, str):
-            self.version = Semver.from_str(self.version)
-
-        if self.type:
-            self.doc_uri, self.protocol, version_str, self.name = \
-                parse_type_info(kwargs['type'])
-            self.version = Semver.from_str(version_str)
-
-        self.type = '{}{}/{}/{}'.format(
-            self.doc_uri,
-            self.protocol,
-            str(self.version),
-            self.name
-        )
-
-        if self.doc_uri is None or self.protocol is None or \
-                self.version is None or self.name is None:
-            raise ValueError(
-                'Handler must be given type or '
-                'doc_uri, protocol, version, and name'
-            )
+        self.context = context
 
     async def run(self, msg, *args, **kwargs):
         """ Call the handler with message. """
@@ -78,12 +52,12 @@ class Dispatcher:
 
     def add_handler(self, handler):
         """ Add a handler to routing tables. """
-        self.handlers[handler.type] = handler
+        self.handlers[handler.type.normalized] = handler
 
-        key = (handler.doc_uri, handler.protocol, handler.name)
+        key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
         if key not in self.handler_versions:
             self.handler_versions[key] = SortedSet()
-        self.handler_versions[key].add(handler.version)
+        self.handler_versions[key].add(handler.type.version_info)
 
     def add_handlers(self, handlers: Sequence[Handler]):
         """ Add a list of handlers to routing tables. """

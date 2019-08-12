@@ -6,7 +6,7 @@ from .dispatcher import Dispatcher, Handler
 from .module import Module
 from .message import Message
 from .mtc import MessageTrustContext
-from .utils import Semver
+from .type import Type, Semver
 
 
 from . import crypto
