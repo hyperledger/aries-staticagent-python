@@ -3,7 +3,11 @@
 
 from .connection import StaticAgentConnection
 from .dispatcher import Dispatcher, Handler
+from .module import Module
 from .message import Message
+from .mtc import MessageTrustContext
+from .utils import Semver
+
 
 from . import crypto
 
