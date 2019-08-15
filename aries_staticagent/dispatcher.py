@@ -12,7 +12,7 @@ class NoRegisteredHandlerException(Exception):
     """ Thrown when message has no registered handlers """
 
 
-class Handler:
+class Handler:  # pylint: disable=too-few-public-methods
     """ A Message Handler. """
     __slots__ = (
         'type',
@@ -50,9 +50,9 @@ class Dispatcher:
         self.handlers.clear()
         self.handler_versions.clear()
 
-    def add_handler(self, handler):
+    def add_handler(self, handler: Handler):
         """ Add a handler to routing tables. """
-        self.handlers[handler.type.normalized] = handler
+        self.handlers[handler.type] = handler
 
         key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
         if key not in self.handler_versions:
@@ -74,13 +74,13 @@ class Dispatcher:
         registered_version_set = self.handler_versions[key]
         for version in reversed(registered_version_set):
             if msg.version_info.major == version.major:
-                full_type = '{}{}/{}/{}'.format(
+                handler_type = Type(
                     msg.doc_uri,
                     msg.protocol,
-                    str(version),
+                    version,
                     msg.name
                 )
-                return self.handlers[full_type]
+                return self.handlers[handler_type]
 
             if msg.version_info.major > version.major:
                 break

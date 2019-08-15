@@ -1,6 +1,7 @@
 """ Message and Module Type related classes and helpers. """
 from functools import partial
 from operator import is_not
+from typing import Union
 import re
 from semver import VersionInfo, parse
 
@@ -51,13 +52,24 @@ class Type:
         '_str'
     )
 
-    def __init__(self, doc_uri, protocol, version, name):
-        try:
-            self.version_info = Semver.from_str(version)
-        except ValueError as err:
-            raise InvalidType(
-                'Invalid type version {}'.format(version)
-            ) from err
+    def __init__(
+            self,
+            doc_uri: str,
+            protocol: str,
+            version: Union[str, Semver],
+            name: str):
+        if isinstance(version, str):
+            try:
+                self.version_info = Semver.from_str(version)
+            except ValueError as err:
+                raise InvalidType(
+                    'Invalid type version {}'.format(version)
+                ) from err
+        elif isinstance(version, Semver):
+            self.version_info = version
+            self.version = str(version)
+        else:
+            raise ValueError('`version` must be instance of str or Semver')
 
         self.doc_uri = doc_uri
         self.protocol = protocol
