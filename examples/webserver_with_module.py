@@ -1,11 +1,12 @@
-""" Cron script example. """
+""" Webserver with module example. """
 # This file is intended to be run as a cron script. Upon execution, it does
 # it's thing and shuts down.
 
 import argparse
 import os
+from aiohttp import web
 
-from aries_staticagent import StaticConnection, utils
+from aries_staticagent import StaticConnection, Module, route, utils
 
 
 def environ_or_required(key):
@@ -39,12 +40,40 @@ def config():
         '--myprivatekey',
         **environ_or_required('ARIES_MY_PRIVATE_KEY')
     )
+    parser.add_argument(
+        '--port',
+        **environ_or_required('PORT')
+    )
     args = parser.parse_args()
     return args
 
 
+class BasicMessageCounter(Module):
+    """ A BasicMessage module that responds with the number of messages
+        received.
+    """
+    DOC_URI = 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/'
+    PROTOCOL = 'basicmessage'
+    VERSION = '1.0'
+
+    def __init__(self):
+        super().__init__()
+        self.count = 0
+
+    @route
+    async def message(self, _msg, conn):
+        """ Respond to basic messages with a count of messages received. """
+        self.count += 1
+        await conn.send_async({
+            "@type": self.type("message"),
+            "~l10n": {"locale": "en"},
+            "sent_time": utils.timestamp(),
+            "content": "{} message(s) received.".format(self.count)
+        })
+
+
 def main():
-    """ Cron example. """
+    """ Create connection and start web server. """
     args = config()
     conn = StaticConnection(
         args.mypublickey,
@@ -52,13 +81,19 @@ def main():
         args.endpointkey,
         args.endpoint,
     )
-    conn.send({
-        "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
-                 "basicmessage/1.0/message",
-        "~l10n": {"locale": "en"},
-        "sent_time": utils.timestamp(),
-        "content": "The Cron Script has been executed."
-    })
+
+    bmc = BasicMessageCounter()
+    conn.route_module(bmc)
+
+    async def handle(request):
+        """ aiohttp handle POST. """
+        await conn.handle(await request.read())
+        raise web.HTTPAccepted()
+
+    app = web.Application()
+    app.add_routes([web.post('/', handle)])
+
+    web.run_app(app, port=args.port)
 
 
 if __name__ == '__main__':
