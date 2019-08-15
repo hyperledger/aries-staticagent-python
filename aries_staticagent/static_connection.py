@@ -6,6 +6,7 @@ import aiohttp
 
 from .dispatcher import Dispatcher, Handler
 from .message import Message
+from .module import Module
 from .mtc import (
     MessageTrustContext,
     DESERIALIZE_OK,
@@ -22,11 +23,11 @@ class StaticConnection:
     """ A Static Agent Connection to another agent. """
     def __init__(
             self,
-            endpoint: str,
-            their_vk: Union[bytes, str],
             my_vk: Union[bytes, str],
             my_sk: Union[bytes, str],
-            **kwargs
+            their_vk: Union[bytes, str],
+            endpoint: str,
+            dispatcher: Dispatcher = None
                 ):
         """ Constructor
 
@@ -44,7 +45,7 @@ class StaticConnection:
         self.my_sk = my_sk \
             if isinstance(my_sk, bytes) else crypto.b58_to_bytes(my_sk)
 
-        self._dispatcher = kwargs.get('dispatcher', Dispatcher())
+        self._dispatcher = dispatcher if dispatcher else Dispatcher()
 
     def route(self, msg_type: str):
         """ Register route decorator. """
@@ -56,7 +57,7 @@ class StaticConnection:
 
         return register_route_dec
 
-    def route_module(self, module):
+    def route_module(self, module: Module):
         """ Register a module for routing. """
         handlers = [
             Handler(msg_type, func)
@@ -68,8 +69,8 @@ class StaticConnection:
         """ Clear registered routes. """
         return self._dispatcher.clear_handlers()
 
-    async def handle(self, packed_message):
-        """ Unpack and handle message. """
+    def unpack(self, packed_message: bytes) -> Message:
+        """ Unpack a message, filling out metadata in the MTC """
         (msg, sender_vk, recip_vk) = crypto.unpack_message(
             packed_message,
             self.my_vk,
@@ -82,39 +83,56 @@ class StaticConnection:
         )
         if sender_vk:
             msg.mtc[AUTHENTICATED_ORIGIN] = True
+        else:
+            msg.mtc[AUTHENTICATED_ORIGIN] = False
 
         msg.mtc.ad['sender_vk'] = sender_vk
         msg.mtc.ad['recip_vk'] = recip_vk
-        await self._dispatcher.dispatch(msg, self)
+        return msg
 
-    async def send_async(self, msg):
-        """ Send a message to the agent connected through this
-            StaticConnection.  This method should support both http and
-            WS, eventually. Also Return Route.
-        """
-        #TODO Support WS
+    def pack(self, msg: Union[dict, Message], anon=False):
+        """ Pack a message for sending over the wire. """
         if isinstance(msg, dict):
             msg = Message(msg)
 
-        packed_msg = crypto.pack_message(
-            msg.serialize(),
-            [self.their_vk],
-            self.my_vk,
-            self.my_sk
-        )
+        if anon:
+            packed_message = crypto.pack_message(
+                msg.serialize(),
+                [self.their_vk],
+            )
+        else:
+            packed_message = crypto.pack_message(
+                msg.serialize(),
+                [self.their_vk],
+                self.my_vk,
+                self.my_sk
+            )
+
+        return packed_message
+
+    async def handle(self, packed_message: bytes):
+        """ Unpack and dispatch message to handler. """
+        msg = self.unpack(packed_message)
+        await self._dispatcher.dispatch(msg, self)
+
+    async def send_async(self, msg: Union[dict, Message]):
+        """ Send a message to the agent connected through this StaticConnection.
+        """
+        # TODO Support WS
+        # TODO add return route support
+        packed_message = self.pack(msg)
 
         async with aiohttp.ClientSession() as session:
             headers = {'content-type': 'application/ssi-agent-wire'}
             async with session.post(
                     self.endpoint,
-                    data=packed_msg,
+                    data=packed_message,
                     headers=headers
                         ) as resp:
                 if resp.status != 202:
                     await self.handle(await resp.read())
 
-    def send(self, msg):
+    def send(self, msg: Union[dict, Message]):
         """ Send a message, blocking. """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.send_async(msg))
-
