@@ -2,7 +2,7 @@
 import argparse
 import os
 
-from aries_staticagent import StaticAgentConnection, utils
+from aries_staticagent import StaticConnection, utils
 
 # Config Start
 
@@ -26,7 +26,7 @@ args = parser.parse_args()
 
 # Config End
 
-a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
+a = StaticConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
 
 # TODO: the send() method will apply an id if not present
 a.send({

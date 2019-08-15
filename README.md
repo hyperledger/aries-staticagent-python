@@ -112,12 +112,12 @@ Refer to the `examples` directory for complete working examples of using this li
 ### Setting up a Static Agent Connection
 
 ```python
-from aries_staticagent import StaticAgentConnection
+from aries_staticagent import StaticConnection
 
 # endpoint, endpointkey, mypublickey, myprivate key are obtained through some form of static
 # configuration
 
-a = StaticAgentConnection(endpoint, endpointkey, mypublickey, myprivatekey)
+a = StaticConnection(endpoint, endpointkey, mypublickey, myprivatekey)
 ```
 
 This will open a static connection with the full agent reachable at `endpoint` and messages packed
@@ -155,12 +155,12 @@ transport mechanism for the static agent:
 
 ```python
 from aiohttp import web
-from aries_staticagent import StaticAgentConnection, utils
+from aries_staticagent import StaticConnection, utils
 
 # ... Configuration omitted
 
 # Create static agent connection
-a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
+a = StaticConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
 
 # Register a handler for the basicmessage/1.0/message message type
 @a.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
@@ -176,7 +176,7 @@ async def basic_message(agent, msg):
 
 # aiohttp request handler
 async def handle(request):
-    # Read request body and pass to StaticAgentConnection.handle
+    # Read request body and pass to StaticConnection.handle
     await a.handle(await request.read())
     raise web.HTTPAccepted()
 

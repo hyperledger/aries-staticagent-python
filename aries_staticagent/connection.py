@@ -18,7 +18,7 @@ from .type import Type
 from . import crypto
 
 
-class StaticAgentConnection:
+class StaticConnection:
     """ A Static Agent Connection to another agent. """
     def __init__(
             self,
@@ -89,7 +89,7 @@ class StaticAgentConnection:
 
     async def send_async(self, msg):
         """ Send a message to the agent connected through this
-            StaticAgentConnection.  This method should support both http and
+            StaticConnection.  This method should support both http and
             WS, eventually. Also Return Route.
         """
         #TODO Support WS

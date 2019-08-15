@@ -1,7 +1,7 @@
 """ Aries Static Agent Library.
 """
 
-from .connection import StaticAgentConnection
+from .connection import StaticConnection
 from .dispatcher import Dispatcher, Handler
 from .module import Module
 from .message import Message

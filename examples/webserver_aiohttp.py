@@ -2,7 +2,7 @@
 import argparse
 import os
 
-from aries_staticagent import StaticAgentConnection, utils
+from aries_staticagent import StaticConnection, utils
 
 from aiohttp import web
 
@@ -29,7 +29,7 @@ args = parser.parse_args()
 
 # Config End
 
-a = StaticAgentConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
+a = StaticConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
 # TODO: a.returnroute = "thread"
 
 @a.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
