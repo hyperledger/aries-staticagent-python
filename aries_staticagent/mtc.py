@@ -104,7 +104,9 @@ class MessageTrustContext:
     def __setitem__(self, context: Context, value: Optional[bool]):
         if not (isinstance(value, bool) or value is None):
             raise TypeError(
-                'Value of type bool or None was expected, got %s' % type(value)
+                'Value of type bool or None was expected, got {}'.format(
+                    type(value)
+                )
             )
 
         if value is None:
@@ -123,9 +125,9 @@ class MessageTrustContext:
         minus = []
         for context, label in LABELS.items():
             if self[context] is True:
-                plus.append('+%s' % label)
+                plus.append('+{}'.format(label))
             elif self[context] is False:
-                minus.append('-%s' % label)
+                minus.append('-{}'.format(label))
 
         str_repr = ' '.join([str_repr] + plus + minus)
         return str_repr

@@ -14,6 +14,7 @@ from aries_staticagent.dispatcher import (
 from aries_staticagent.type import Type
 
 # pylint: disable=redefined-outer-name
+# pylint: disable=too-few-public-methods
 
 
 @pytest.fixture
