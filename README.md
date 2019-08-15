@@ -117,7 +117,7 @@ from aries_staticagent import StaticConnection
 # endpoint, endpointkey, mypublickey, myprivate key are obtained through some form of static
 # configuration
 
-a = StaticConnection(endpoint, endpointkey, mypublickey, myprivatekey)
+conn = StaticConnection(mypublickey, myprivatekey, endpointkey, endpoint)
 ```
 
 This will open a static connection with the full agent reachable at `endpoint` and messages packed
@@ -128,21 +128,21 @@ for `endpointkey`.
 With the static agent connection `a`, to send messages to the full agent:
 
 ```python
-a.send({
-        "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
-        "~l10n": {"locale": "en"},
-        "sent_time": utils.timestamp(),
-        "content": "The Cron Script has been executed."
+conn.send({
+    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
+    "~l10n": {"locale": "en"},
+    "sent_time": utils.timestamp(),
+    "content": "The Cron Script has been executed."
 })
 ```
 
 An asynchronous method is also provided:
 ```python
-await a.send_async({
-        "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
-        "~l10n": {"locale": "en"},
-        "sent_time": utils.timestamp(),
-        "content": "The Cron Script has been executed."
+await conn.send_async({
+    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
+    "~l10n": {"locale": "en"},
+    "sent_time": utils.timestamp(),
+    "content": "The Cron Script has been executed."
 })
 ```
 
@@ -160,13 +160,13 @@ from aries_staticagent import StaticConnection, utils
 # ... Configuration omitted
 
 # Create static agent connection
-a = StaticConnection(args.endpoint, args.endpointkey, args.mypublickey, args.myprivatekey)
+conn = StaticConnection(args.mypublickey, args.myprivatekey, args.endpointkey, args.endpoint)
 
 # Register a handler for the basicmessage/1.0/message message type
-@a.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
-async def basic_message(agent, msg):
+@conn.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
+async def basic_message(msg, conn):
     # Respond to the received basic message by sending another basic message back
-    await a.send_async({
+    await conn.send_async({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
         "sent_time": utils.timestamp(),
@@ -177,7 +177,7 @@ async def basic_message(agent, msg):
 # aiohttp request handler
 async def handle(request):
     # Read request body and pass to StaticConnection.handle
-    await a.handle(await request.read())
+    await conn.handle(await request.read())
     raise web.HTTPAccepted()
 
 # Register aiohttp request handler
@@ -189,8 +189,8 @@ web.run_app(app, port=args.port)
 ```
 
 As seen in this example, registering a handler for a DIDComm message is done using the
-`@a.route('<message_type>')` decorator. Passing raw, unpackaged messages to the static agent
-connection over the decoupled transport mechanism is done by calling `a.handle(<raw message>)`.
+`@conn.route('<message_type>')` decorator. Passing raw, unpackaged messages to the static agent
+connection over the decoupled transport mechanism is done by calling `conn.handle(<raw message>)`.
 
 Static agents can only unpack messages sent by the full agent.
 
