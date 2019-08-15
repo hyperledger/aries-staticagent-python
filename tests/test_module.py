@@ -13,12 +13,6 @@ def test_module_def():
         PROTOCOL = 'test_protocol'
         VERSION = '1.0'
 
-    assert TestModule.version == '1.0'
-    assert TestModule.normalized_version == '1.0.0'
-    assert TestModule.version_info == Semver(1, 0, 0)
-    assert TestModule.protocol == 'test_protocol'
-    assert TestModule.doc_uri == 'test_doc_uri/'
-
 
 def test_module_missing_attrs():
     """ Test that defining a module without required attributes raises

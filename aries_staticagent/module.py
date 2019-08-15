@@ -1,7 +1,7 @@
 """ Module base class """
 
 from typing import Union, Callable
-from .type import Type, Semver
+from .type import Type
 
 
 class InvalidModule(Exception):
@@ -22,40 +22,6 @@ class MetaModule(type):
 
         return type.__new__(cls, name, bases, dct)
 
-    _normalized_version = None
-    _version_info = None
-
-    @property
-    def version(cls):
-        """ Convenience property: access VERSION """
-        return cls.VERSION
-
-    @property
-    def normalized_version(cls):
-        """ Convenience property: get normalized version info string """
-        if not cls._normalized_version:
-            version_info = cls.version_info
-            cls._normalized_version = str(version_info)
-        return cls._normalized_version
-
-    @property
-    def version_info(cls):
-        """ Convenience property: get version info (major, minor, patch, etc.)
-        """
-        if not cls._version_info:
-            cls._version_info = Semver.from_str(cls.VERSION)
-        return cls._version_info
-
-    @property
-    def protocol(cls):
-        """ Convenience property: access PROTOCOL """
-        return cls.PROTOCOL
-
-    @property
-    def doc_uri(cls):
-        """ Convenience property: access DOC_URI """
-        return cls.DOC_URI
-
 
 class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
     """ Base Module class """
@@ -68,9 +34,9 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
 
     def type(self, name, **kwargs):
         """ Build a type string for this module. """
-        doc_uri = kwargs.get('doc_uri', self.__class__.doc_uri)
-        protocol = kwargs.get('protocol', self.__class__.protocol)
-        version = kwargs.get('version', self.__class__.version)
+        doc_uri = kwargs.get('doc_uri', self.__class__.DOC_URI)
+        protocol = kwargs.get('protocol', self.__class__.PROTOCOL)
+        version = kwargs.get('version', self.__class__.VERSION)
         return Type(doc_uri, protocol, version, name)
 
     def _find_routes(self):
@@ -118,9 +84,9 @@ class PartialType():
 
     def complete(self, mod: Module) -> Type:
         """ Return a complete type given the module context. """
-        doc_uri = self.doc_uri if self.doc_uri else type(mod).doc_uri
-        protocol = self.protocol if self.protocol else type(mod).protocol
-        version = self.version if self.version else type(mod).version
+        doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
+        protocol = self.protocol if self.protocol else type(mod).PROTOCOL
+        version = self.version if self.version else type(mod).VERSION
         return Type(doc_uri, protocol, version, self.name)
 
 
