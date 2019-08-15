@@ -1,13 +1,9 @@
 """ Aries Static Agent Library.
 """
 
-from .connection import StaticConnection
-from .dispatcher import Dispatcher, Handler
-from .module import Module
+from .static_connection import StaticConnection
+from .module import Module, route
 from .message import Message
-from .mtc import MessageTrustContext
-from .type import Type, Semver
-
 
 from . import crypto
 
