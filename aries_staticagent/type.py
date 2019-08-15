@@ -65,15 +65,15 @@ class Type:
                 raise InvalidType(
                     'Invalid type version {}'.format(version)
                 ) from err
+            self.version = version
         elif isinstance(version, Semver):
             self.version_info = version
             self.version = str(version)
         else:
-            raise ValueError('`version` must be instance of str or Semver')
+            raise InvalidType('`version` must be instance of str or Semver')
 
         self.doc_uri = doc_uri
         self.protocol = protocol
-        self.version = version
         self.name = name
         self._str = Type.FORMAT.format(
             self.doc_uri,
