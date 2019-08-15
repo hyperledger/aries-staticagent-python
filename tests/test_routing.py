@@ -2,12 +2,15 @@
 
 import asyncio
 import pytest
-from aries_staticagent import StaticConnection
+from aries_staticagent import (
+    StaticConnection,
+    Message,
+    Module,
+    route
+)
 from aries_staticagent.dispatcher import (
     Dispatcher, NoRegisteredHandlerException
 )
-from aries_staticagent.message import Message
-from aries_staticagent.module import Module, route
 from aries_staticagent.type import Type
 
 # pylint: disable=redefined-outer-name
@@ -20,8 +23,8 @@ def dispatcher():
 
 
 @pytest.fixture
-def agent(dispatcher):
-    """ Function scoped static agent connection fixture. This connection isn't
+def conn(dispatcher):
+    """ Function scoped static connection fixture. This connection isn't
         actually connected to anything.
     """
     yield StaticConnection(
@@ -42,10 +45,10 @@ def event():
 
 
 @pytest.mark.asyncio
-async def test_simple_route(event, dispatcher, agent):
+async def test_simple_route(event, dispatcher, conn):
     """ Test using route decorator on a method. """
 
-    @agent.route('test_protocol/1.0/testing_type')
+    @conn.route('test_protocol/1.0/testing_type')
     async def test(msg, **kwargs):  # pylint: disable=unused-variable
         assert msg['test'] == 'test'
         kwargs['event'].set()
@@ -104,9 +107,9 @@ async def test_simple_route(event, dispatcher, agent):
             'doc;not_test_protocol/2.0/not_testing_type'
         )
     ]
-)
+)  # pylint: disable=too-many-arguments
 async def test_routing_module_explicit_def(
-        event, dispatcher, agent, route_args, route_kwargs, send_type):
+        event, dispatcher, conn, route_args, route_kwargs, send_type):
     """ Test that routing to a module works. """
 
     class TestModule(Module):
@@ -121,7 +124,7 @@ async def test_routing_module_explicit_def(
             kwargs['event'].set()
 
     mod = TestModule()
-    agent.route_module(mod)
+    conn.route_module(mod)
 
     test_msg = Message({
         '@type': send_type, 'test': 'test'
@@ -132,7 +135,7 @@ async def test_routing_module_explicit_def(
 
 
 @pytest.mark.asyncio
-async def test_routing_module_simple(event, dispatcher, agent):
+async def test_routing_module_simple(event, dispatcher, conn):
     """ Test that routing to a module works. """
     class TestModule(Module):
         """ Simple module for testing """
@@ -146,7 +149,7 @@ async def test_routing_module_simple(event, dispatcher, agent):
             kwargs['event'].set()
 
     mod = TestModule()
-    agent.route_module(mod)
+    conn.route_module(mod)
 
     test_msg = Message({
         '@type': 'test_protocol/1.0/testing_type', 'test': 'test'
@@ -157,7 +160,7 @@ async def test_routing_module_simple(event, dispatcher, agent):
 
 
 @pytest.mark.asyncio
-async def test_routing_many(event, dispatcher, agent):
+async def test_routing_many(event, dispatcher, conn):
     """ Test that routing to a module works. """
     dispatcher.called_module = None
 
@@ -185,8 +188,8 @@ async def test_routing_many(event, dispatcher, agent):
             kwargs['dispatcher'].called_module = 2
             kwargs['event'].set()
 
-    agent.route_module(TestModule1())
-    agent.route_module(TestModule2())
+    conn.route_module(TestModule1())
+    conn.route_module(TestModule2())
 
     test_msg = Message({
         '@type': 'test_protocol/1.0/testing_type',
@@ -212,7 +215,7 @@ async def test_routing_many(event, dispatcher, agent):
 
 
 @pytest.mark.asyncio
-async def test_routing_no_matching_version(event, dispatcher, agent):
+async def test_routing_no_matching_version(event, dispatcher, conn):
     """ Test error raised on no matching handlers. """
     class TestModule(Module):
         """ Simple module for testing """
@@ -226,7 +229,7 @@ async def test_routing_no_matching_version(event, dispatcher, agent):
             kwargs['event'].set()
 
     mod = TestModule()
-    agent.route_module(mod)
+    conn.route_module(mod)
 
     test_msg = Message({
         '@type': 'test_protocol/3.0/testing_type',
@@ -237,7 +240,7 @@ async def test_routing_no_matching_version(event, dispatcher, agent):
 
 
 @pytest.mark.asyncio
-async def test_routing_minor_version_different(event, dispatcher, agent):
+async def test_routing_minor_version_different(event, dispatcher, conn):
     """ Test routing when minor version is different. """
     class TestModule(Module):
         """ Simple module for testing """
@@ -251,7 +254,7 @@ async def test_routing_minor_version_different(event, dispatcher, agent):
             kwargs['event'].set()
 
     mod = TestModule()
-    agent.route_module(mod)
+    conn.route_module(mod)
 
     test_msg = Message({
         '@type': 'test_protocol/1.0/testing_type',
