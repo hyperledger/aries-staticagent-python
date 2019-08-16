@@ -54,7 +54,9 @@ def create_keypair(seed: bytes = None) -> (bytes, bytes):
         A tuple of (public key, secret key)
 
     """
-    if not seed:
+    if seed:
+        validate_seed(seed)
+    else:
         seed = random_seed()
     pk, sk = pysodium.crypto_sign_seed_keypair(seed)
     return pk, sk
@@ -69,23 +71,6 @@ def random_seed() -> bytes:
 
     """
     return pysodium.randombytes(pysodium.crypto_secretbox_KEYBYTES)
-
-
-def seed_to_did(seed: str) -> str:
-    """
-    Derive a did from a seed value.
-
-    Args:
-        seed: The seed to derive
-
-    Returns:
-        The did derived from the seed
-
-    """
-    seed = validate_seed(seed)
-    verkey, _ = create_keypair(seed)
-    did = bytes_to_b58(verkey[:16])
-    return did
 
 
 def validate_seed(seed: (str, bytes)) -> bytes:
@@ -148,6 +133,7 @@ def verify_signed_message(signed: bytes, verkey: bytes) -> bool:
         return False
     return True
 
+
 def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
     """ Sign a field of a message and return the value of a signature decorator.
     """
@@ -168,6 +154,7 @@ def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
         "sig_data": sig_data,
         "signature": signature
     }
+
 
 def verify_signed_message_field(signed_field: Dict):
     """ Verify a signed message field """
@@ -223,7 +210,10 @@ def anon_decrypt_message(enc_message: bytes, secret: bytes) -> bytes:
 
 
 def auth_crypt_message(
-        message: bytes, to_verkey: bytes, from_verkey: bytes, from_sigkey: bytes
+        message: bytes,
+        to_verkey: bytes,
+        from_verkey: bytes,
+        from_sigkey: bytes
 ) -> bytes:
     """
     Apply auth_crypt to a binary message.
@@ -232,7 +222,7 @@ def auth_crypt_message(
         message: The message to encrypt
         to_verkey: To recipient's verkey
         from_verkey: Sender verkey, included in combo box for verification
-        from_sigkey: Sender sigkey, included to authenticated encrypt the message
+        from_sigkey: Sender sigkey, included to auth encrypt the message
 
     Returns:
         The encrypted message
@@ -254,7 +244,11 @@ def auth_crypt_message(
     return enc_message
 
 
-def auth_decrypt_message(enc_message: bytes, my_verkey: bytes, my_sigkey: bytes) -> (bytes, str):
+def auth_decrypt_message(
+        enc_message: bytes,
+        my_verkey: bytes,
+        my_sigkey: bytes
+) -> (bytes, str):
     """
     Apply auth_decrypt to a binary message.
 
@@ -280,7 +274,9 @@ def auth_decrypt_message(enc_message: bytes, my_verkey: bytes, my_sigkey: bytes)
 
 
 def prepare_pack_recipient_keys(
-        to_verkeys: Sequence[bytes], from_verkey: bytes = None, from_sigkey: bytes = None
+        to_verkeys: Sequence[bytes],
+        from_verkey: bytes = None,
+        from_sigkey: bytes = None
 ) -> (str, bytes):
     """
     Assemble the recipients block of a packed message.
@@ -355,7 +351,9 @@ def prepare_pack_recipient_keys(
 
 
 def locate_pack_recipient_key(
-        recipients: Sequence[dict], my_verkey: bytes, my_sigkey: bytes
+        recipients: Sequence[dict],
+        my_verkey: bytes,
+        my_sigkey: bytes
 ) -> (bytes, str, str):
     """
     Locate pack recipient key.
@@ -385,21 +383,21 @@ def locate_pack_recipient_key(
             not_found.append(recip_vk_b58)
             continue
 
-        recip_vk = b58_to_bytes(recip_vk_b58)
         pk = pysodium.crypto_sign_pk_to_box_pk(my_verkey)
         sk = pysodium.crypto_sign_sk_to_box_sk(my_sigkey)
 
         encrypted_key = b64_to_bytes(recip["encrypted_key"], urlsafe=True)
 
-        nonce_b64 = recip["header"].get("iv")
-        nonce = b64_to_bytes(nonce_b64, urlsafe=True) if nonce_b64 else None
-        sender_b64 = recip["header"].get("sender")
-        enc_sender = b64_to_bytes(sender_b64, urlsafe=True) if sender_b64 else None
+        if "iv" in recip["header"] and "sender" in recip["header"]:
+            nonce = b64_to_bytes(recip["header"]["iv"], urlsafe=True)
+            enc_sender = b64_to_bytes(recip["header"]["sender"], urlsafe=True)
+        else:
+            nonce = None
+            enc_sender = None
 
         if nonce and enc_sender:
-            sender_vk_bin = pysodium.crypto_box_seal_open(enc_sender, pk, sk)
-            sender_vk = sender_vk_bin.decode("ascii")
-            sender_pk = pysodium.crypto_sign_pk_to_box_pk(b58_to_bytes(sender_vk_bin))
+            sender_vk = pysodium.crypto_box_seal_open(enc_sender, pk, sk).decode("ascii")
+            sender_pk = pysodium.crypto_sign_pk_to_box_pk(b58_to_bytes(sender_vk))
             cek = pysodium.crypto_box_open(encrypted_key, nonce, sender_pk, sk)
         else:
             sender_vk = None
@@ -435,7 +433,7 @@ def encrypt_plaintext(
 
 
 def decrypt_plaintext(
-    ciphertext: bytes, recips_bin: bytes, nonce: bytes, key: bytes
+        ciphertext: bytes, recips_bin: bytes, nonce: bytes, key: bytes
 ) -> str:
     """
     Decrypt the payload of a packed message.
@@ -457,7 +455,10 @@ def decrypt_plaintext(
 
 
 def pack_message(
-        message: str, to_verkeys: Sequence[bytes], from_verkey:bytes = None, from_sigkey: bytes = None
+        message: str,
+        to_verkeys: Sequence[bytes],
+        from_verkey: bytes = None,
+        from_sigkey: bytes = None
 ) -> bytes:
     """
     Assemble a packed message for a set of recipients, optionally including the sender.
