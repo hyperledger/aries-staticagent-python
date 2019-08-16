@@ -52,7 +52,7 @@ def test_pack_unpack_auth(keys, alice, bob):
 def test_pack_unpack_anon(keys, alice, bob):
     """ Test the pack-unpack loop with anoncrypt. """
     _alice_vk, _alice_sk, bob_vk, _bob_sk = keys
-    msg = Message({'@type': 'doc;protocol/1.0/name'})
+    msg = {'@type': 'doc;protocol/1.0/name'}
     packed_msg = alice.pack(msg, anon=True)
     assert isinstance(packed_msg, bytes)
 
@@ -65,3 +65,9 @@ def test_pack_unpack_anon(keys, alice, bob):
     assert unpacked_msg.mtc[NONREPUDIATION | AUTHENTICATED_ORIGIN] is False
     assert unpacked_msg.mtc.ad['sender_vk'] is None
     assert unpacked_msg.mtc.ad['recip_vk'] == crypto.bytes_to_b58(bob_vk)
+
+
+def test_bad_input(alice):
+    """ Test that bad input raises an error in pack. """
+    with pytest.raises(TypeError):
+        alice.pack('blah')
