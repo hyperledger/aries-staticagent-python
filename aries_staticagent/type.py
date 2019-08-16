@@ -18,8 +18,8 @@ class Semver(VersionInfo):  # pylint: disable=too-few-public-methods
         r'^(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\.(0|[1-9]\d*))?$'
     )
 
-    @staticmethod
-    def from_str(version_str):
+    @classmethod
+    def from_str(cls, version_str):
         """ Parse version information from a string. """
         matches = Semver.SEMVER_RE.match(version_str)
         if matches:
@@ -29,9 +29,14 @@ class Semver(VersionInfo):  # pylint: disable=too-few-public-methods
             return Semver(*map(int, filter(partial(is_not, None), args)))
 
         parts = parse(version_str)
-        return Semver(
-            parts['major'], parts['minor'], parts['patch'],
-            parts['prerelease'], parts['build'])
+
+        return cls(
+            parts['major'],
+            parts['minor'],
+            parts['patch'],
+            parts['prerelease'],
+            parts['build']
+        )
 
 
 class InvalidType(Exception):
