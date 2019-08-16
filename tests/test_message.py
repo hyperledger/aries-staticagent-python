@@ -3,7 +3,7 @@
 import pytest
 
 from aries_staticagent.message import Message, InvalidMessage
-from aries_staticagent.type import Semver, InvalidType
+from aries_staticagent.type import Type, Semver, InvalidType
 
 TEST_TYPE = 'test_type/protocol/1.0/test'
 TEST_TYPE_NO_DOC = 'protocol/1.0/test'
@@ -19,6 +19,7 @@ def test_valid_message():
     assert msg.doc_uri == 'test_type/'
     assert msg.protocol == 'protocol'
     assert msg.version == '1.0'
+    assert msg.normalized_version == '1.0.0'
     assert msg.name == 'test'
     assert msg.version_info == Semver(1, 0, 0)
 
@@ -33,6 +34,22 @@ def test_valid_message_no_doc_uri():
     assert msg.doc_uri == ''
     assert msg.protocol == 'protocol'
     assert msg.version == '1.0'
+    assert msg.normalized_version == '1.0.0'
+    assert msg.name == 'test'
+    assert msg.version_info == Semver(1, 0, 0)
+
+
+def test_valid_message_with_type_obj():
+    """ Test creating message using Type object. """
+    id_ = '12345'
+
+    msg = Message({'@type': Type.from_str(TEST_TYPE), '@id': id_})
+    assert msg.type == TEST_TYPE
+    assert msg.id == id_
+    assert msg.doc_uri == 'test_type/'
+    assert msg.protocol == 'protocol'
+    assert msg.version == '1.0'
+    assert msg.normalized_version == '1.0.0'
     assert msg.name == 'test'
     assert msg.version_info == Semver(1, 0, 0)
 
@@ -57,6 +74,23 @@ def test_message_serialization():
 
     assert msg.serialize() == \
         '{"@type": "%s", "@id": "%s"}' % (TEST_TYPE, msg.id)
+
+
+def test_bad_serialized_message():
+    """ Test bad serialized message raises an error on deserialze. """
+    with pytest.raises(InvalidMessage):
+        Message.deserialize('asdf')
+
+
+def test_bad_message_no_type():
+    """ Test no type in message raises error. """
+    with pytest.raises(InvalidMessage):
+        Message({'test': 'test'})
+
+
+def test_pretty_print():
+    """ Assert pretty print is returning something crazy. """
+    assert isinstance(Message({'@type': TEST_TYPE}).pretty_print(), str)
 
 
 @pytest.mark.parametrize('type_str', [
