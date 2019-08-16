@@ -6,9 +6,11 @@
 """
 
 from collections import OrderedDict
-from typing import Callable, Optional, Sequence
+from typing import Optional, Sequence, Dict
 import base64
 import json
+import struct
+import time
 
 import base58
 import msgpack
@@ -145,6 +147,42 @@ def verify_signed_message(signed: bytes, verkey: bytes) -> bool:
     except ValueError:
         return False
     return True
+
+def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
+    """ Sign a field of a message and return the value of a signature decorator.
+    """
+    timestamp_bytes = struct.pack(">Q", int(time.time()))
+    sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode('ascii')
+    sig_data = base64.urlsafe_b64encode(sig_data_bytes).decode('ascii')
+
+    signature_bytes = pysodium.crypto_sign_detached(
+        sig_data_bytes,
+        secret
+    )
+    signature = base64.urlsafe_b64encode(signature_bytes).decode('ascii')
+
+    return {
+        "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec"
+                 "/signature/1.0/ed25519Sha512_single",
+        "signer": signer,
+        "sig_data": sig_data,
+        "signature": signature
+    }
+
+def verify_signed_message_field(signed_field: Dict):
+    """ Verify a signed message field """
+    data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
+    signature_bytes = base64.urlsafe_b64decode(
+        signed_field['signature'].encode('ascii')
+    )
+    pysodium.crypto_sign_verify_detached(
+        signature_bytes,
+        data_bytes,
+        b58_to_bytes(signed_field['signer'])
+    )
+
+    fieldjson = data_bytes[8:]
+    return json.loads(fieldjson)
 
 
 def anon_crypt_message(message: bytes, to_verkey: bytes) -> bytes:

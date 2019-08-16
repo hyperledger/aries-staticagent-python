@@ -1,16 +1,8 @@
 """ Define Message base class. """
 import json
-import re
 import uuid
 
-from .utils import Semver
-
-
-class InvalidMessage(Exception):
-    """ Thrown when message is malformed. """
-
-
-MTURI_RE = re.compile(r'(.*?)([a-z0-9._-]+)/(\d[^/]*)/([a-z0-9._-]+)$')
+from .type import Type, Semver
 
 
 def generate_id():
@@ -18,27 +10,17 @@ def generate_id():
     return str(uuid.uuid4())
 
 
-def parse_type_info(message_type_uri):
-    """ Parse message type for doc_uri, portocol, version, and short type.
-    """
-    matches = MTURI_RE.match(message_type_uri)
-    if not matches:
-        raise InvalidMessage('Invalid message type')
-
-    return matches.groups()
+class InvalidMessage(Exception):
+    """ Thrown when message is malformed. """
 
 
 class Message(dict):
     """ Message base class.
-        Inherits from UserDict meaning it behaves like a dictionary.
+        Inherits from dict meaning it behaves like a dictionary.
     """
     __slots__ = (
         'mtc',
-        'doc_uri',
-        'protocol',
-        'version',
-        'version_info',
-        'short_type'
+        '_type'
     )
 
     def __init__(self, *args, **kwargs):
@@ -52,14 +34,11 @@ class Message(dict):
         elif not isinstance(self['@id'], str):
             raise InvalidMessage('Message @id is invalid; must be str')
 
-
-        self.doc_uri, self.protocol, self.version, self.short_type = \
-            parse_type_info(self.type)
-
-        try:
-            self.version_info = Semver.from_str(self.version)
-        except ValueError as err:
-            raise InvalidMessage('Invalid message type version') from err
+        if isinstance(self['@type'], Type):
+            self._type = self['@type']
+            self['@type'] = str(self._type)
+        else:
+            self._type = Type.from_str(self.type)
 
     @property
     def type(self):
@@ -72,11 +51,34 @@ class Message(dict):
         return self['@id']
 
     @property
-    def qualified_protocol(self):
-        """ Shortcut for constructing qualified protocol identifier from
-            doc_uri and protocol
-        """
-        return self.doc_uri + self.protocol
+    def doc_uri(self) -> str:
+        """ Get type doc_uri """
+        return self._type.doc_uri
+
+    @property
+    def protocol(self) -> str:
+        """ Get type protocol """
+        return self._type.protocol
+
+    @property
+    def version(self) -> str:
+        """ Get type version """
+        return self._type.version
+
+    @property
+    def version_info(self) -> Semver:
+        """ Get type version info """
+        return self._type.version_info
+
+    @property
+    def name(self) -> str:
+        """ Get type name """
+        return self._type.name
+
+    @property
+    def normalized_version(self) -> str:
+        """ Get type normalized version """
+        return str(self._type.version_info)
 
     # Serialization
     @classmethod

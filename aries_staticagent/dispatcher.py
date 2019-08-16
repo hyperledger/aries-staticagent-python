@@ -1,68 +1,87 @@
 """ Dispatcher """
 import logging
-from typing import Optional
+from typing import Callable, Sequence
 
 from sortedcontainers import SortedSet
 
 from .message import Message
+from .type import Type
 
-class NoRegisteredRouteException(Exception):
+
+class NoRegisteredHandlerException(Exception):
     """ Thrown when message has no registered handlers """
 
+
+class Handler:  # pylint: disable=too-few-public-methods
+    """ A Message Handler. """
+    __slots__ = (
+        'type',
+        'handler',
+        'context'
+    )
+
+    def __init__(self, type_: Type, handler: Callable, context=None):
+        if not isinstance(type_, Type):
+            raise ValueError('type parameter must be Type object')
+        if not callable(handler):
+            raise ValueError('handler parameter must be callable')
+
+        self.type = type_
+        self.handler = handler
+        self.context = context
+
+    async def run(self, msg, *args, **kwargs):
+        """ Call the handler with message. """
+        args = [msg, *args] if not self.context else [self.context, msg, *args]
+        return await self.handler(*args, **kwargs)
+
+
 class Dispatcher:
-    """ One of the fundamental aspects of an agent responsible for dispatching messages to
-        appropriate handlers.
+    """ One of the fundamental aspects of an agent responsible for dispatching
+        messages to appropriate handlers.
     """
     def __init__(self):
-        self.routes = {}
-        self.modules = {} # Protocol identifier URI to module
-        self.module_versions = {} # Doc URI + Protocol to list of Module Versions
         self.logger = logging.getLogger(__name__)
+        self.handlers = {}
+        self.handler_versions = {}
 
-    def route(self, msg_type: str):
-        """ Register route decorator. """
-        def register_route_dec(func):
-            self.logger.debug('Setting route for %s to %s', msg_type, func)
-            self.routes[msg_type] = func
-            return func
-
-        return register_route_dec
-
-    def clear_routes(self):
+    def clear_handlers(self):
         """ Clear routes """
-        self.routes.clear()
+        self.handlers.clear()
+        self.handler_versions.clear()
 
-    def clear_modules(self):
-        """ Clear registered modules """
-        self.modules.clear()
-        self.module_versions.clear()
+    def add_handler(self, handler: Handler):
+        """ Add a handler to routing tables. """
+        self.handlers[handler.type] = handler
 
-    def route_module(self, mod):
-        """ Register a module for routing.
-            Modules are routed to based on protocol and version. Newer versions
-            are favored over older versions. Major version number must match.
-        """
-        # Register module
-        self.modules[type(mod).protocol_identifer_uri] = mod
+        key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
+        if key not in self.handler_versions:
+            self.handler_versions[key] = SortedSet()
+        self.handler_versions[key].add(handler.type.version_info)
 
-        # Store version selection info
-        version_info = type(mod).version_info
-        qualified_protocol = type(mod).qualified_protocol
-        if not qualified_protocol in self.module_versions:
-            self.module_versions[qualified_protocol] = SortedSet()
+    def add_handlers(self, handlers: Sequence[Handler]):
+        """ Add a list of handlers to routing tables. """
+        for handler in handlers:
+            self.add_handler(handler)
 
-        self.module_versions[qualified_protocol].add(version_info)
-
-    def get_closest_module_for_msg(self, msg: Message):
+    def select_handler(self, msg: Message):
         """ Find the closest appropriate module for a given message.
         """
-        if not msg.qualified_protocol in self.module_versions:
+        key = (msg.doc_uri, msg.protocol, msg.name)
+        if key not in self.handler_versions:
             return None
 
-        registered_version_set = self.module_versions[msg.qualified_protocol]
+        registered_version_set = self.handler_versions[key]
         for version in reversed(registered_version_set):
             if msg.version_info.major == version.major:
-                return self.modules[msg.qualified_protocol + '/' + str(version)]
+                handler_type = Type(
+                    msg.doc_uri,
+                    msg.protocol,
+                    version,
+                    msg.name
+                )
+                return self.handlers[handler_type]
+
             if msg.version_info.major > version.major:
                 break
 
@@ -70,29 +89,12 @@ class Dispatcher:
 
     async def dispatch(self, msg: Message, *args, **kwargs):
         """ Dispatch message to handler. """
-        if msg.type in self.routes:
-            await self.routes[msg.type](msg, *args, **kwargs)
-            return
-
-        mod = self.get_closest_module_for_msg(msg)
-        if mod:
-
-            # If routes have been statically defined in a module, attempt to route based on type
-            if hasattr(mod, 'routes') and \
-                    msg.type in mod.routes:
-                await mod.routes[msg.type](mod, msg, *args, **kwargs)
-                return
-
-            # If no routes defined in module, attempt to route based on method matching
-            # the message type name
-            if hasattr(mod, msg.short_type) and \
-                    callable(getattr(mod, msg.short_type)):
-
-                await getattr(mod, msg.short_type)(
-                    msg,
-                    *args,
-                    **kwargs
+        handler = self.select_handler(msg)
+        if not handler:
+            raise NoRegisteredHandlerException(
+                'No suitable handler for message of type {}'.format(
+                    msg.type
                 )
-                return
+            )
 
-        raise NoRegisteredRouteException
+        await handler.run(msg, *args, **kwargs)

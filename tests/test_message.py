@@ -3,7 +3,7 @@
 import pytest
 
 from aries_staticagent.message import Message, InvalidMessage
-from aries_staticagent.utils import Semver
+from aries_staticagent.type import Semver, InvalidType
 
 TEST_TYPE = 'test_type/protocol/1.0/test'
 TEST_TYPE_NO_DOC = 'protocol/1.0/test'
@@ -19,7 +19,7 @@ def test_valid_message():
     assert msg.doc_uri == 'test_type/'
     assert msg.protocol == 'protocol'
     assert msg.version == '1.0'
-    assert msg.short_type == 'test'
+    assert msg.name == 'test'
     assert msg.version_info == Semver(1, 0, 0)
 
 
@@ -33,7 +33,7 @@ def test_valid_message_no_doc_uri():
     assert msg.doc_uri == ''
     assert msg.protocol == 'protocol'
     assert msg.version == '1.0'
-    assert msg.short_type == 'test'
+    assert msg.name == 'test'
     assert msg.version_info == Semver(1, 0, 0)
 
 
@@ -52,7 +52,7 @@ def test_message_serialization():
     assert msg.doc_uri == 'test_type/'
     assert msg.protocol == 'protocol'
     assert msg.version == '1.0'
-    assert msg.short_type == 'test'
+    assert msg.name == 'test'
     assert msg.version_info == Semver(1, 0, 0)
 
     assert msg.serialize() == \
@@ -70,7 +70,7 @@ def test_message_serialization():
 ])
 def test_bad_message_type(type_str):
     """ Test bad message types raise InvalidMessage """
-    with pytest.raises(InvalidMessage):
+    with pytest.raises(InvalidType):
         Message({'@type': type_str})
 
 
