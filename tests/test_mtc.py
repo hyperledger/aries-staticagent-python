@@ -114,3 +114,12 @@ def test_get_set():
     mtc[AUTHENTICATED_ORIGIN] = None
     assert mtc.affirmed == CONFIDENTIALITY
     assert mtc.denied == SIZE_OK
+
+
+def test_bad_set():
+    """ Test that bad values for set raise error. """
+    with pytest.raises(TypeError):
+        MessageTrustContext()['asdf'] = True
+
+    with pytest.raises(TypeError):
+        MessageTrustContext()[CONFIDENTIALITY] = 10
