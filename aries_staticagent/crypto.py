@@ -401,7 +401,8 @@ def locate_pack_recipient_key(
 
         encrypted_key = b64_to_bytes(recip["encrypted_key"], urlsafe=True)
 
-        if "iv" in recip["header"] and "sender" in recip["header"]:
+        if "iv" in recip["header"] and recip["header"]["iv"] and \
+                "sender" in recip["header"] and recip["header"]["sender"]:
             nonce = b64_to_bytes(recip["header"]["iv"], urlsafe=True)
             enc_sender = b64_to_bytes(recip["header"]["sender"], urlsafe=True)
         else:
@@ -415,7 +416,7 @@ def locate_pack_recipient_key(
                 sk
             ).decode("ascii")
             sender_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
-                sender_vk
+                b58_to_bytes(sender_vk)
             )
             cek = nacl.bindings.crypto_box_open(
                 encrypted_key,
