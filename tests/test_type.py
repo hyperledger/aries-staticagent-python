@@ -11,7 +11,8 @@ from aries_staticagent.type import Type, Semver, InvalidType
         ['1.0', '1.0', Semver(1, 0, 0)],
         ['1.3', '1.3', Semver(1, 3, 0)],
         ['1.3.4', '1.3.4', Semver(1, 3, 4)],
-        [Semver(1, 0, 0), '1.0.0', Semver(1, 0, 0)]
+        [Semver(1, 0, 0), '1.0.0', Semver(1, 0, 0)],
+        ['1.0.0-alpha', '1.0.0-alpha', Semver(1, 0, 0, 'alpha')]
     ]
 )
 def test_version_parsing(version_arg, expected_version, expected_semver):
@@ -51,6 +52,15 @@ def test_bad_version_raises_error(version_arg):
                 '2.0',
                 'test_type'
             ]
+        ),
+        (
+            'doc;protocol/1.0.0-alpha/name',
+            [
+                'doc;',
+                'protocol',
+                '1.0.0-alpha',
+                'name'
+            ]
         )
     ]
 )
@@ -78,6 +88,31 @@ def test_parse_from_str(type_str, expected):
 def test_equality(lhs, rhs):
     """ Test equality functions """
     assert lhs == rhs
+
+
+def test_equality_wrong_types():
+    """ Test incorrect type raises error. """
+    with pytest.raises(TypeError):
+        _ = Type.from_str('doc;protocol/1.0/name') == 10
+
+
+@pytest.mark.parametrize(
+    'lhs, rhs',
+    [
+        (Type.from_str('doc;protocol/1.0/name'), 'doc;protocol/2.0/name'),
+        (
+            Type.from_str('doc;protocol/1.0/name'),
+            Type('doc;', 'protocol', '2.0', 'name')
+        ),
+        (
+            Type('doc;', 'protocol', '1.0.0', 'name'),
+            Type('doc;', 'protocol', '2.0.0', 'name')
+        )
+    ]
+)
+def test_not_equal(lhs, rhs):
+    """ Test not equals. """
+    assert lhs != rhs
 
 
 @pytest.mark.parametrize(

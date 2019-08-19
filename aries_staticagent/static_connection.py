@@ -92,8 +92,11 @@ class StaticConnection:
 
     def pack(self, msg: Union[dict, Message], anon=False):
         """ Pack a message for sending over the wire. """
-        if isinstance(msg, dict):
-            msg = Message(msg)
+        if not isinstance(msg, Message):
+            if isinstance(msg, dict):
+                msg = Message(msg)
+            else:
+                raise TypeError('msg must be type Message or dict')
 
         if anon:
             packed_message = crypto.pack_message(

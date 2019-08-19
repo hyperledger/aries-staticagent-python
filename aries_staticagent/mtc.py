@@ -102,12 +102,8 @@ class MessageTrustContext:
         return None
 
     def __setitem__(self, context: Context, value: Optional[bool]):
-        if not (isinstance(value, bool) or value is None):
-            raise TypeError(
-                'Value of type bool or None was expected, got {}'.format(
-                    type(value)
-                )
-            )
+        if not isinstance(context, Context):
+            raise TypeError('index must be of type Context')
 
         if value is None:
             # Set undefined
@@ -118,6 +114,12 @@ class MessageTrustContext:
         elif value is False:
             self._denied |= context
             self._affirmed &= ~context
+        else:
+            raise TypeError(
+                'Value of type bool or None was expected, got {}'.format(
+                    type(value)
+                )
+            )
 
     def __str__(self):
         str_repr = 'mtc:'

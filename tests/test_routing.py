@@ -214,6 +214,10 @@ async def test_routing_many(event, dispatcher, conn):
     assert event.is_set()
     assert dispatcher.called_module == 2
 
+    assert dispatcher.handlers
+    conn.clear_routes()
+    assert not dispatcher.handlers
+
 
 @pytest.mark.asyncio
 async def test_routing_no_matching_version(event, dispatcher, conn):
