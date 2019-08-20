@@ -3,10 +3,10 @@ Version 0.4.0 (2019-09-20)
 
 ## Highlights
 
-- Switch to PyNacl instead of PySodium. PyNacl includes pre-built binary
+- **Switch to PyNacl instead of PySodium.** PyNacl includes pre-built binary
   packages of `libsodium`; this switch means removing the dependency of
   `libsodium` being installed on the system.
-- `Module` and route definition rewrite. The Module system has been
+- **`Module` and route definition rewrite.** The Module system has been
   significantly improved, allowing for cleaner and more flexible module
   definitions.
 
@@ -15,7 +15,7 @@ Version 0.4.0 (2019-09-20)
 ### Improvements to Static (Agent) Connection
 
 - Rename to `StaticConnection`.
-- Reorder parameter into slightly more natural order.
+- Reorder parameter into slightly more natural order. (Breaking change)
 - Split out pack and unpack functionality into separate functions for a little
   added flexibility and simpler testing.
 - `route` and `route_module` no longer simply wrap a dispatcher method. These
@@ -32,8 +32,8 @@ Version 0.4.0 (2019-09-20)
 
 ### Improvements to Module
 
-Overhauled route definitions:
-- Use `@route` to define a route (instead of `@route_def`)
+Overhauled route definitions (breaking changes):
+- Use `@route` to define a route (instead of `@route_def`).
 - No implicit routes. If a method of a module does not have a @route decorator,
   it will never be routed to.
 - A bare `@route` will create a handler for the message type defined by
