@@ -33,15 +33,6 @@ Quick Start Guide
 #### Requirements
 
 - Python 3.6 or higher
-- `libsodium` version 1.0.15 or higher
-
-> The most recent version of `libsodium` available in package repositories for some operating
-> systems may not meet this requirement (notably, Ubuntu 16.04). Additionally, pre-built binaries
-> may be altogether unavailable for your operating system. If possible, follow the standard
-> installation method for your OS; otherwise, follow the instructions listed [here][2].
->
-> We recognize that this dependency may be troublesome in some circumstances; we are open to/looking
-> for appropriate alternatives.
 
 #### Running the included examples
 
