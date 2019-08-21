@@ -2,10 +2,12 @@
 
 from setuptools import setup, find_packages
 
+
 def parse_requirements(filename):
     """Load requirements from a pip requirements file."""
     lineiter = (line.strip() for line in open(filename))
     return [line for line in lineiter if line and not line.startswith("#")]
+
 
 if __name__ == '__main__':
     with open('README.md', 'r') as fh:
@@ -13,8 +15,9 @@ if __name__ == '__main__':
 
     setup(
         name='aries-staticagent',
-        version='0.3.0',
-        author='Daniel Bluhm <daniel.bluhm@sovrin.org>, Sam Curren <sam@sovrin.org>',
+        version='0.4.0',
+        author='Daniel Bluhm <daniel.bluhm@sovrin.org>, '
+               'Sam Curren <sam@sovrin.org>',
         description='Python Static Agent Library and Examples for Aries',
         long_description=LONG_DESCRIPTION,
         long_description_content_type='text/markdown',

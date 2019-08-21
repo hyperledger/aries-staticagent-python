@@ -37,6 +37,15 @@ class StaticConnection:
                 my_vk - the verification key of the static agent
                 my_sk - the signing key of the static agent
         """
+        if not isinstance(my_vk, bytes) and not isinstance(my_vk, str):
+            raise TypeError('`my_vk` must be bytes or str')
+        if not isinstance(my_sk, bytes) and not isinstance(my_sk, str):
+            raise TypeError('`my_sk` must be bytes or str')
+        if not isinstance(their_vk, bytes) and not isinstance(their_vk, str):
+            raise TypeError('`their_vk` must be bytes or str')
+        if not isinstance(endpoint, str):
+            raise TypeError('`endpoint` must be str')
+
         self.endpoint = endpoint
         self.their_vk = their_vk \
             if isinstance(their_vk, bytes) else crypto.b58_to_bytes(their_vk)
