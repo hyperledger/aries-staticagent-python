@@ -32,11 +32,17 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
     def __init__(self):
         self._routes = None
 
-    def type(self, name, **kwargs):
+    def type(
+            self,
+            name: str,
+            doc_uri: str = None,
+            protocol: str = None,
+            version: str = None
+                ):
         """ Build a type string for this module. """
-        doc_uri = kwargs.get('doc_uri', self.__class__.DOC_URI)
-        protocol = kwargs.get('protocol', self.__class__.PROTOCOL)
-        version = kwargs.get('version', self.__class__.VERSION)
+        doc_uri = doc_uri if doc_uri is not None else self.__class__.DOC_URI
+        protocol = protocol if protocol is not None else self.__class__.PROTOCOL
+        version = version if version is not None else self.__class__.VERSION
         return Type(doc_uri, protocol, version, name)
 
     def _find_routes(self):
@@ -76,11 +82,17 @@ class PartialType():
         'name'
     )
 
-    def __init__(self, name, **kwargs):
+    def __init__(
+            self,
+            name: str,
+            doc_uri: str = None,
+            protocol: str = None,
+            version: str = None
+                ):
         self.name = name
-        self.version = kwargs.get('version')
-        self.protocol = kwargs.get('protocol')
-        self.doc_uri = kwargs.get('doc_uri')
+        self.version = version
+        self.protocol = protocol
+        self.doc_uri = doc_uri
 
     def complete(self, mod: Module) -> Type:
         """ Return a complete type given the module context. """

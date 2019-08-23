@@ -75,7 +75,10 @@ class Type:
             self.version_info = version
             self.version = str(version)
         else:
-            raise InvalidType('`version` must be instance of str or Semver')
+            raise InvalidType(
+                '`version` must be instance of str or Semver,'
+                ' got {}'.format(type(version).__name__)
+            )
 
         self.doc_uri = doc_uri
         self.protocol = protocol
