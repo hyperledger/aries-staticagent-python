@@ -33,6 +33,7 @@ class StaticConnection:
         def __init__(self, condition: Callable[[Message], bool] = None):
             self._condition = condition
             self._future = asyncio.Future()
+            self._pending_task: asyncio.Task = None
 
         def condition_met(self, msg: Message) -> bool:
             """Test whether the condition has been met for this message."""
@@ -42,7 +43,9 @@ class StaticConnection:
 
         async def wait(self):
             """Wait for a message meeting the given condition."""
-            return await self._future
+            if not self._pending_task:
+                self._pending_task = asyncio.ensure_future(self._future)
+            return self._pending_task
 
         def set_message(self, msg):
             """Set the message, fulfilling the future."""
@@ -90,7 +93,7 @@ class StaticConnection:
             self._future_message = \
                 self.ConditionallyAwaitFutureMessage(condition)
 
-        yield asyncio.ensure_future(self._future_message.wait())
+        yield self._future_message.wait()
 
         self._future_message = None
 
