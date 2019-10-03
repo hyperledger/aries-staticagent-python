@@ -137,23 +137,31 @@ class StaticConnection:
 
     def unpack(self, packed_message: bytes) -> Message:
         """Unpack a message, filling out metadata in the MTC."""
-        (msg, sender_vk, recip_vk) = crypto.unpack_message(
-            packed_message,
-            self.my_vk,
-            self.my_sk
-        )
-        msg = Message.deserialize(msg)
-        msg.mtc = MessageTrustContext(
-            CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK,
-            NONREPUDIATION
-        )
-        if sender_vk:
-            msg.mtc[AUTHENTICATED_ORIGIN] = True
-        else:
-            msg.mtc[AUTHENTICATED_ORIGIN] = False
+        try:
+            (msg, sender_vk, recip_vk) = crypto.unpack_message(
+                packed_message,
+                self.my_vk,
+                self.my_sk
+            )
+            msg = Message.deserialize(msg)
+            msg.mtc = MessageTrustContext(
+                CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK,
+                NONREPUDIATION
+            )
+            if sender_vk:
+                msg.mtc[AUTHENTICATED_ORIGIN] = True
+            else:
+                msg.mtc[AUTHENTICATED_ORIGIN] = False
 
-        msg.mtc.ad['sender_vk'] = sender_vk
-        msg.mtc.ad['recip_vk'] = recip_vk
+            msg.mtc.ad['sender_vk'] = sender_vk
+            msg.mtc.ad['recip_vk'] = recip_vk
+        except ValueError:
+            msg = Message.deserialize(packed_message)
+            msg.mtc = MessageTrustContext(
+                DESERIALIZE_OK,
+                CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN
+            )
+
         return msg
 
     def pack(self, msg: Union[dict, Message], anoncrypt=False) -> bytes:
