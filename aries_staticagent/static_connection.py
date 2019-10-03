@@ -1,4 +1,4 @@
-""" Static Agent Connection """
+"""Static Agent Connection."""
 import asyncio
 from contextlib import contextmanager
 from typing import Union, Callable
@@ -25,7 +25,7 @@ class MessageUndeliverable(Exception):
 
 
 class StaticConnection:
-    """ A Static Agent Connection to another agent. """
+    """A Static Agent Connection to another agent."""
 
     class ConditionallyAwaitFutureMessage:
         """Async construct for waiting for a message that meets a condition."""
@@ -41,13 +41,13 @@ class StaticConnection:
                 return True
             return self._condition(msg)
 
-        async def wait(self):
+        async def wait(self) -> asyncio.Task:
             """Wait for a message meeting the given condition."""
             if not self._pending_task:
                 self._pending_task = asyncio.ensure_future(self._future)
             return self._pending_task
 
-        def set_message(self, msg):
+        def set_message(self, msg: Message):
             """Set the message, fulfilling the future."""
             self._future.set_result(msg)
 
@@ -59,13 +59,14 @@ class StaticConnection:
             endpoint: str = None,
             dispatcher: Dispatcher = None
                 ):
-        """ Constructor
+        """
+        Construct new static connection.
 
-            params:
-                endpoint - the http endpoint of the other agent
-                their_vk - the verification key of the other agent
-                my_vk - the verification key of the static agent
-                my_sk - the signing key of the static agent
+        params:
+            my_vk - the verification key of the static agent
+            my_sk - the signing key of the static agent
+            their_vk - the verification key of the other agent
+            endpoint - the http endpoint of the other agent
         """
         if not isinstance(my_vk, bytes) and not isinstance(my_vk, str):
             raise TypeError('`my_vk` must be bytes or str')
@@ -87,7 +88,9 @@ class StaticConnection:
         self._reply: Callable[[bytes], None] = None
 
     @contextmanager
-    def future_message(self, condition=None):
+    def future_message(
+            self,
+            condition: Callable[[Message], bool] = None) -> asyncio.Task:
         """Get a handle to a future message matching condition."""
         if not self._future_message:
             self._future_message = \
@@ -97,8 +100,8 @@ class StaticConnection:
 
         self._future_message = None
 
-    def route(self, msg_type: str):
-        """ Register route decorator. """
+    def route(self, msg_type: str) -> Callable:
+        """Register route decorator."""
         def register_route_dec(func):
             self._dispatcher.add_handler(
                 Handler(Type.from_str(msg_type), func)
@@ -108,7 +111,7 @@ class StaticConnection:
         return register_route_dec
 
     def route_module(self, module: Module):
-        """ Register a module for routing. """
+        """Register a module for routing."""
         handlers = [
             Handler(msg_type, func)
             for msg_type, func in module.routes.items()
@@ -116,11 +119,11 @@ class StaticConnection:
         return self._dispatcher.add_handlers(handlers)
 
     def clear_routes(self):
-        """ Clear registered routes. """
+        """Clear registered routes."""
         return self._dispatcher.clear_handlers()
 
     def unpack(self, packed_message: bytes) -> Message:
-        """ Unpack a message, filling out metadata in the MTC """
+        """Unpack a message, filling out metadata in the MTC."""
         (msg, sender_vk, recip_vk) = crypto.unpack_message(
             packed_message,
             self.my_vk,
@@ -140,8 +143,8 @@ class StaticConnection:
         msg.mtc.ad['recip_vk'] = recip_vk
         return msg
 
-    def pack(self, msg: Union[dict, Message], anoncrypt=False):
-        """ Pack a message for sending over the wire. """
+    def pack(self, msg: Union[dict, Message], anoncrypt=False) -> bytes:
+        """Pack a message for sending over the wire."""
         if not isinstance(msg, Message):
             if isinstance(msg, dict):
                 msg = Message(msg)
@@ -164,7 +167,7 @@ class StaticConnection:
         return packed_message
 
     async def handle(self, packed_message: bytes):
-        """ Unpack and dispatch message to handler. """
+        """Unpack and dispatch message to handler."""
         msg = self.unpack(packed_message)
         if ('~transport' not in msg or
                 'return_route' not in msg['~transport'] or
@@ -172,6 +175,8 @@ class StaticConnection:
             self._reply = None
 
         if self._future_message and self._future_message.condition_met(msg):
+            # Skip normal dispatch if a future message is being awaited and the
+            # condition is met.
             self._future_message.set_message(msg)
             return
 
@@ -242,7 +247,7 @@ class StaticConnection:
     async def await_message(
             self,
             condition: Callable[[Message], bool] = None,
-            timeout: int = 0):
+            timeout: int = 0) -> Message:
         """
         Bypass dispatching to a handler and return the next handled message
         matching the given condition here.
@@ -264,7 +269,7 @@ class StaticConnection:
             return_route: str = "all",
             plaintext: bool = False,
             anoncrypt: bool = False,
-            timeout: int = 0):
+            timeout: int = 0) -> Message:
         """Send a message and wait for a reply."""
 
         with self.future_message():
@@ -290,12 +295,12 @@ class StaticConnection:
         self._reply = None
 
     def send(self, *args, **kwargs):
-        """ Send a message, blocking. """
+        """Blocking wrapper around send_async."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self.send_async(*args, **kwargs))
 
-    def send_and_await_reply(self, *args, **kwargs):
-        """ Send a message and await reply, blocking. """
+    def send_and_await_reply(self, *args, **kwargs) -> Message:
+        """Blocking wrapper around send_and_await_reply_async."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self.send_and_await_reply_async(*args, **kwargs)
