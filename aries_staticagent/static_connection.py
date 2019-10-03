@@ -24,32 +24,33 @@ class MessageUndeliverable(Exception):
     """When a message cannot be delivered."""
 
 
+class ConditionallyAwaitFutureMessage:
+    """Async construct for waiting for a message that meets a condition."""
+
+    def __init__(self, condition: Callable[[Message], bool] = None):
+        self._condition = condition
+        self._future = asyncio.Future()
+        self._pending_task: asyncio.Task = None
+
+    def condition_met(self, msg: Message) -> bool:
+        """Test whether the condition has been met for this message."""
+        if not self._condition:
+            return True
+        return self._condition(msg)
+
+    def wait(self) -> asyncio.Task:
+        """Wait for a message meeting the given condition."""
+        if not self._pending_task:
+            self._pending_task = asyncio.ensure_future(self._future)
+        return self._pending_task
+
+    def set_message(self, msg: Message):
+        """Set the message, fulfilling the future."""
+        self._future.set_result(msg)
+
+
 class StaticConnection:
     """A Static Agent Connection to another agent."""
-
-    class ConditionallyAwaitFutureMessage:
-        """Async construct for waiting for a message that meets a condition."""
-
-        def __init__(self, condition: Callable[[Message], bool] = None):
-            self._condition = condition
-            self._future = asyncio.Future()
-            self._pending_task: asyncio.Task = None
-
-        def condition_met(self, msg: Message) -> bool:
-            """Test whether the condition has been met for this message."""
-            if not self._condition:
-                return True
-            return self._condition(msg)
-
-        async def wait(self) -> asyncio.Task:
-            """Wait for a message meeting the given condition."""
-            if not self._pending_task:
-                self._pending_task = asyncio.ensure_future(self._future)
-            return self._pending_task
-
-        def set_message(self, msg: Message):
-            """Set the message, fulfilling the future."""
-            self._future.set_result(msg)
 
     def __init__(
             self,
@@ -84,7 +85,7 @@ class StaticConnection:
             if isinstance(my_sk, bytes) else crypto.b58_to_bytes(my_sk)
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
-        self._future_message: self.ConditionallyAwaitFutureMessage = None
+        self._future_message: ConditionallyAwaitFutureMessage = None
         self._reply: Callable[[bytes], None] = None
 
     @contextmanager
@@ -94,11 +95,23 @@ class StaticConnection:
         """Get a handle to a future message matching condition."""
         if not self._future_message:
             self._future_message = \
-                self.ConditionallyAwaitFutureMessage(condition)
+                ConditionallyAwaitFutureMessage(condition)
 
         yield self._future_message.wait()
 
         self._future_message = None
+
+    @contextmanager
+    def reply_handler(
+            self,
+            send: Callable[[bytes], None]):
+        """
+        Set a reply handler to be used in sending messages rather than opening
+        a new connection.
+        """
+        self._reply = send
+        yield
+        self._reply = None
 
     def route(self, msg_type: str) -> Callable:
         """Register route decorator."""
@@ -193,7 +206,7 @@ class StaticConnection:
         Send a message to the agent connected through this StaticConnection.
         """
         if plaintext and anoncrypt:
-            raise RuntimeError(
+            raise ValueError(
                 'plaintext and anoncrypt flags are mutually exclusive.'
             )
 
@@ -202,7 +215,7 @@ class StaticConnection:
                 not self.endpoint):
             raise MessageUndeliverable(
                 'Cannot send message;'
-                ' no endpoint and no return route specified.'
+                ' no endpoint and no return route.'
             )
 
         if return_route and not self._reply:
@@ -281,18 +294,6 @@ class StaticConnection:
             )
             reply = await self.await_message(timeout)
             return reply
-
-    @contextmanager
-    def reply_handler(
-            self,
-            send: Callable[[bytes], None]):
-        """
-        Set a reply handler to be used in sending messages rather than opening
-        a new connection.
-        """
-        self._reply = send
-        yield
-        self._reply = None
 
     def send(self, *args, **kwargs):
         """Blocking wrapper around send_async."""
