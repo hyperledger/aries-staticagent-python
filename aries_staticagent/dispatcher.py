@@ -37,7 +37,7 @@ class Handler:  # pylint: disable=too-few-public-methods
 
 
 class Dispatcher:
-    """ One of the fundamental aspects of an agent responsible for dispatching
+    """ One of the fundamental aspects of an agent; responsible for dispatching
         messages to appropriate handlers.
     """
     def __init__(self):
@@ -63,6 +63,17 @@ class Dispatcher:
         """ Add a list of handlers to routing tables. """
         for handler in handlers:
             self.add_handler(handler)
+
+    def remove_handler(self, handler):
+        """ Remove handler from routing tables. """
+        if handler.type not in self.handlers:
+            raise NoRegisteredHandlerException('Handler is not registered')
+
+        del self.handlers[handler.type]
+        key = _key_for_type(handler.type)
+        self.handler_versions[key].remove(key)
+        if not self.handler_versions[key]:
+            del self.handler_versions[key]
 
     def select_handler(self, msg: Message):
         """ Find the closest appropriate module for a given message.
@@ -97,4 +108,4 @@ class Dispatcher:
                 )
             )
 
-        await handler.run(msg, *args, **kwargs)
+        return await handler.run(msg, *args, **kwargs)
