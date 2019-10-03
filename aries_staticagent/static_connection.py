@@ -18,7 +18,6 @@ from .mtc import (
 )
 from .type import Type
 from . import crypto
-from .utils import AsyncClaimResource
 
 
 class MessageUndeliverable(Exception):
@@ -27,6 +26,28 @@ class MessageUndeliverable(Exception):
 
 class StaticConnection:
     """ A Static Agent Connection to another agent. """
+
+    class ConditionallyAwaitFutureMessage:
+        """Async construct for waiting for a message that meets a condition."""
+
+        def __init__(self, condition: Callable[[Message], bool] = None):
+            self._condition = condition
+            self._future = asyncio.Future()
+
+        def condition_met(self, msg: Message) -> bool:
+            """Test whether the condition has been met for this message."""
+            if not self._condition:
+                return True
+            return self._condition(msg)
+
+        async def wait(self):
+            """Wait for a message meeting the given condition."""
+            return await self._future
+
+        def set_message(self, msg):
+            """Set the message, fulfilling the future."""
+            self._future.set_result(msg)
+
     def __init__(
             self,
             my_vk: Union[bytes, str],
@@ -59,8 +80,19 @@ class StaticConnection:
             if isinstance(my_sk, bytes) else crypto.b58_to_bytes(my_sk)
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
-        self._pending_message = AsyncClaimResource()
-        self._reply = None
+        self._future_message: self.ConditionallyAwaitFutureMessage = None
+        self._reply: Callable[[bytes], None] = None
+
+    @contextmanager
+    def future_message(self, condition=None):
+        """Get a handle to a future message matching condition."""
+        if not self._future_message:
+            self._future_message = \
+                self.ConditionallyAwaitFutureMessage(condition)
+
+        yield asyncio.ensure_future(self._future_message.wait())
+
+        self._future_message = None
 
     def route(self, msg_type: str):
         """ Register route decorator. """
@@ -136,8 +168,8 @@ class StaticConnection:
                 msg['~transport']['return_route'] == 'none'):
             self._reply = None
 
-        if self._pending_message.claimed():
-            self._pending_message.satisfy(msg)
+        if self._future_message and self._future_message.condition_met(msg):
+            self._future_message.set_message(msg)
             return
 
         await self._dispatcher.dispatch(msg, self)
@@ -188,7 +220,7 @@ class StaticConnection:
                     headers=headers) as resp:
 
                 body = await resp.read()
-                if resp.status != 200 or resp.status != 202:
+                if resp.status != 200 and resp.status != 202:
                     raise MessageUndeliverable(
                         'Error while sending message: {} {}'.format(
                             resp.status,
@@ -204,11 +236,23 @@ class StaticConnection:
 
                     await self.handle(body)
 
-                if (not body and
-                        return_route and
-                        return_route != 'none' and
-                        self._pending_message.claimed()):
-                    self._pending_message.satisfy(None)
+    async def await_message(
+            self,
+            condition: Callable[[Message], bool] = None,
+            timeout: int = 0):
+        """
+        Bypass dispatching to a handler and return the next handled message
+        matching the given condition here.
+        """
+        with self.future_message(condition) as future_msg:
+            if timeout > 0:
+                msg = await asyncio.wait_for(
+                    future_msg,
+                    timeout
+                )
+            else:
+                msg = await future_msg
+            return msg
 
     async def send_and_await_reply_async(
             self,
@@ -220,20 +264,20 @@ class StaticConnection:
             timeout: int = 0):
         """Send a message and wait for a reply."""
 
-        self._pending_message.claim()
-        await self.send_async(
-            msg,
-            return_route=return_route,
-            plaintext=plaintext,
-            anoncrypt=anoncrypt,
-        )
-        reply = await self.await_message(timeout)
-        return reply
+        with self.future_message():
+            await self.send_async(
+                msg,
+                return_route=return_route,
+                plaintext=plaintext,
+                anoncrypt=anoncrypt,
+            )
+            reply = await self.await_message(timeout)
+            return reply
 
     @contextmanager
     def reply_handler(
             self,
-            send: Callable[[str], None]):
+            send: Callable[[bytes], None]):
         """
         Set a reply handler to be used in sending messages rather than opening
         a new connection.
@@ -253,19 +297,3 @@ class StaticConnection:
         return loop.run_until_complete(
             self.send_and_await_reply_async(*args, **kwargs)
         )
-
-    async def await_message(self, timeout: int = 0):
-        """
-        Bypass dispatching to a handler and return the next handled message
-        here.
-        """
-        if not self._pending_message.claimed():
-            self._pending_message.claim()
-
-        if timeout > 0:
-            return await asyncio.wait_for(
-                self._pending_message.retrieve(),
-                timeout
-            )
-
-        return await self._pending_message.retrieve()
