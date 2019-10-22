@@ -70,8 +70,14 @@ def main():
         })
 
     async def handle(request):
-        """ aiohttp handle POST. """
-        await conn.handle(await request.read())
+        """aiohttp handle POST."""
+        response = []
+        with conn.reply_handler(response.append):
+            await conn.handle(await request.read())
+
+        if response:
+            return web.Response(text=response.pop())
+
         raise web.HTTPAccepted()
 
     app = web.Application()
