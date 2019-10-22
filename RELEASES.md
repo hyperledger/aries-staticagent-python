@@ -1,3 +1,49 @@
+Version 0.5.0 (2019-10-21)
+==========================
+
+## Highlights
+
+- **Add return route support.**
+- **Add mechanism for directly awaiting a message, bypassing regular dispatch.**
+  This makes it possible to treat messages more like a return-response model and
+  significantly simplifies some flows.
+
+## Detailed Changes
+
+### General improvements
+
+- Favor named arguments over keyword arguments where possible.
+
+### Examples
+
+- Added a [return route server example](examples/return_route_server.py),
+  intended to be run with the corresponding client, to demonstrate return route
+  support.
+- Added a [return route client example](examples/return_route_client.py),
+  intended to be run with the corresponding server, to demonstrate return route
+  support.
+- Removed original `cron_returnroute` example.
+
+### Improvements to StaticConnection
+
+- Add construct for conditionally awaiting a message on the connection,
+  bypassing regular dispatch. As a result, two new methods are defined on
+  `StaticConnection`: `await_message`, and `send_and_await_reply`. See [return
+  route client example](examples/return_route_client.py)
+- Add Reply construct to support return routing while keeping transport
+  decoupled from the library. See [return route server
+  example](examples/return_route_server.py).
+- Add `MessageUndeliverable` Exception, raised when no endpoint or return route
+  is currently available for the connection or other errors with the connection
+  are encountered.
+- Add support for unpacking plaintext messages.
+- Better error handling in `send`.
+
+### Improvements to Dispatcher
+
+- Add `remove_handler` method.
+
+
 Version 0.4.0 (2019-09-20)
 ==========================
 
