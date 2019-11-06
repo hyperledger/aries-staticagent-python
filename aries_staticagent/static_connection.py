@@ -56,7 +56,7 @@ class StaticConnection:
             self,
             my_vk: Union[bytes, str],
             my_sk: Union[bytes, str],
-            their_vk: Union[bytes, str],
+            their_vk: Union[bytes, str] = None,
             endpoint: str = None,
             dispatcher: Dispatcher = None
                 ):
@@ -69,24 +69,41 @@ class StaticConnection:
             their_vk - the verification key of the other agent
             endpoint - the http endpoint of the other agent
         """
-        if not isinstance(my_vk, bytes) and not isinstance(my_vk, str):
-            raise TypeError('`my_vk` must be bytes or str')
-        if not isinstance(my_sk, bytes) and not isinstance(my_sk, str):
-            raise TypeError('`my_sk` must be bytes or str')
-        if not isinstance(their_vk, bytes) and not isinstance(their_vk, str):
-            raise TypeError('`their_vk` must be bytes or str')
-
         if endpoint and not isinstance(endpoint, str):
             raise TypeError('`endpoint` must be a str')
 
         self.endpoint = endpoint
 
-        self.their_vk = their_vk \
-            if isinstance(their_vk, bytes) else crypto.b58_to_bytes(their_vk)
-        self.my_vk = my_vk \
-            if isinstance(my_vk, bytes) else crypto.b58_to_bytes(my_vk)
-        self.my_sk = my_sk \
-            if isinstance(my_sk, bytes) else crypto.b58_to_bytes(my_sk)
+        if not their_vk:
+            self.their_vk = None
+        elif isinstance(their_vk, bytes):
+            self.their_vk = their_vk
+            self.their_vk_b58 = crypto.bytes_to_b58(their_vk)
+        elif isinstance(their_vk, str):
+            self.their_vk = crypto.b58_to_bytes(their_vk)
+            self.their_vk_b58 = their_vk
+        else:
+            raise TypeError('`their_vk` must be bytes or str')
+
+        if isinstance(my_vk, bytes):
+            self.my_vk = my_vk
+            self.my_vk_b58 = crypto.bytes_to_b58(my_vk)
+        elif isinstance(my_vk, str):
+            self.my_vk_b58 = my_vk
+            self.my_vk = crypto.b58_to_bytes(my_vk)
+        else:
+            raise TypeError('`my_vk` must be bytes or str')
+
+        self.did = crypto.bytes_to_b58(self.my_vk[:16])
+
+        if isinstance(my_sk, bytes):
+            self.my_sk = my_sk
+            self.my_sk_b58 = crypto.bytes_to_b58(my_sk)
+        elif isinstance(my_sk, str):
+            self.my_sk_b58 = my_sk
+            self.my_sk = crypto.b58_to_bytes(my_sk)
+        else:
+            raise TypeError('`my_sk` must be bytes or str')
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
         self._future_message: ConditionallyAwaitFutureMessage = None
