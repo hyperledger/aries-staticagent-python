@@ -174,7 +174,7 @@ def verify_signed_message_field(signed_field: Dict):
     )
 
     fieldjson = data_bytes[8:]
-    return json.loads(fieldjson)
+    return signed_field['signer'], json.loads(fieldjson)
 
 
 def anon_crypt_message(message: bytes, to_verkey: bytes) -> bytes:
