@@ -53,7 +53,7 @@ def test_pack_unpack_anon(keys, alice, bob):
     """ Test the pack-unpack loop with anoncrypt. """
     _alice_vk, _alice_sk, bob_vk, _bob_sk = keys
     msg = {'@type': 'doc;protocol/1.0/name'}
-    packed_msg = alice.pack(msg, anon=True)
+    packed_msg = alice.pack(msg, anoncrypt=True)
     assert isinstance(packed_msg, bytes)
 
     unpacked_msg = bob.unpack(packed_msg)

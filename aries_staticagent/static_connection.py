@@ -76,7 +76,11 @@ class StaticConnection:
         if not isinstance(their_vk, bytes) and not isinstance(their_vk, str):
             raise TypeError('`their_vk` must be bytes or str')
 
+        if endpoint and not isinstance(endpoint, str):
+            raise TypeError('`endpoint` must be a str')
+
         self.endpoint = endpoint
+
         self.their_vk = their_vk \
             if isinstance(their_vk, bytes) else crypto.b58_to_bytes(their_vk)
         self.my_vk = my_vk \
