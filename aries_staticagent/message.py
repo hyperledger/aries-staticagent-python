@@ -96,3 +96,12 @@ class Message(dict):
     def pretty_print(self):
         """ return a 'pretty print' representation of this message. """
         return json.dumps(self, indent=2)
+
+    def __eq__(self, other):
+        if not isinstance(other, Message):
+            return False
+
+        return self == other
+
+    def __hash__(self):
+        return hash(self.id)
