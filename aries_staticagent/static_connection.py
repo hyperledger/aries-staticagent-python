@@ -304,6 +304,7 @@ class StaticConnection:
             self,
             msg: Union[dict, Message],
             *,
+            condition: Callable[[Message], bool] = None,
             return_route: str = "all",
             plaintext: bool = False,
             anoncrypt: bool = False,
@@ -317,7 +318,7 @@ class StaticConnection:
                 plaintext=plaintext,
                 anoncrypt=anoncrypt,
             )
-            reply = await self.await_message(timeout)
+            reply = await self.await_message(condition, timeout)
             return reply
 
     def send(self, *args, **kwargs):
