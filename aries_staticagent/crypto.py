@@ -162,7 +162,7 @@ def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
     }
 
 
-def verify_signed_message_field(signed_field: Dict):
+def verify_signed_message_field(signed_field: Dict) -> (str, Dict):
     """ Verify a signed message field """
     data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
     signature_bytes = base64.urlsafe_b64decode(
