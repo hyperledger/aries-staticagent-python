@@ -69,7 +69,11 @@ class StaticConnection:
             their_vk - the verification key of the other agent
             endpoint - the http endpoint of the other agent
         """
+        if endpoint and not isinstance(endpoint, str):
+            raise TypeError('`endpoint` must be a str')
+
         self.endpoint = endpoint
+
         if not their_vk:
             self.their_vk = None
         elif isinstance(their_vk, bytes):

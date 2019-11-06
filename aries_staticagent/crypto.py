@@ -162,7 +162,7 @@ def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
     }
 
 
-def verify_signed_message_field(signed_field: Dict):
+def verify_signed_message_field(signed_field: Dict) -> (str, Dict):
     """ Verify a signed message field """
     data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
     signature_bytes = base64.urlsafe_b64decode(
@@ -174,7 +174,7 @@ def verify_signed_message_field(signed_field: Dict):
     )
 
     fieldjson = data_bytes[8:]
-    return json.loads(fieldjson)
+    return signed_field['signer'], json.loads(fieldjson)
 
 
 def anon_crypt_message(message: bytes, to_verkey: bytes) -> bytes:
