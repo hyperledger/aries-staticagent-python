@@ -1,4 +1,4 @@
-name: Python application
+name: Test PRs
 
 on:
   pull_request:
@@ -17,8 +17,6 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
-        python -m venv env
-        source env/bin/activate
         python -m pip install --upgrade pip
         pip install -e .[test]
     - name: Lint with flake8
