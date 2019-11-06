@@ -70,7 +70,7 @@ class Dispatcher:
             raise NoRegisteredHandlerException('Handler is not registered')
 
         del self.handlers[handler.type]
-        key = _key_for_type(handler.type)
+        key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
         self.handler_versions[key].remove(key)
         if not self.handler_versions[key]:
             del self.handler_versions[key]
