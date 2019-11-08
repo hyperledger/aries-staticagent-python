@@ -1,3 +1,19 @@
+Version 0.5.1 (2019-11-06)
+==========================
+
+## Bug fixes
+- Fix condition not passed to `await_message` inside of `send_and_await_reply`.
+- Return signer on `verify_signed_message_field` so that the signer of the
+  message can be verified to be the expected signer.
+- Fix usage of removed `_key_for_type` in dispatcher
+- Fix tests
+
+## Additions
+- Added more connection information to `StaticConnection`, including: `did` as
+  Base58 encoding of first sixteen bytes of `my_vk`, `my_vk_b58`,
+  `their_vk_b58`.
+
+
 Version 0.5.0 (2019-10-21)
 ==========================
 

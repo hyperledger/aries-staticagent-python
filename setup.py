@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     setup(
         name='aries-staticagent',
-        version='0.5.0',
+        version='0.5.1',
         author='Daniel Bluhm <daniel.bluhm@sovrin.org>, '
                'Sam Curren <sam@sovrin.org>',
         description='Python Static Agent Library and Examples for Aries',
