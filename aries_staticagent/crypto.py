@@ -6,6 +6,7 @@
 """
 
 from collections import OrderedDict
+from functools import lru_cache
 from typing import Optional, Sequence, Dict
 import base64
 import json
@@ -39,11 +40,13 @@ def bytes_to_b64(val: bytes, urlsafe=False) -> str:
     return base64.b64encode(val).decode("ascii")
 
 
+@lru_cache(maxsize=16)
 def b58_to_bytes(val: str) -> bytes:
     """Convert a base 58 string to bytes."""
     return base58.b58decode(val)
 
 
+@lru_cache(maxsize=16)
 def bytes_to_b58(val: bytes) -> str:
     """Convert a byte string to base 58."""
     return base58.b58encode(val).decode("ascii")
