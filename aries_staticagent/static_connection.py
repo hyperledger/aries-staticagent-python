@@ -34,7 +34,7 @@ class ConditionallyAwaitFutureMessage:
 
     def condition_met(self, msg: Message) -> bool:
         """Test whether the condition has been met for this message."""
-        if not self._condition:
+        if self._condition is None:
             return True
         return self._condition(msg)
 
@@ -58,6 +58,7 @@ class StaticConnection:
             my_sk: Union[bytes, str],
             their_vk: Union[bytes, str] = None,
             endpoint: str = None,
+            *,
             dispatcher: Dispatcher = None
                 ):
         """
@@ -69,45 +70,84 @@ class StaticConnection:
             their_vk - the verification key of the other agent
             endpoint - the http endpoint of the other agent
         """
+        self._my_vk = None
+        self._my_sk = None
+        self._their_vk = None
+
+        self.my_vk = my_vk
+        self.my_sk = my_sk
+
+        if their_vk:
+            self.their_vk = their_vk
+
         if endpoint and not isinstance(endpoint, str):
             raise TypeError('`endpoint` must be a str')
 
         self.endpoint = endpoint
 
-        if not their_vk:
-            self.their_vk = None
-        elif isinstance(their_vk, bytes):
-            self.their_vk = their_vk
-            self.their_vk_b58 = crypto.bytes_to_b58(their_vk)
-        elif isinstance(their_vk, str):
-            self.their_vk = crypto.b58_to_bytes(their_vk)
-            self.their_vk_b58 = their_vk
-        else:
-            raise TypeError('`their_vk` must be bytes or str')
-
-        if isinstance(my_vk, bytes):
-            self.my_vk = my_vk
-            self.my_vk_b58 = crypto.bytes_to_b58(my_vk)
-        elif isinstance(my_vk, str):
-            self.my_vk_b58 = my_vk
-            self.my_vk = crypto.b58_to_bytes(my_vk)
-        else:
-            raise TypeError('`my_vk` must be bytes or str')
-
-        self.did = crypto.bytes_to_b58(self.my_vk[:16])
-
-        if isinstance(my_sk, bytes):
-            self.my_sk = my_sk
-            self.my_sk_b58 = crypto.bytes_to_b58(my_sk)
-        elif isinstance(my_sk, str):
-            self.my_sk_b58 = my_sk
-            self.my_sk = crypto.b58_to_bytes(my_sk)
-        else:
-            raise TypeError('`my_sk` must be bytes or str')
-
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
         self._future_message: ConditionallyAwaitFutureMessage = None
         self._reply: Callable[[bytes], None] = None
+
+    @property
+    def my_vk(self):
+        """My verification key for this connection."""
+        return self._my_vk
+
+    @my_vk.setter
+    def my_vk(self, value: Union[bytes, str]):
+        """Set my_vk, handling bytes and base58 values."""
+        if isinstance(value, bytes):
+            self._my_vk = value
+        elif isinstance(value, str):
+            self._my_vk = crypto.b58_to_bytes(value)
+        else:
+            raise TypeError('`my_vk` must be bytes or str')
+
+    @property
+    def my_vk_b58(self):
+        """Get Base58 encoded my_vk."""
+        return crypto.bytes_to_b58(self._my_vk)
+
+    @property
+    def my_sk(self):
+        """My signing key for this connection."""
+        return self._my_sk
+
+    @my_sk.setter
+    def my_sk(self, value: Union[bytes, str]):
+        """Set my_sk, handling bytes and base58 values."""
+        if isinstance(value, bytes):
+            self._my_sk = value
+        elif isinstance(value, str):
+            self._my_sk = crypto.b58_to_bytes(value)
+        else:
+            raise TypeError('`my_sk` must be bytes or str')
+
+    @property
+    def did(self):
+        """Get verkey based DID for this connection."""
+        return crypto.bytes_to_b58(self._my_vk[:16])
+
+    @property
+    def their_vk(self):
+        """Their verkey on this connection."""
+        return self._their_vk
+
+    @their_vk.setter
+    def their_vk(self, value: Union[bytes, str]):
+        """Set their_vk, handling bytes and base58 values."""
+        if isinstance(value, bytes):
+            self._their_vk = value
+        elif isinstance(value, str):
+            self._their_vk = crypto.b58_to_bytes(value)
+        else:
+            raise TypeError('`their_vk` must be bytes or str')
+
+    @property
+    def their_vk_b58(self):
+        """Get Base58 encoded their_vk."""
+        return crypto.bytes_to_b58(self._their_vk)
 
     @contextmanager
     def future_message(

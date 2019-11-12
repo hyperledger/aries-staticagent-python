@@ -31,9 +31,7 @@ def conn(dispatcher):
     yield StaticConnection(
         b'',
         b'',
-        b'',
-        'endpoint',
-        dispatcher
+        dispatcher=dispatcher
     )
 
 
