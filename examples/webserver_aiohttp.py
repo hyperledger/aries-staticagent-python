@@ -1,7 +1,4 @@
-""" Webserver example. """
-# This file is intended to be run as a cron script. Upon execution, it does
-# it's thing and shuts down.
-
+"""Webserver example."""
 import argparse
 import os
 from aiohttp import web
@@ -10,18 +7,14 @@ from aries_staticagent import StaticConnection, utils
 
 
 def environ_or_required(key):
-    """ Pull arg from environment or require it in args. """
+    """Pull arg from environment or require it in args."""
     if os.environ.get(key):
         return {'default': os.environ.get(key)}
 
     return {'required': True}
 
-# above from https://stackoverflow.com/questions/10551117/setting-options-from-environment-variables-when-using-argparse
-# Thought: Should we include arg parsing help into the staticagent library?
-
-
 def config():
-    """ Get StaticConnection parameters from env or command line args. """
+    """Get StaticConnection parameters from env or command line args."""
     parser = argparse.ArgumentParser()
     # endpoint can be http or ws, auto handled by staticagent library.
     parser.add_argument(
@@ -49,18 +42,17 @@ def config():
 
 
 def main():
-    """ Create StaticConnection and start web server. """
+    """Create StaticConnection and start web server."""
     args = config()
     conn = StaticConnection(
-        args.mypublickey,
-        args.myprivatekey,
-        args.endpointkey,
-        args.endpoint,
+        (args.mypublickey, args.myprivatekey),
+        their_vk=args.endpointkey,
+        endpoint=args.endpoint,
     )
 
     @conn.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
     async def basic_message(msg, conn):
-        """ Respond to a basic message """
+        """Respond to a basic message."""
         await conn.send_async({
             "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
                      "basicmessage/1.0/message",

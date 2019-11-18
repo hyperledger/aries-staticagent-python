@@ -1,3 +1,5 @@
+"""Example return route capable agent."""
+
 import hashlib
 from aiohttp import web
 from aries_staticagent import StaticConnection, crypto, utils
@@ -5,13 +7,13 @@ from aries_staticagent import StaticConnection, crypto, utils
 
 def main():
     """Start a server with a static connection."""
-    my_vk, my_sk = crypto.create_keypair(
+    keys = crypto.create_keypair(
         seed=hashlib.sha256(b'server').digest()
     )
     their_vk, _ = crypto.create_keypair(
         seed=hashlib.sha256(b'client').digest()
     )
-    conn = StaticConnection(my_vk, my_sk, their_vk, None)
+    conn = StaticConnection(keys, their_vk=their_vk, endpoint=None)
 
     @conn.route('did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message')
     async def basic_message_auto_responder(msg, conn):
