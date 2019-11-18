@@ -15,9 +15,6 @@ def environ_or_required(key):
 
     return {'required': True}
 
-# above from https://stackoverflow.com/questions/10551117/setting-options-from-environment-variables-when-using-argparse
-# Thought: Should we include arg parsing help into the staticagent library?
-
 
 def config():
     """ Get StaticConnection parameters from env or command line args. """
@@ -47,10 +44,9 @@ def main():
     """ Cron example. """
     args = config()
     conn = StaticConnection(
-        args.mypublickey,
-        args.myprivatekey,
-        args.endpointkey,
-        args.endpoint,
+        (args.mypublickey, args.myprivatekey),
+        their_vk=args.endpointkey,
+        endpoint=args.endpoint,
     )
     conn.send({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"

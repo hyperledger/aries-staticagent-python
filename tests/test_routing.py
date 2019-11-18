@@ -29,11 +29,8 @@ def conn(dispatcher):
         actually connected to anything.
     """
     yield StaticConnection(
-        b'',
-        b'',
-        b'',
-        'endpoint',
-        dispatcher
+        (b'', b''),
+        dispatcher=dispatcher
     )
 
 

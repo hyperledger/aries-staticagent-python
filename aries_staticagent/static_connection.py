@@ -1,10 +1,13 @@
 """Static Agent Connection."""
 import asyncio
+import json
 from contextlib import contextmanager
 from typing import Union, Callable
+from collections import namedtuple
 
 import aiohttp
 
+from . import crypto
 from .dispatcher import Dispatcher, Handler
 from .message import Message
 from .module import Module
@@ -17,7 +20,7 @@ from .mtc import (
     NONREPUDIATION
 )
 from .type import Type
-from . import crypto
+from .utils import ensure_key_bytes, forward_msg
 
 
 class MessageUndeliverable(Exception):
@@ -34,7 +37,7 @@ class ConditionallyAwaitFutureMessage:
 
     def condition_met(self, msg: Message) -> bool:
         """Test whether the condition has been met for this message."""
-        if not self._condition:
+        if self._condition is None:
             return True
         return self._condition(msg)
 
@@ -52,14 +55,17 @@ class ConditionallyAwaitFutureMessage:
 class StaticConnection:
     """A Static Agent Connection to another agent."""
 
+    Keys = namedtuple('KeyPair', 'verkey, sigkey')
+
     def __init__(
             self,
-            my_vk: Union[bytes, str],
-            my_sk: Union[bytes, str],
-            their_vk: Union[bytes, str] = None,
+            keys: (Union[bytes, str], Union[bytes, str]),
+            *,
             endpoint: str = None,
-            dispatcher: Dispatcher = None
-                ):
+            their_vk: Union[bytes, str] = None,
+            recipients: [Union[bytes, str]] = None,
+            routing_keys: [Union[bytes, str]] = None,
+            dispatcher: Dispatcher = None):
         """
         Construct new static connection.
 
@@ -69,45 +75,69 @@ class StaticConnection:
             their_vk - the verification key of the other agent
             endpoint - the http endpoint of the other agent
         """
-        if endpoint and not isinstance(endpoint, str):
-            raise TypeError('`endpoint` must be a str')
-
+        self.keys = StaticConnection.Keys(*map(ensure_key_bytes, keys))
         self.endpoint = endpoint
+        self.recipients = None
+        self.routing_keys = None
 
-        if not their_vk:
-            self.their_vk = None
-        elif isinstance(their_vk, bytes):
-            self.their_vk = their_vk
-            self.their_vk_b58 = crypto.bytes_to_b58(their_vk)
-        elif isinstance(their_vk, str):
-            self.their_vk = crypto.b58_to_bytes(their_vk)
-            self.their_vk_b58 = their_vk
-        else:
-            raise TypeError('`their_vk` must be bytes or str')
+        if their_vk and recipients:
+            raise ValueError('their_vk and recipients are mutually exclusive.')
 
-        if isinstance(my_vk, bytes):
-            self.my_vk = my_vk
-            self.my_vk_b58 = crypto.bytes_to_b58(my_vk)
-        elif isinstance(my_vk, str):
-            self.my_vk_b58 = my_vk
-            self.my_vk = crypto.b58_to_bytes(my_vk)
-        else:
-            raise TypeError('`my_vk` must be bytes or str')
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
 
-        self.did = crypto.bytes_to_b58(self.my_vk[:16])
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
 
-        if isinstance(my_sk, bytes):
-            self.my_sk = my_sk
-            self.my_sk_b58 = crypto.bytes_to_b58(my_sk)
-        elif isinstance(my_sk, str):
-            self.my_sk_b58 = my_sk
-            self.my_sk = crypto.b58_to_bytes(my_sk)
-        else:
-            raise TypeError('`my_sk` must be bytes or str')
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
         self._future_message: ConditionallyAwaitFutureMessage = None
         self._reply: Callable[[bytes], None] = None
+
+    def update(
+            self,
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: [Union[bytes, str]] = None,
+            routing_keys: [Union[bytes, str]] = None):
+        """Update their information."""
+        if endpoint:
+            self.endpoint = endpoint
+
+        if their_vk and recipients:
+            raise ValueError('their_vk and recipients are mutually exclusive.')
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+
+    @property
+    def verkey(self):
+        """My verification key for this connection."""
+        return self.keys.verkey
+
+    @property
+    def verkey_b58(self):
+        """Get Base58 encoded my_vk."""
+        return crypto.bytes_to_b58(self.keys.verkey)
+
+    @property
+    def sigkey(self):
+        """My signing key for this connection."""
+        return self.keys.sigkey
+
+    @property
+    def did(self):
+        """Get verkey based DID for this connection."""
+        return crypto.bytes_to_b58(self.keys.verkey[:16])
 
     @contextmanager
     def future_message(
@@ -161,8 +191,8 @@ class StaticConnection:
         try:
             (msg, sender_vk, recip_vk) = crypto.unpack_message(
                 packed_message,
-                self.my_vk,
-                self.my_sk
+                self.verkey,
+                self.sigkey
             )
             msg = Message.deserialize(msg)
             msg.mtc = MessageTrustContext(
@@ -196,17 +226,27 @@ class StaticConnection:
         if anoncrypt:
             packed_message = crypto.pack_message(
                 msg.serialize(),
-                [self.their_vk],
+                self.recipients,
+                dump=False
             )
         else:
             packed_message = crypto.pack_message(
                 msg.serialize(),
-                [self.their_vk],
-                self.my_vk,
-                self.my_sk
+                self.recipients,
+                self.verkey,
+                self.sigkey,
+                dump=False
             )
 
-        return packed_message
+        if self.routing_keys:
+            for routing_key in self.routing_keys:
+                packed_message = crypto.pack_message(
+                    forward_msg(to=routing_key, msg=packed_message),
+                    [routing_key],
+                    dump=False
+                )
+
+        return json.dumps(packed_message).encode('ascii')
 
     async def handle(self, packed_message: bytes):
         """Unpack and dispatch message to handler."""

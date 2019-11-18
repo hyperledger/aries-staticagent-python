@@ -105,10 +105,10 @@ Refer to the `examples` directory for complete working examples of using this li
 ```python
 from aries_staticagent import StaticConnection
 
-# endpoint, endpointkey, mypublickey, myprivate key are obtained through some form of static
+# endpoint, endpointkey, mypublickey, myprivatekey key are obtained through some form of static
 # configuration
 
-conn = StaticConnection(mypublickey, myprivatekey, endpointkey, endpoint)
+conn = StaticConnection((mypublickey, myprivatekey), their_vk=endpointkey, endpoint=endpoint)
 ```
 
 This will open a static connection with the full agent reachable at `endpoint` and messages packed
@@ -151,7 +151,7 @@ from aries_staticagent import StaticConnection, utils
 # ... Configuration omitted
 
 # Create static agent connection
-conn = StaticConnection(args.mypublickey, args.myprivatekey, args.endpointkey, args.endpoint)
+conn = StaticConnection((args.mypublickey, args.myprivatekey), their_vk=args.endpointkey, endpoint=args.endpoint)
 
 # Register a handler for the basicmessage/1.0/message message type
 @conn.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")

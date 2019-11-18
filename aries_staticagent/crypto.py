@@ -6,6 +6,7 @@
 """
 
 from collections import OrderedDict
+from functools import lru_cache
 from typing import Optional, Sequence, Dict
 import base64
 import json
@@ -39,13 +40,25 @@ def bytes_to_b64(val: bytes, urlsafe=False) -> str:
     return base64.b64encode(val).decode("ascii")
 
 
+@lru_cache(maxsize=16)
 def b58_to_bytes(val: str) -> bytes:
-    """Convert a base 58 string to bytes."""
+    """
+    Convert a base 58 string to bytes.
+
+    Small cache provided for key conversions which happen frequently in pack
+    and unpack and message handling.
+    """
     return base58.b58decode(val)
 
 
+@lru_cache(maxsize=16)
 def bytes_to_b58(val: bytes) -> str:
-    """Convert a byte string to base 58."""
+    """
+    Convert a byte string to base 58.
+
+    Small cache provided for key conversions which happen frequently in pack
+    and unpack and message handling.
+    """
     return base58.b58encode(val).decode("ascii")
 
 
@@ -487,7 +500,9 @@ def pack_message(
         message: str,
         to_verkeys: Sequence[bytes],
         from_verkey: bytes = None,
-        from_sigkey: bytes = None
+        from_sigkey: bytes = None,
+        *,
+        dump: bool = True
 ) -> bytes:
     """
     Assemble a packed message for a set of recipients, optionally including
@@ -524,7 +539,9 @@ def pack_message(
             ("tag", bytes_to_b64(tag, urlsafe=True)),
         ]
     )
-    return json.dumps(data).encode("ascii")
+    if dump:
+        return json.dumps(data).encode("ascii")
+    return data
 
 
 def unpack_message(
