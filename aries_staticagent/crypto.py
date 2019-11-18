@@ -42,13 +42,23 @@ def bytes_to_b64(val: bytes, urlsafe=False) -> str:
 
 @lru_cache(maxsize=16)
 def b58_to_bytes(val: str) -> bytes:
-    """Convert a base 58 string to bytes."""
+    """
+    Convert a base 58 string to bytes.
+
+    Small cache provided for key conversions which happen frequently in pack
+    and unpack and message handling.
+    """
     return base58.b58decode(val)
 
 
 @lru_cache(maxsize=16)
 def bytes_to_b58(val: bytes) -> str:
-    """Convert a byte string to base 58."""
+    """
+    Convert a byte string to base 58.
+
+    Small cache provided for key conversions which happen frequently in pack
+    and unpack and message handling.
+    """
     return base58.b58encode(val).decode("ascii")
 
 
