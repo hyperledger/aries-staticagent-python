@@ -1,3 +1,54 @@
+Version 0.6.0 (2019-11-18)
+==========================
+
+## Highlights
+
+- **Add support for forwarding** for connections utilizing mediators for
+  routing.
+- **Simplified `StaticConnection` and added mechanism for updating "their"
+  info**, resulting in differences in the method signature of its constructor.
+
+## Detailed Changes
+
+### `StaticConnection`
+- `__init__` - changed to accept tuple of keys (public, private) with
+  optional named arguments: `endpoint`, `their_vk`, `recipients`, and
+  `routing_keys`.
+  - `endpoint` - sets the endpoint to which messages are sent.
+  - `their_vk` - mutually exclusive with `recipients` and results in a
+    recipients list of size one containing `their_vk`.
+  - `recipients` - mutually exclusive with `their_vk`, setting the contents of
+    the recipients list for this connection.
+  - `routing_keys` - list of mediator keys that will forward the message on to
+    the recipient(s).
+- `pack` prepares messages for forwarding when `routing_keys` is set on the
+  connection.
+- Renamed convenience accessors for keys: `my_vk -> verkey`, `my_sk -> sigkey`.
+- Added `update` - Updates "their" connection information for this static
+  connection. Arguments are named arguments; processing is similar to
+  `__init__` with the exclusion of "my" keys. A change in my information should
+  be viewed as creating a new connection and therefore updating those values is
+  not supported.
+
+### Crypto
+- `pack_message` - added named optional argument `dump` that will convert the
+  packed message to bytes when set to `True` or will leave as a dictionary
+  when set to `False`. Defaults to `True`.
+- `bytes_to_b58` and `b58_to_bytes` - added a small (max size of 16) `lru_cache`
+  to make frequent conversions of keys in the pack, unpack, and message
+  handling process more efficient.
+
+### Utils
+- Added `ensure_key_bytes` - ensures that the given key is formatted as a
+  byte string rather than a Base58 encoded string.
+- Added `ensure_key_b58` - ensures that the given key is formatted as a
+  Base58 encoded string rather than as bytes.
+- Added `forward_msg` - creates a new forward message.
+
+### Examples
+- Updated to reflect new method signatures.
+
+
 Version 0.5.1 (2019-11-06)
 ==========================
 
