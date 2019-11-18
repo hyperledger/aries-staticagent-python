@@ -21,14 +21,14 @@ def keys():
 def alice(keys):
     """ Create Alice's StaticConnection. """
     alice_vk, alice_sk, bob_vk, _bob_sk = keys
-    yield StaticConnection(alice_vk, alice_sk, bob_vk, '')
+    yield StaticConnection((alice_vk, alice_sk), their_vk=bob_vk, endpoint='')
 
 
 @pytest.fixture
 def bob(keys):
     """ Create Bob's StaticConnection. """
     alice_vk, _alice_sk, bob_vk, bob_sk = keys
-    yield StaticConnection(bob_vk, bob_sk, alice_vk, '')
+    yield StaticConnection((bob_vk, bob_sk), their_vk=alice_vk, endpoint='')
 
 
 def test_pack_unpack_auth(keys, alice, bob):
