@@ -490,7 +490,9 @@ def pack_message(
         message: str,
         to_verkeys: Sequence[bytes],
         from_verkey: bytes = None,
-        from_sigkey: bytes = None
+        from_sigkey: bytes = None,
+        *,
+        dump: bool = True
 ) -> bytes:
     """
     Assemble a packed message for a set of recipients, optionally including
@@ -527,7 +529,9 @@ def pack_message(
             ("tag", bytes_to_b64(tag, urlsafe=True)),
         ]
     )
-    return json.dumps(data).encode("ascii")
+    if dump:
+        return json.dumps(data).encode("ascii")
+    return data
 
 
 def unpack_message(
