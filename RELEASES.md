@@ -1,3 +1,9 @@
+Version 0.6.1 (2019-11-19)
+==========================
+
+## Fixes
+- Fixed preparation of `Forward` message (PR #26)
+
 Version 0.6.0 (2019-11-18)
 ==========================
 
