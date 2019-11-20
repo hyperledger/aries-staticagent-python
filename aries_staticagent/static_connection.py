@@ -301,7 +301,7 @@ class StaticConnection:
         if not plaintext:
             packed_message = self.pack(msg, anoncrypt=anoncrypt)
         else:
-            packed_message = msg
+            packed_message = msg.serialize().encode('ascii')
 
         if self._reply:
             self._reply(packed_message)
