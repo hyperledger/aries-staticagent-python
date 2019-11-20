@@ -243,10 +243,9 @@ class StaticConnection:
 
         if self.routing_keys:
             to = self.recipients[0]
-
             for routing_key in self.routing_keys:
                 packed_message = crypto.pack_message(
-                    json.dumps(forward_msg(to=to, msg=packed_message)),
+                    forward_msg(to=to, msg=packed_message).serialize(),
                     [routing_key],
                     dump=False
                 )
