@@ -37,7 +37,7 @@ jobs:
 
     - name: Pytest and Coverage
       run: |
-        env/bin/coverage run --branch -m pytest
+        env/bin/coverage run --branch --source=aries_staticagent -m pytest
         env/bin/coverage report
         env/bin/coverage html
 
