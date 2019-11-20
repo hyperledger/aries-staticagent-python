@@ -23,8 +23,11 @@ from .type import Type
 from .utils import ensure_key_bytes, forward_msg
 
 
-class MessageUndeliverable(Exception):
+class MessageDeliveryError(Exception):
     """When a message cannot be delivered."""
+    def __init__(self, *, status: int = None, msg: str = None):
+        super().__init__(msg)
+        self.status = status
 
 
 class ConditionallyAwaitFutureMessage:
@@ -285,9 +288,8 @@ class StaticConnection:
         if ((not return_route or return_route == 'none') and
                 not self._reply and
                 not self.endpoint):
-            raise MessageUndeliverable(
-                'Cannot send message;'
-                ' no endpoint and no return route.'
+            raise MessageDeliveryError(
+                msg='Cannot send message; no endpoint and no return route.'
             )
 
         if return_route and not self._reply:
@@ -314,10 +316,10 @@ class StaticConnection:
 
                 body = await resp.read()
                 if resp.status != 200 and resp.status != 202:
-                    raise MessageUndeliverable(
-                        'Error while sending message: {} {}'.format(
-                            resp.status,
-                            body
+                    raise MessageDeliveryError(
+                        status=resp.status,
+                        msg='Error while sending message: {}'.format(
+                            resp.status
                         )
                     )
                 if resp.status == 200 and body:
