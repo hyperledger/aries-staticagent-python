@@ -3,7 +3,7 @@
 import hashlib
 from collections import namedtuple
 import pytest
-from aries_staticagent import StaticConnection, crypto
+from aries_staticagent import StaticConnection, MessageDeliveryError, crypto
 
 
 ConnectionInfo = namedtuple('ConnectionInfo', 'keys, keys_b58, did')
@@ -97,3 +97,10 @@ def test_b58_inputs_with_their_info(my_test_info, their_test_info):
     assert conn.verkey_b58 == my_test_info.keys_b58.verkey
     assert conn.did == my_test_info.did
     assert conn.recipients == [their_test_info.keys.verkey]
+
+
+def test_message_delivery_error():
+    """Test MessageDeliveryError."""
+    error = MessageDeliveryError(status=10, msg='asdf')
+    assert error.status == 10
+    assert str(error) == 'asdf'
