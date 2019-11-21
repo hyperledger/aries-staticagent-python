@@ -2,10 +2,9 @@
 import asyncio
 import json
 from contextlib import contextmanager
-from typing import Union, Callable
+from typing import Union, Callable, Awaitable
 from collections import namedtuple
-
-import aiohttp
+from functools import partial
 
 from . import crypto
 from .dispatcher import Dispatcher, Handler
@@ -13,7 +12,7 @@ from .message import Message
 from .module import Module
 from .mtc import MessageTrustContext
 from .type import Type
-from .utils import ensure_key_bytes, forward_msg
+from .utils import ensure_key_bytes, forward_msg, http_send
 
 
 class MessageDeliveryError(Exception):
@@ -21,31 +20,6 @@ class MessageDeliveryError(Exception):
     def __init__(self, *, status: int = None, msg: str = None):
         super().__init__(msg)
         self.status = status
-
-
-class ConditionallyAwaitFutureMessage:
-    """Async construct for waiting for a message that meets a condition."""
-
-    def __init__(self, condition: Callable[[Message], bool] = None):
-        self._condition = condition
-        self._future = asyncio.Future()
-        self._pending_task: asyncio.Task = None
-
-    def condition_met(self, msg: Message) -> bool:
-        """Test whether the condition has been met for this message."""
-        if self._condition is None:
-            return True
-        return self._condition(msg)
-
-    def wait(self) -> asyncio.Task:
-        """Wait for a message meeting the given condition."""
-        if not self._pending_task:
-            self._pending_task = asyncio.ensure_future(self._future)
-        return self._pending_task
-
-    def set_message(self, msg: Message):
-        """Set the message, fulfilling the future."""
-        self._future.set_result(msg)
 
 
 class StaticConnection:
@@ -61,7 +35,8 @@ class StaticConnection:
             their_vk: Union[bytes, str] = None,
             recipients: [Union[bytes, str]] = None,
             routing_keys: [Union[bytes, str]] = None,
-            dispatcher: Dispatcher = None):
+            dispatcher: Dispatcher = None,
+            send: Callable[[bytes, str, Callable], None] = None):
         """
         Construct new static connection.
 
@@ -89,8 +64,10 @@ class StaticConnection:
             self.routing_keys = list(map(ensure_key_bytes, routing_keys))
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
-        self._future_message: ConditionallyAwaitFutureMessage = None
+        self._hold_condition = lambda msg: False
+        self._held_messages = asyncio.Queue()
         self._reply: Callable[[bytes], None] = None
+        self._send = send if send else http_send
 
     def update(
             self,
@@ -136,22 +113,9 @@ class StaticConnection:
         return crypto.bytes_to_b58(self.keys.verkey[:16])
 
     @contextmanager
-    def future_message(
-            self,
-            condition: Callable[[Message], bool] = None) -> asyncio.Task:
-        """Get a handle to a future message matching condition."""
-        if not self._future_message:
-            self._future_message = \
-                ConditionallyAwaitFutureMessage(condition)
-
-        yield self._future_message.wait()
-
-        self._future_message = None
-
-    @contextmanager
     def reply_handler(
             self,
-            send: Callable[[bytes], None]):
+            send: Callable[[bytes], Awaitable[None]]):
         """
         Set a reply handler to be used in sending messages rather than opening
         a new connection.
@@ -250,6 +214,21 @@ class StaticConnection:
 
         return json.dumps(packed_message).encode('ascii')
 
+    @contextmanager
+    def hold_messages(self, condition: Callable[[Message], bool] = None):
+        """Context manager to hold messages without them being dispatched."""
+        if condition and not callable(condition):
+            raise TypeError('condition must be Callable[[Message], bool]')
+
+        if condition:
+            self._hold_condition = condition
+        else:
+            self._hold_condition = lambda msg: True
+
+        yield
+
+        self._hold_condition = lambda msg: False
+
     async def handle(self, packed_message: bytes):
         """Unpack and dispatch message to handler."""
         msg = self.unpack(packed_message)
@@ -258,10 +237,8 @@ class StaticConnection:
                 msg['~transport']['return_route'] == 'none'):
             self._reply = None
 
-        if self._future_message and self._future_message.condition_met(msg):
-            # Skip normal dispatch if a future message is being awaited and the
-            # condition is met.
-            self._future_message.set_message(msg)
+        if self._hold_condition(msg):
+            self._held_messages.put_nowait(msg)
             return
 
         await self._dispatcher.dispatch(msg, self)
@@ -294,50 +271,44 @@ class StaticConnection:
         )
 
         if self._reply:
-            self._reply(packed_message)
+            await self._reply(packed_message)
             return
 
-        async with aiohttp.ClientSession() as session:
-            headers = {'content-type': 'application/ssi-agent-wire'}
-            async with session.post(
-                    self.endpoint,
-                    data=packed_message,
-                    headers=headers) as resp:
+        async def _response_handler(self, msg: bytes):
+            """Handler for responses on send."""
+            if return_route is None or return_route == 'none':
+                raise RuntimeError(
+                    'Response received when no response was '
+                    'expected'
+                )
+            await self.handle(msg)
 
-                body = await resp.read()
-                if resp.status != 200 and resp.status != 202:
-                    raise MessageDeliveryError(
-                        status=resp.status,
-                        msg='Error while sending message: {}'.format(
-                            resp.status
-                        )
-                    )
-                if resp.status == 200 and body:
-                    if return_route is None or return_route == 'none':
-                        raise RuntimeError(
-                            'Response received when no response was '
-                            'expected'
-                        )
+        async def _error_handler(self, error_msg):
+            raise MessageDeliveryError(msg=error_msg)
 
-                    await self.handle(body)
+        await self._send(
+            packed_message,
+            self.endpoint,
+            partial(_response_handler, self),
+            partial(_error_handler, self)
+        )
 
     async def await_message(
             self,
-            condition: Callable[[Message], bool] = None,
+            *,
             timeout: int = 0) -> Message:
         """
         Bypass dispatching to a handler and return the next handled message
         matching the given condition here.
         """
-        with self.future_message(condition) as future_msg:
-            if timeout > 0:
-                msg = await asyncio.wait_for(
-                    future_msg,
-                    timeout
-                )
-            else:
-                msg = await future_msg
-            return msg
+        if timeout > 0:
+            msg = await asyncio.wait_for(
+                self._held_messages.get(),
+                timeout
+            )
+        else:
+            msg = await self._held_messages.get()
+        return msg
 
     async def send_and_await_reply_async(
             self,
@@ -350,14 +321,16 @@ class StaticConnection:
             timeout: int = 0) -> Message:
         """Send a message and wait for a reply."""
 
-        with self.future_message():
+        with self.hold_messages(condition):
             await self.send_async(
                 msg,
                 return_route=return_route,
                 plaintext=plaintext,
                 anoncrypt=anoncrypt,
             )
-            reply = await self.await_message(condition, timeout)
+            reply = await self.await_message(
+                timeout=timeout
+            )
             return reply
 
     def send(self, *args, **kwargs):

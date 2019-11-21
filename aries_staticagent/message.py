@@ -101,7 +101,7 @@ class Message(dict):
         if not isinstance(other, Message):
             return False
 
-        return self == other
+        return super().__eq__(other)
 
     def __hash__(self):
         return hash(self.id)

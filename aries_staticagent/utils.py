@@ -1,6 +1,8 @@
 """ General utils """
 import datetime
-from typing import Union
+from typing import Union, Callable, Awaitable
+
+import aiohttp
 
 from . import crypto
 from .message import Message
@@ -43,3 +45,27 @@ def forward_msg(to: Union[bytes, str], msg: dict):
         'to': ensure_key_b58(to),
         'msg': msg
     })
+
+
+async def http_send(
+        msg: bytes,
+        endpoint: str,
+        response_handler: Callable[[bytes], Awaitable[None]],
+        error_handler: Callable[[str], Awaitable[None]]):
+    """Send over HTTP."""
+    async with aiohttp.ClientSession() as session:
+        headers = {'content-type': 'application/ssi-agent-wire'}
+        async with session.post(
+                endpoint,
+                data=msg,
+                headers=headers) as resp:
+
+            body = await resp.read()
+            if resp.status != 200 and resp.status != 202:
+                await error_handler(
+                    'Error while sending message: {}'.format(
+                        resp.status
+                    )
+                )
+            if resp.status == 200 and body:
+                await response_handler(body)
