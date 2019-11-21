@@ -78,13 +78,13 @@ class StaticConnection:
             their_vk - the verification key of the other agent
             endpoint - the http endpoint of the other agent
         """
+        if their_vk and recipients:
+            raise ValueError('their_vk and recipients are mutually exclusive.')
+
         self.keys = StaticConnection.Keys(*map(ensure_key_bytes, keys))
         self.endpoint = endpoint
         self.recipients = None
         self.routing_keys = None
-
-        if their_vk and recipients:
-            raise ValueError('their_vk and recipients are mutually exclusive.')
 
         if their_vk:
             self.recipients = [ensure_key_bytes(their_vk)]
@@ -107,11 +107,11 @@ class StaticConnection:
             recipients: [Union[bytes, str]] = None,
             routing_keys: [Union[bytes, str]] = None):
         """Update their information."""
-        if endpoint:
-            self.endpoint = endpoint
-
         if their_vk and recipients:
             raise ValueError('their_vk and recipients are mutually exclusive.')
+
+        if endpoint:
+            self.endpoint = endpoint
 
         if their_vk:
             self.recipients = [ensure_key_bytes(their_vk)]
