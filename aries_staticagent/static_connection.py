@@ -11,14 +11,7 @@ from . import crypto
 from .dispatcher import Dispatcher, Handler
 from .message import Message
 from .module import Module
-from .mtc import (
-    MessageTrustContext,
-    DESERIALIZE_OK,
-    CONFIDENTIALITY,
-    INTEGRITY,
-    AUTHENTICATED_ORIGIN,
-    NONREPUDIATION
-)
+from .mtc import MessageTrustContext
 from .type import Type
 from .utils import ensure_key_bytes, forward_msg
 
@@ -198,25 +191,16 @@ class StaticConnection:
                 self.sigkey
             )
             msg = Message.deserialize(msg)
-            msg.mtc = MessageTrustContext(
-                CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK,
-                NONREPUDIATION
-            )
+            msg.mtc = MessageTrustContext()
             if sender_vk:
-                msg.mtc[AUTHENTICATED_ORIGIN] = True
+                msg.mtc.set_authcrypted(sender_vk, recip_vk)
             else:
-                msg.mtc[AUTHENTICATED_ORIGIN] = False
+                msg.mtc.set_anoncrypted(recip_vk)
 
-            msg.mtc.ad['sender_vk'] = sender_vk
-            msg.mtc.ad['recip_vk'] = recip_vk
         except (ValueError, KeyError):
             msg = Message.deserialize(packed_message)
-            msg.mtc = MessageTrustContext(
-                DESERIALIZE_OK,
-                CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN
-            )
-            msg.mtc.ad['sender_vk'] = None
-            msg.mtc.ad['recip_vk'] = None
+            msg.mtc = MessageTrustContext()
+            msg.mtc.set_plaintext()
 
         return msg
 

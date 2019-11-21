@@ -73,6 +73,17 @@ PLAINTEXT_MSG = ExpectedMTC(
 )
 
 
+class AdditionalData:
+    """
+    Container for data relevant to Message Trust.
+    """
+    __slots__ = ('sender', 'recipient')
+
+    def __init__(self, sender: str = None, recipient: str = None):
+        self.sender = sender
+        self.recipient = recipient
+
+
 class MessageTrustContext:
     """ Message Trust Context
 
@@ -86,7 +97,7 @@ class MessageTrustContext:
             self,
             affirmed: Context = Context.NONE,
             denied: Context = Context.NONE,
-            additional_data: Dict[Any, Any] = None
+            additional_data: AdditionalData = None
                 ):
 
         if affirmed & denied != Context.NONE:
@@ -94,11 +105,18 @@ class MessageTrustContext:
 
         self._affirmed = affirmed
         self._denied = denied
-        self.additional_data = additional_data if additional_data else {}
+        self.additional_data = additional_data \
+            if additional_data else AdditionalData()
 
     @property
-    def ad(self):
-        return self.additional_data
+    def sender(self):
+        """Shortcut to sender."""
+        return self.additional_data.sender
+
+    @property
+    def recipient(self):
+        """Shortcut to recipient."""
+        return self.additional_data.recipient
 
     @property
     def affirmed(self):
@@ -149,6 +167,27 @@ class MessageTrustContext:
 
         str_repr = ' '.join([str_repr] + plus + minus)
         return str_repr
+
+    # Convenience methods
+    def set_authcrypted(self, sender: str, recipient: str):
+        """Set MTC to match authcrypt."""
+        self._affirmed = AUTHCRYPT_MSG.affirmed
+        self._denied = AUTHCRYPT_MSG.denied
+        self.additional_data.sender = sender
+        self.additional_data.recipient = recipient
+
+    def set_anoncrypted(self, recipient: str):
+        """Set MTC to match anoncrypt."""
+        self._affirmed = ANONCRYPT_MSG.affirmed
+        self._denied = ANONCRYPT_MSG.denied
+        self.additional_data.sender = None
+        self.additional_data.recipient = recipient
+
+    def set_plaintext(self):
+        self._affirmed = PLAINTEXT_MSG.affirmed
+        self._denied = PLAINTEXT_MSG.denied
+        self.additional_data.sender = None
+        self.additional_data.recipient = None
 
     def is_authcrypted(self):
         """MTC matches expected authcrypt."""
