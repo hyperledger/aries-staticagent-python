@@ -35,10 +35,13 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         env/bin/flake8 . --exclude=env --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - name: Pytest and Coverage
+    - name: Pytest (with coverage)
       run: |
         env/bin/coverage run --branch --source=aries_staticagent -m pytest
-        env/bin/coverage report
+
+    - name: Coverage Report
+      run: |
+        env/bin/coverage report -m
         env/bin/coverage html
 
     - name: Upload Coverage Report
