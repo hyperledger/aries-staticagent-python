@@ -5,7 +5,7 @@
 """
 from collections import namedtuple
 from enum import Flag, auto
-from typing import Dict, Any, Optional
+from typing import Optional
 
 
 class ContextsConflict(Exception):
