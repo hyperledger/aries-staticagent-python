@@ -189,7 +189,7 @@ class StaticConnection:
         """Clear registered routes."""
         return self._dispatcher.clear_handlers()
 
-    def unpack(self, packed_message: bytes) -> Message:
+    def unpack(self, packed_message: Union[bytes, dict]) -> Message:
         """Unpack a message, filling out metadata in the MTC."""
         try:
             (msg, sender_vk, recip_vk) = crypto.unpack_message(
@@ -209,17 +209,28 @@ class StaticConnection:
 
             msg.mtc.ad['sender_vk'] = sender_vk
             msg.mtc.ad['recip_vk'] = recip_vk
-        except ValueError:
+        except (ValueError, KeyError):
             msg = Message.deserialize(packed_message)
             msg.mtc = MessageTrustContext(
                 DESERIALIZE_OK,
                 CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN
             )
+            msg.mtc.ad['sender_vk'] = None
+            msg.mtc.ad['recip_vk'] = None
 
         return msg
 
-    def pack(self, msg: Union[dict, Message], anoncrypt=False) -> bytes:
+    def pack(
+            self,
+            msg: Union[dict, Message],
+            anoncrypt=False,
+            plaintext=False) -> bytes:
         """Pack a message for sending over the wire."""
+        if plaintext and anoncrypt:
+            raise ValueError(
+                'plaintext and anoncrypt flags are mutually exclusive.'
+            )
+
         if not isinstance(msg, Message):
             if isinstance(msg, dict):
                 msg = Message(msg)
@@ -232,6 +243,8 @@ class StaticConnection:
                 self.recipients,
                 dump=False
             )
+        elif plaintext:
+            packed_message = msg
         else:
             packed_message = crypto.pack_message(
                 msg.serialize(),
@@ -279,11 +292,6 @@ class StaticConnection:
         """
         Send a message to the agent connected through this StaticConnection.
         """
-        if plaintext and anoncrypt:
-            raise ValueError(
-                'plaintext and anoncrypt flags are mutually exclusive.'
-            )
-
         if ((not return_route or return_route == 'none') and
                 not self._reply and
                 not self.endpoint):
@@ -297,10 +305,9 @@ class StaticConnection:
             msg['~transport']['return_route'] = return_route
 
         # TODO Support WS
-        if not plaintext:
-            packed_message = self.pack(msg, anoncrypt=anoncrypt)
-        else:
-            packed_message = msg.serialize().encode('ascii')
+        packed_message = self.pack(
+            msg, anoncrypt=anoncrypt, plaintext=plaintext
+        )
 
         if self._reply:
             self._reply(packed_message)

@@ -3,8 +3,9 @@
     This file is inspired by the example implementation contained within
     that RFC.
 """
-from typing import Dict, Any, Optional
+from collections import namedtuple
 from enum import Flag, auto
+from typing import Dict, Any, Optional
 
 
 class ContextsConflict(Exception):
@@ -56,6 +57,21 @@ PFS = Context.PFS
 UNIQUENESS = Context.UNIQUENESS
 LIMITED_SCOPE = Context.LIMITED_SCOPE
 
+# Typical MTCs
+ExpectedMTC = namedtuple('ExpectedMTC', 'affirmed, denied')
+AUTHCRYPT_MSG = ExpectedMTC(
+    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN,
+    NONREPUDIATION
+)
+ANONCRYPT_MSG = ExpectedMTC(
+    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK,
+    NONREPUDIATION | AUTHENTICATED_ORIGIN
+)
+PLAINTEXT_MSG = ExpectedMTC(
+    DESERIALIZE_OK,
+    CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN  # | NONREPUDIATION ?
+)
+
 
 class MessageTrustContext:
     """ Message Trust Context
@@ -70,7 +86,7 @@ class MessageTrustContext:
             self,
             affirmed: Context = Context.NONE,
             denied: Context = Context.NONE,
-            additional_data: Dict[Any, Any] = {}
+            additional_data: Dict[Any, Any] = None
                 ):
 
         if affirmed & denied != Context.NONE:
@@ -78,7 +94,7 @@ class MessageTrustContext:
 
         self._affirmed = affirmed
         self._denied = denied
-        self.additional_data = additional_data
+        self.additional_data = additional_data if additional_data else {}
 
     @property
     def ad(self):
@@ -133,3 +149,18 @@ class MessageTrustContext:
 
         str_repr = ' '.join([str_repr] + plus + minus)
         return str_repr
+
+    def is_authcrypted(self):
+        """MTC matches expected authcrypt."""
+        return self[AUTHCRYPT_MSG.affirmed] is True and \
+            self[AUTHCRYPT_MSG.denied] is False
+
+    def is_anoncrypted(self):
+        """MTC matches expected anoncrypt."""
+        return self[ANONCRYPT_MSG.affirmed] is True and \
+            self[ANONCRYPT_MSG.denied] is False
+
+    def is_plaintext(self):
+        """MTC matches expected plaintext."""
+        return self[PLAINTEXT_MSG.affirmed] is True and \
+            self[PLAINTEXT_MSG.denied] is False

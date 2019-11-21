@@ -33,10 +33,13 @@ def ensure_key_b58(key: Union[bytes, str]):
     raise TypeError('key must be bytes or str')
 
 
+FORWARD = 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/routing/1.0/forward'
+
+
 def forward_msg(to: Union[bytes, str], msg: dict):
     """Return a forward message."""
     return Message({
-        '@type': 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/routing/1.0/forward',
+        '@type': FORWARD,
         'to': ensure_key_b58(to),
         'msg': msg
     })
