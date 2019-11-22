@@ -7,7 +7,7 @@
 
 from collections import OrderedDict
 from functools import lru_cache
-from typing import Optional, Sequence, Dict
+from typing import Optional, Sequence, Dict, Union
 import base64
 import json
 import struct
@@ -545,7 +545,7 @@ def pack_message(
 
 
 def unpack_message(
-        enc_message: bytes, my_verkey: bytes, my_sigkey: bytes
+        enc_message: Union[bytes, dict], my_verkey: bytes, my_sigkey: bytes
 ) -> (str, Optional[str], str):
     """
     Decode a packed message.
@@ -568,14 +568,20 @@ def unpack_message(
         ValueError: If the sender's public key was not provided
 
     """
-    try:
-        wrapper = json.loads(enc_message)
-    except Exception as err:
-        raise ValueError("Invalid packed message") from err
+    if not isinstance(enc_message, bytes) and \
+            not isinstance(enc_message, dict):
+        raise TypeError(
+            'Expected bytes or dict, got {}'.format(type(enc_message))
+        )
+    if isinstance(enc_message, bytes):
+        try:
+            enc_message = json.loads(enc_message)
+        except Exception as err:
+            raise ValueError("Invalid packed message") from err
 
-    protected_bin = wrapper["protected"].encode("ascii")
+    protected_bin = enc_message["protected"].encode("ascii")
     recips_json = b64_to_bytes(
-        wrapper["protected"], urlsafe=True
+        enc_message["protected"], urlsafe=True
     ).decode("ascii")
     try:
         recips_outer = json.loads(recips_json)
@@ -594,9 +600,9 @@ def unpack_message(
             "Sender public key not provided for Authcrypt message"
         )
 
-    ciphertext = b64_to_bytes(wrapper["ciphertext"], urlsafe=True)
-    nonce = b64_to_bytes(wrapper["iv"], urlsafe=True)
-    tag = b64_to_bytes(wrapper["tag"], urlsafe=True)
+    ciphertext = b64_to_bytes(enc_message["ciphertext"], urlsafe=True)
+    nonce = b64_to_bytes(enc_message["iv"], urlsafe=True)
+    tag = b64_to_bytes(enc_message["tag"], urlsafe=True)
 
     payload_bin = ciphertext + tag
     message = decrypt_plaintext(payload_bin, protected_bin, nonce, cek)

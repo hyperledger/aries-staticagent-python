@@ -3,8 +3,9 @@
     This file is inspired by the example implementation contained within
     that RFC.
 """
-from typing import Dict, Any, Optional
+from collections import namedtuple
 from enum import Flag, auto
+from typing import Optional
 
 
 class ContextsConflict(Exception):
@@ -56,6 +57,32 @@ PFS = Context.PFS
 UNIQUENESS = Context.UNIQUENESS
 LIMITED_SCOPE = Context.LIMITED_SCOPE
 
+# Typical MTCs
+ExpectedMTC = namedtuple('ExpectedMTC', 'affirmed, denied')
+AUTHCRYPT_MSG = ExpectedMTC(
+    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN,
+    NONREPUDIATION
+)
+ANONCRYPT_MSG = ExpectedMTC(
+    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK,
+    NONREPUDIATION | AUTHENTICATED_ORIGIN
+)
+PLAINTEXT_MSG = ExpectedMTC(
+    DESERIALIZE_OK,
+    CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN  # | NONREPUDIATION ?
+)
+
+
+class AdditionalData:
+    """
+    Container for data relevant to Message Trust.
+    """
+    __slots__ = ('sender', 'recipient')
+
+    def __init__(self, sender: str = None, recipient: str = None):
+        self.sender = sender
+        self.recipient = recipient
+
 
 class MessageTrustContext:
     """ Message Trust Context
@@ -70,7 +97,7 @@ class MessageTrustContext:
             self,
             affirmed: Context = Context.NONE,
             denied: Context = Context.NONE,
-            additional_data: Dict[Any, Any] = {}
+            additional_data: AdditionalData = None
                 ):
 
         if affirmed & denied != Context.NONE:
@@ -78,11 +105,18 @@ class MessageTrustContext:
 
         self._affirmed = affirmed
         self._denied = denied
-        self.additional_data = additional_data
+        self.additional_data = additional_data \
+            if additional_data else AdditionalData()
 
     @property
-    def ad(self):
-        return self.additional_data
+    def sender(self):
+        """Shortcut to sender."""
+        return self.additional_data.sender
+
+    @property
+    def recipient(self):
+        """Shortcut to recipient."""
+        return self.additional_data.recipient
 
     @property
     def affirmed(self):
@@ -133,3 +167,39 @@ class MessageTrustContext:
 
         str_repr = ' '.join([str_repr] + plus + minus)
         return str_repr
+
+    # Convenience methods
+    def set_authcrypted(self, sender: str, recipient: str):
+        """Set MTC to match authcrypt."""
+        self._affirmed = AUTHCRYPT_MSG.affirmed
+        self._denied = AUTHCRYPT_MSG.denied
+        self.additional_data.sender = sender
+        self.additional_data.recipient = recipient
+
+    def set_anoncrypted(self, recipient: str):
+        """Set MTC to match anoncrypt."""
+        self._affirmed = ANONCRYPT_MSG.affirmed
+        self._denied = ANONCRYPT_MSG.denied
+        self.additional_data.sender = None
+        self.additional_data.recipient = recipient
+
+    def set_plaintext(self):
+        self._affirmed = PLAINTEXT_MSG.affirmed
+        self._denied = PLAINTEXT_MSG.denied
+        self.additional_data.sender = None
+        self.additional_data.recipient = None
+
+    def is_authcrypted(self):
+        """MTC matches expected authcrypt."""
+        return self[AUTHCRYPT_MSG.affirmed] is True and \
+            self[AUTHCRYPT_MSG.denied] is False
+
+    def is_anoncrypted(self):
+        """MTC matches expected anoncrypt."""
+        return self[ANONCRYPT_MSG.affirmed] is True and \
+            self[ANONCRYPT_MSG.denied] is False
+
+    def is_plaintext(self):
+        """MTC matches expected plaintext."""
+        return self[PLAINTEXT_MSG.affirmed] is True and \
+            self[PLAINTEXT_MSG.denied] is False
