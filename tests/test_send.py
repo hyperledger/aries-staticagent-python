@@ -207,7 +207,7 @@ async def test_claim_next_messages(alice_gen, bob, dispatcher):
 async def test_next_raises_error_on_bad_condition(alice):
     """Bad condition raises error."""
     with pytest.raises(TypeError):
-        with alice.next(cond='asdf'):
+        with alice.next(condition='asdf'):
             pass
 
 
@@ -216,7 +216,7 @@ async def test_next_condition(alice_gen, bob, dispatcher):
     """Test hold condtions."""
     alice = alice_gen(dispatcher=dispatcher)
     with alice.next(
-            cond=lambda msg: msg.type == MESSAGE.type
+            condition=lambda msg: msg.type == MESSAGE.type
     ) as message:
         await alice.handle(bob.pack(MESSAGE))
         assert dispatcher.dispatched is None
