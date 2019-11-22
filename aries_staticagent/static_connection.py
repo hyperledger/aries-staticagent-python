@@ -333,6 +333,23 @@ class StaticConnection:
             )
             return await asyncio.wait_for(next_message, timeout)
 
+    async def await_message(
+            self,
+            *,
+            type_: str = None,
+            condition: Callable[[Message], bool] = None,
+            timeout: int = None):
+        """
+        Wait for a message.
+
+        Note that it's possible for a message to arrive just before or during
+        the setup of this function. If it's likely that a message will arrive
+        as a result of an action taken prior to calling await_message, use the
+        `next` context manager instead.
+        """
+        with self.next(type_, cond=condition) as next_message:
+            return await asyncio.wait_for(next_message, timeout)
+
     def send(self, *args, **kwargs):
         """Blocking wrapper around send_async."""
         loop = asyncio.get_event_loop()

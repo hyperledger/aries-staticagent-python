@@ -1,4 +1,5 @@
 """Test StaticConection send method."""
+import asyncio
 import copy
 from functools import partial
 from asyncio import wait_for
@@ -251,11 +252,29 @@ async def test_multiple_next_fulfilled_sequentially(alice, bob):
 
 
 @pytest.mark.asyncio
+async def test_next_with_type_and_cond_raises_error(alice):
+    """Test value error raised when both type and condition specified."""
+    with pytest.raises(ValueError):
+        with alice.next(MESSAGE.type, lambda msg: True):
+            pass
+
+
+@pytest.mark.asyncio
 async def test_send_and_await_reply(alice_gen, bob, send):
     """Test holding and awaiting messages."""
     alice = alice_gen(partial(send.call_response, bob.pack(RESPONSE)))
     response = await alice.send_and_await_reply_async(MESSAGE)
     assert response == RESPONSE
+
+
+@pytest.mark.asyncio
+async def test_await_message(alice, bob):
+    """Test awaiting a message."""
+    waiting_task = asyncio.ensure_future(alice.await_message())
+    await asyncio.sleep(.1)
+    await alice.handle(bob.pack(MESSAGE))
+    message = await waiting_task
+    assert message == MESSAGE
 
 
 def test_blocking_send(alice_gen, bob, send):
