@@ -2,7 +2,7 @@
 import asyncio
 import json
 from contextlib import contextmanager
-from typing import Union, Callable, Awaitable
+from typing import Union, Callable, Awaitable, Dict
 from collections import namedtuple
 from functools import partial
 
@@ -64,8 +64,7 @@ class StaticConnection:
             self.routing_keys = list(map(ensure_key_bytes, routing_keys))
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
-        self._hold_condition = lambda msg: False
-        self._held_messages = asyncio.Queue()
+        self._next: Dict[Callable[[Message], bool], asyncio.Future] = {}
         self._reply: Callable[[bytes], None] = None
         self._send = send if send else http_send
 
@@ -215,19 +214,30 @@ class StaticConnection:
         return json.dumps(packed_message).encode('ascii')
 
     @contextmanager
-    def hold_messages(self, condition: Callable[[Message], bool] = None):
-        """Context manager to hold messages without them being dispatched."""
+    def next(self, condition: Callable[[Message], bool] = None):
+        """
+        Context manager to claim the next message matching condtion, allowing
+        temporary bypass of regular dispatch.
+
+        This will consume only the next message matching condition. If you need
+        to consume more than one or two, consider using a standard message
+        handler or overriding the default dispatching mechanism.
+        """
         if condition and not callable(condition):
             raise TypeError('condition must be Callable[[Message], bool]')
 
-        if condition:
-            self._hold_condition = condition
-        else:
-            self._hold_condition = lambda msg: True
+        if not condition:
+            # Collect everything
+            def _default(_msg):
+                return True
+            condition = _default
 
-        yield
+        next_message = asyncio.Future()
+        self._next[condition] = next_message
 
-        self._hold_condition = lambda msg: False
+        yield next_message
+
+        del self._next[condition]
 
     async def handle(self, packed_message: bytes):
         """Unpack and dispatch message to handler."""
@@ -237,9 +247,10 @@ class StaticConnection:
                 msg['~transport']['return_route'] == 'none'):
             self._reply = None
 
-        if self._hold_condition(msg):
-            self._held_messages.put_nowait(msg)
-            return
+        for condition, next_message_future in self._next.items():
+            if condition(msg) and not next_message_future.done():
+                next_message_future.set_result(msg)
+                return
 
         await self._dispatcher.dispatch(msg, self)
 
@@ -265,7 +276,6 @@ class StaticConnection:
                 msg['~transport'] = {}
             msg['~transport']['return_route'] = return_route
 
-        # TODO Support WS
         packed_message = self.pack(
             msg, anoncrypt=anoncrypt, plaintext=plaintext
         )
@@ -293,23 +303,6 @@ class StaticConnection:
             partial(_error_handler, self)
         )
 
-    async def await_message(
-            self,
-            *,
-            timeout: int = 0) -> Message:
-        """
-        Bypass dispatching to a handler and return the next handled message
-        matching the given condition here.
-        """
-        if timeout > 0:
-            msg = await asyncio.wait_for(
-                self._held_messages.get(),
-                timeout
-            )
-        else:
-            msg = await self._held_messages.get()
-        return msg
-
     async def send_and_await_reply_async(
             self,
             msg: Union[dict, Message],
@@ -318,20 +311,17 @@ class StaticConnection:
             return_route: str = "all",
             plaintext: bool = False,
             anoncrypt: bool = False,
-            timeout: int = 0) -> Message:
+            timeout: int = None) -> Message:
         """Send a message and wait for a reply."""
 
-        with self.hold_messages(condition):
+        with self.next(condition) as next_message:
             await self.send_async(
                 msg,
                 return_route=return_route,
                 plaintext=plaintext,
                 anoncrypt=anoncrypt,
             )
-            reply = await self.await_message(
-                timeout=timeout
-            )
-            return reply
+            return await asyncio.wait_for(next_message, timeout)
 
     def send(self, *args, **kwargs):
         """Blocking wrapper around send_async."""

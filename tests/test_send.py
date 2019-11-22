@@ -1,6 +1,7 @@
 """Test StaticConection send method."""
 import copy
 from functools import partial
+from asyncio import wait_for
 
 import pytest
 
@@ -192,34 +193,48 @@ async def test_error_handler(alice_gen, bob, send):
 
 
 @pytest.mark.asyncio
-async def test_hold_and_await_message(alice_gen, bob, dispatcher):
+async def test_claim_next_messages(alice_gen, bob, dispatcher):
     """Test holding and awaiting messages."""
     alice = alice_gen(dispatcher=dispatcher)
-    message = bob.pack(MESSAGE)
-    with alice.hold_messages():
-        await alice.handle(message)
-    assert await alice.await_message(timeout=1) == MESSAGE
+    bob_msg = bob.pack(MESSAGE)
+    with alice.next() as message:
+        await alice.handle(bob_msg)
+        assert await wait_for(message, 1) == MESSAGE
 
 
 @pytest.mark.asyncio
-async def test_hold_raises_error_on_bad_condition(alice):
+async def test_next_raises_error_on_bad_condition(alice):
     """Bad condition raises error."""
     with pytest.raises(TypeError):
-        with alice.hold_messages('asdf'):
+        with alice.next('asdf'):
             pass
 
 
 @pytest.mark.asyncio
-async def test_hold_condition(alice_gen, bob, dispatcher):
+async def test_next_condition(alice_gen, bob, dispatcher):
     """Test hold condtions."""
     alice = alice_gen(dispatcher=dispatcher)
-    with alice.hold_messages(lambda msg: msg.type == MESSAGE.type):
+    with alice.next(
+            lambda msg: msg.type == MESSAGE.type
+    ) as message:
         await alice.handle(bob.pack(MESSAGE))
         assert dispatcher.dispatched is None
-        assert await alice.await_message(timeout=1) == MESSAGE
+        assert await wait_for(message, 1) == MESSAGE
         await alice.handle(bob.pack(RESPONSE))
         assert dispatcher.dispatched == RESPONSE
-    assert alice._hold_condition(MESSAGE.type) is False
+    assert not alice._next
+
+
+@pytest.mark.asyncio
+async def test_multiple_next_fulfilled_sequentially(alice, bob):
+    """Test all matching next condtions are fulfilled."""
+    with alice.next(lambda msg: msg.type == MESSAGE.type) as next_of_type, \
+            alice.next() as next_anything:
+        await alice.handle(bob.pack(MESSAGE))
+        first = await wait_for(next_of_type, 1)
+        await alice.handle(bob.pack(MESSAGE))
+        second = await wait_for(next_anything, 1)
+        assert first == second
 
 
 @pytest.mark.asyncio
