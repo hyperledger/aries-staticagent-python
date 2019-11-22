@@ -206,7 +206,7 @@ async def test_claim_next_messages(alice_gen, bob, dispatcher):
 async def test_next_raises_error_on_bad_condition(alice):
     """Bad condition raises error."""
     with pytest.raises(TypeError):
-        with alice.next('asdf'):
+        with alice.next(cond='asdf'):
             pass
 
 
@@ -215,8 +215,21 @@ async def test_next_condition(alice_gen, bob, dispatcher):
     """Test hold condtions."""
     alice = alice_gen(dispatcher=dispatcher)
     with alice.next(
-            lambda msg: msg.type == MESSAGE.type
+            cond=lambda msg: msg.type == MESSAGE.type
     ) as message:
+        await alice.handle(bob.pack(MESSAGE))
+        assert dispatcher.dispatched is None
+        assert await wait_for(message, 1) == MESSAGE
+        await alice.handle(bob.pack(RESPONSE))
+        assert dispatcher.dispatched == RESPONSE
+    assert not alice._next
+
+
+@pytest.mark.asyncio
+async def test_next_type(alice_gen, bob, dispatcher):
+    """Test hold condtions."""
+    alice = alice_gen(dispatcher=dispatcher)
+    with alice.next(MESSAGE.type) as message:
         await alice.handle(bob.pack(MESSAGE))
         assert dispatcher.dispatched is None
         assert await wait_for(message, 1) == MESSAGE
@@ -228,7 +241,7 @@ async def test_next_condition(alice_gen, bob, dispatcher):
 @pytest.mark.asyncio
 async def test_multiple_next_fulfilled_sequentially(alice, bob):
     """Test all matching next condtions are fulfilled."""
-    with alice.next(lambda msg: msg.type == MESSAGE.type) as next_of_type, \
+    with alice.next(MESSAGE.type) as next_of_type, \
             alice.next() as next_anything:
         await alice.handle(bob.pack(MESSAGE))
         first = await wait_for(next_of_type, 1)

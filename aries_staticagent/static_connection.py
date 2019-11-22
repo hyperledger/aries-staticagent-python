@@ -214,7 +214,10 @@ class StaticConnection:
         return json.dumps(packed_message).encode('ascii')
 
     @contextmanager
-    def next(self, condition: Callable[[Message], bool] = None):
+    def next(
+            self,
+            type_: str = None,
+            cond: Callable[[Message], bool] = None):
         """
         Context manager to claim the next message matching condtion, allowing
         temporary bypass of regular dispatch.
@@ -223,21 +226,28 @@ class StaticConnection:
         to consume more than one or two, consider using a standard message
         handler or overriding the default dispatching mechanism.
         """
-        if condition and not callable(condition):
-            raise TypeError('condition must be Callable[[Message], bool]')
+        if cond and type_:
+            raise ValueError('Expected type or condtion, not both.')
+        if cond and not callable(cond):
+            raise TypeError('cond must be Callable[[Message], bool]')
 
-        if not condition:
+        if not cond and not type_:
             # Collect everything
             def _default(_msg):
                 return True
-            condition = _default
+            cond = _default
+
+        if type_:
+            def _matches_type(msg):
+                return msg.type == type_
+            cond = _matches_type
 
         next_message = asyncio.Future()
-        self._next[condition] = next_message
+        self._next[cond] = next_message
 
         yield next_message
 
-        del self._next[condition]
+        del self._next[cond]
 
     async def handle(self, packed_message: bytes):
         """Unpack and dispatch message to handler."""
