@@ -217,7 +217,7 @@ class StaticConnection:
     def next(
             self,
             type_: str = None,
-            cond: Callable[[Message], bool] = None):
+            condition: Callable[[Message], bool] = None):
         """
         Context manager to claim the next message matching condtion, allowing
         temporary bypass of regular dispatch.
@@ -226,28 +226,28 @@ class StaticConnection:
         to consume more than one or two, consider using a standard message
         handler or overriding the default dispatching mechanism.
         """
-        if cond and type_:
+        if condition and type_:
             raise ValueError('Expected type or condtion, not both.')
-        if cond and not callable(cond):
-            raise TypeError('cond must be Callable[[Message], bool]')
+        if condition and not callable(condition):
+            raise TypeError('condition must be Callable[[Message], bool]')
 
-        if not cond and not type_:
+        if not condition and not type_:
             # Collect everything
             def _default(_msg):
                 return True
-            cond = _default
+            condition = _default
 
         if type_:
             def _matches_type(msg):
                 return msg.type == type_
-            cond = _matches_type
+            condition = _matches_type
 
         next_message = asyncio.Future()
-        self._next[cond] = next_message
+        self._next[condition] = next_message
 
         yield next_message
 
-        del self._next[cond]
+        del self._next[condition]
 
     async def handle(self, packed_message: bytes):
         """Unpack and dispatch message to handler."""
@@ -317,6 +317,7 @@ class StaticConnection:
             self,
             msg: Union[dict, Message],
             *,
+            type_: str = None,
             condition: Callable[[Message], bool] = None,
             return_route: str = "all",
             plaintext: bool = False,
@@ -324,7 +325,7 @@ class StaticConnection:
             timeout: int = None) -> Message:
         """Send a message and wait for a reply."""
 
-        with self.next(condition) as next_message:
+        with self.next(type_=type_, condition=condition) as next_message:
             await self.send_async(
                 msg,
                 return_route=return_route,
@@ -347,7 +348,7 @@ class StaticConnection:
         as a result of an action taken prior to calling await_message, use the
         `next` context manager instead.
         """
-        with self.next(type_, cond=condition) as next_message:
+        with self.next(type_, condition=condition) as next_message:
             return await asyncio.wait_for(next_message, timeout)
 
     def send(self, *args, **kwargs):
