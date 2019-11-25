@@ -1,3 +1,39 @@
+Version 0.7.0 (2019-11-25)
+==========================
+
+## Highlights
+- Improved standard message dispatch bypass mechanism.
+- Improved interface for MTCs.
+- Significantly increased code coverage in unit tests resulting in overall
+  improvement in reliability.
+
+## Detailed Changes
+
+### General Fixes and Improvements
+- Export `MessageDeliveryError` from package root.
+- Fixes for forwarding and processing forwarded messages.
+- Fix Message equality checks.
+
+### Message Trust Contexts
+- Add MTC helper functions for checking and setting typical message
+  characteristics.
+- Refactor `Additional Data`; now a class instead of a dictionary. Currently
+  only has  `sender` and `recipient` as properties. `sender` and `recipient` are
+  also accessible as properties on MTC.
+
+### `StaticConnection`
+- Remove `ConditionallyAwaitFutureMessage` construct in favor of simpler and
+  more robust `connection.next` method.
+- Refactor send method into injectable dependency. Defaults to HTTP.
+- `unpack` will take a dictionary or bytes as input.
+- `pack` takes `plaintext` as an argument.
+- Add `next` context manager method, yielding a future to the next message
+  matching the given type or condition. This mechanism is now also utilized in
+  `await_message`.
+
+### `Utils`
+- Move HTTP sending code to method under `utils`.
+
 Version 0.6.1 (2019-11-19)
 ==========================
 
