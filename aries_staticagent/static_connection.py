@@ -74,7 +74,8 @@ class StaticConnection:
             endpoint: str = None,
             their_vk: Union[bytes, str] = None,
             recipients: [Union[bytes, str]] = None,
-            routing_keys: [Union[bytes, str]] = None):
+            routing_keys: [Union[bytes, str]] = None,
+            **kwargs):
         """Update their information."""
         if their_vk and recipients:
             raise ValueError('their_vk and recipients are mutually exclusive.')
