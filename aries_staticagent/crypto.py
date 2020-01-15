@@ -416,8 +416,15 @@ def locate_pack_recipient_key(
 
         if "iv" in recip["header"] and recip["header"]["iv"] and \
                 "sender" in recip["header"] and recip["header"]["sender"]:
-            nonce: Optional[bytes] = b64_to_bytes(recip["header"]["iv"], urlsafe=True)
-            enc_sender: Optional[bytes] = b64_to_bytes(recip["header"]["sender"], urlsafe=True)
+            nonce: Optional[bytes] = b64_to_bytes(
+                recip["header"]["iv"],
+                urlsafe=True
+            )
+            enc_sender: Optional[bytes] = b64_to_bytes(
+                recip["header"]["sender"],
+                urlsafe=True
+            )
+
         else:
             nonce = None
             enc_sender = None

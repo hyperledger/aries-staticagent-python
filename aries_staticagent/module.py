@@ -1,7 +1,5 @@
 """ Module base class """
 
-from functools import partial
-from operator import is_
 from typing import Union, Callable
 from .type import Type
 
@@ -42,9 +40,9 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
             version: str = None
                 ):
         """ Build a type string for this module. """
-        doc_uri = doc_uri if doc_uri is not None else self.__class__.DOC_URI
-        protocol = protocol if protocol is not None else self.__class__.PROTOCOL
-        version = version if version is not None else self.__class__.VERSION
+        doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
+        protocol = protocol if protocol is not None else self.PROTOCOL
+        version = version if version is not None else self.VERSION
         if doc_uri is None:
             raise TypeError('doc_uri must be str')
         if protocol is None:

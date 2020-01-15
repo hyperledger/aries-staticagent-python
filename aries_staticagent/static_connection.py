@@ -17,7 +17,7 @@ from .type import Type
 from .utils import ensure_key_bytes, forward_msg, http_send
 
 
-Send = Callable[[bytes, str], Awaitable[bytes]]
+Send = Callable[[bytes, str], Awaitable[Optional[bytes]]]
 Reply = Callable[[bytes], Awaitable[None]]
 ConditionFutureMap = Dict[Callable[[Message], bool], asyncio.Future]
 
@@ -50,8 +50,8 @@ class StaticConnection:
 
         self.keys = StaticConnection.Keys(*map(ensure_key_bytes, keys))
         self.endpoint: Optional[str] = endpoint
-        self.recipients: List[bytes] = None
-        self.routing_keys: List[bytes] = None
+        self.recipients: Optional[List[bytes]] = None
+        self.routing_keys: Optional[List[bytes]] = None
 
         if their_vk:
             self.recipients = [ensure_key_bytes(their_vk)]
@@ -64,7 +64,7 @@ class StaticConnection:
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
         self._next: ConditionFutureMap = {}
-        self._reply: Reply = None
+        self._reply: Optional[Reply] = None
         self._send: Send = send if send else http_send
 
     def update(

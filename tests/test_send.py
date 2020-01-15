@@ -31,6 +31,7 @@ def bob_keys():
     """Bob's keys."""
     return StaticConnection.Keys(*crypto.create_keypair())
 
+
 @pytest.fixture
 def alice_gen(alice_keys, bob_keys):
     def _gen(send=None, dispatcher=None):
@@ -43,9 +44,11 @@ def alice_gen(alice_keys, bob_keys):
         )
     return _gen
 
+
 @pytest.fixture
 def alice(alice_gen):
     return alice_gen()
+
 
 @pytest.fixture
 def bob_gen(alice_keys, bob_keys):
@@ -58,6 +61,7 @@ def bob_gen(alice_keys, bob_keys):
             dispatcher=dispatcher
         )
     return _gen
+
 
 @pytest.fixture
 def bob(bob_gen):
@@ -84,6 +88,7 @@ def send():
 
     return _Send()
 
+
 @pytest.fixture
 def reply():
     """Mock reply callable."""
@@ -95,6 +100,7 @@ def reply():
             self.replied = msg
 
     return _Reply()
+
 
 @pytest.fixture
 def dispatcher():
