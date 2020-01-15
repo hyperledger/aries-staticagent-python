@@ -7,7 +7,7 @@
 
 from collections import OrderedDict
 from functools import lru_cache
-from typing import Optional, Sequence, Dict, Union
+from typing import Optional, Sequence, Dict, Union, Tuple
 import base64
 import json
 import struct
@@ -62,7 +62,7 @@ def bytes_to_b58(val: bytes) -> str:
     return base58.b58encode(val).decode("ascii")
 
 
-def create_keypair(seed: bytes = None) -> (bytes, bytes):
+def create_keypair(seed: bytes = None) -> Tuple[bytes, bytes]:
     """
     Create a public and private signing keypair from a seed value.
 
@@ -92,7 +92,7 @@ def random_seed() -> bytes:
     return nacl.utils.random(nacl.bindings.crypto_secretbox_KEYBYTES)
 
 
-def validate_seed(seed: (str, bytes)) -> bytes:
+def validate_seed(seed: Union[str, bytes]) -> Optional[bytes]:
     """
     Convert a seed parameter to standard format and check length.
 
@@ -175,7 +175,7 @@ def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
     }
 
 
-def verify_signed_message_field(signed_field: Dict) -> (str, Dict):
+def verify_signed_message_field(signed_field: Dict) -> Tuple[str, Dict]:
     """ Verify a signed message field """
     data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
     signature_bytes = base64.urlsafe_b64decode(
@@ -266,7 +266,7 @@ def auth_decrypt_message(
         enc_message: bytes,
         my_verkey: bytes,
         my_sigkey: bytes
-) -> (bytes, str):
+) -> Tuple[bytes, str]:
     """
     Apply auth_decrypt to a binary message.
 
@@ -297,7 +297,7 @@ def prepare_pack_recipient_keys(
         to_verkeys: Sequence[bytes],
         from_verkey: bytes = None,
         from_sigkey: bytes = None
-) -> (str, bytes):
+) -> Tuple[str, bytes]:
     """
     Assemble the recipients block of a packed message.
 
@@ -380,7 +380,7 @@ def locate_pack_recipient_key(
         recipients: Sequence[dict],
         my_verkey: bytes,
         my_sigkey: bytes
-) -> (bytes, str, str):
+) -> Tuple[bytes, str, str]:
     """
     Locate pack recipient key.
 
@@ -416,8 +416,8 @@ def locate_pack_recipient_key(
 
         if "iv" in recip["header"] and recip["header"]["iv"] and \
                 "sender" in recip["header"] and recip["header"]["sender"]:
-            nonce = b64_to_bytes(recip["header"]["iv"], urlsafe=True)
-            enc_sender = b64_to_bytes(recip["header"]["sender"], urlsafe=True)
+            nonce: Optional[bytes] = b64_to_bytes(recip["header"]["iv"], urlsafe=True)
+            enc_sender: Optional[bytes] = b64_to_bytes(recip["header"]["sender"], urlsafe=True)
         else:
             nonce = None
             enc_sender = None
@@ -448,7 +448,7 @@ def locate_pack_recipient_key(
 
 def encrypt_plaintext(
         message: str, add_data: bytes, key: bytes
-) -> (bytes, bytes, bytes):
+) -> Tuple[bytes, bytes, bytes]:
     """
     Encrypt the payload of a packed message.
 
@@ -501,9 +501,7 @@ def pack_message(
         to_verkeys: Sequence[bytes],
         from_verkey: bytes = None,
         from_sigkey: bytes = None,
-        *,
-        dump: bool = True
-) -> bytes:
+) -> OrderedDict:
     """
     Assemble a packed message for a set of recipients, optionally including
     the sender.
@@ -539,14 +537,12 @@ def pack_message(
             ("tag", bytes_to_b64(tag, urlsafe=True)),
         ]
     )
-    if dump:
-        return json.dumps(data).encode("ascii")
     return data
 
 
 def unpack_message(
-        enc_message: Union[bytes, dict], my_verkey: bytes, my_sigkey: bytes
-) -> (str, Optional[str], str):
+        enc_message: Union[Dict, bytes], my_verkey: bytes, my_sigkey: bytes
+) -> Tuple[str, Optional[str], str]:
     """
     Decode a packed message.
 
@@ -568,16 +564,15 @@ def unpack_message(
         ValueError: If the sender's public key was not provided
 
     """
-    if not isinstance(enc_message, bytes) and \
-            not isinstance(enc_message, dict):
-        raise TypeError(
-            'Expected bytes or dict, got {}'.format(type(enc_message))
-        )
     if isinstance(enc_message, bytes):
         try:
             enc_message = json.loads(enc_message)
         except Exception as err:
             raise ValueError("Invalid packed message") from err
+    if not isinstance(enc_message, dict):
+        raise TypeError(
+            'Expected bytes or dict, got {}'.format(type(enc_message))
+        )
 
     protected_bin = enc_message["protected"].encode("ascii")
     recips_json = b64_to_bytes(
