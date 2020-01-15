@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>aries_staticagent.mtc API documentation</title>
+<meta name="description" content="Message Trust Context. See Aries RFC 0029: Message Trust Contexts …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>aries_staticagent.mtc</code></h1>
+</header>
+<section id="section-intro">
+<p>Message Trust Context. See Aries RFC 0029: Message Trust Contexts.</p>
+<p>This file is inspired by the example implementation contained within
+that RFC.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34; Message Trust Context. See Aries RFC 0029: Message Trust Contexts.
+
+    This file is inspired by the example implementation contained within
+    that RFC.
+&#34;&#34;&#34;
+from collections import namedtuple
+from enum import Flag, auto
+from typing import Optional
+
+
+class ContextsConflict(Exception):
+    &#34;&#34;&#34; Thrown when the passed contexts overlap &#34;&#34;&#34;
+
+
+class Context(Flag):
+    &#34;&#34;&#34; Flags for MTC &#34;&#34;&#34;
+    NONE = 0
+    SIZE_OK = auto()
+    DESERIALIZE_OK = auto()
+    KEYS_OK = auto()
+    VALUES_OK = auto()
+    CONFIDENTIALITY = auto()
+    INTEGRITY = auto()
+    AUTHENTICATED_ORIGIN = auto()
+    NONREPUDIATION = auto()
+    PFS = auto()
+    UNIQUENESS = auto()
+    LIMITED_SCOPE = auto()
+
+
+LABELS = {
+    Context.SIZE_OK: &#39;size_ok&#39;,
+    Context.DESERIALIZE_OK: &#39;deserialize_ok&#39;,
+    Context.KEYS_OK: &#39;keys_ok&#39;,
+    Context.VALUES_OK: &#39;values_ok&#39;,
+    Context.CONFIDENTIALITY: &#39;confidentiality&#39;,
+    Context.INTEGRITY: &#39;integrity&#39;,
+    Context.AUTHENTICATED_ORIGIN: &#39;authenticated_origin&#39;,
+    Context.NONREPUDIATION: &#39;nonrepudiation&#39;,
+    Context.PFS: &#39;pfs&#39;,
+    Context.UNIQUENESS: &#39;uniqueness&#39;,
+    Context.LIMITED_SCOPE: &#39;limited_scope&#39;
+}
+
+
+# Context Shortcuts
+NONE = Context.NONE
+SIZE_OK = Context.SIZE_OK
+DESERIALIZE_OK = Context.DESERIALIZE_OK
+KEYS_OK = Context.KEYS_OK
+VALUES_OK = Context.VALUES_OK
+CONFIDENTIALITY = Context.CONFIDENTIALITY
+INTEGRITY = Context.INTEGRITY
+AUTHENTICATED_ORIGIN = Context.AUTHENTICATED_ORIGIN
+NONREPUDIATION = Context.NONREPUDIATION
+PFS = Context.PFS
+UNIQUENESS = Context.UNIQUENESS
+LIMITED_SCOPE = Context.LIMITED_SCOPE
+
+# Typical MTCs
+ExpectedMTC = namedtuple(&#39;ExpectedMTC&#39;, &#39;affirmed, denied&#39;)
+AUTHCRYPT_MSG = ExpectedMTC(
+    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN,
+    NONREPUDIATION
+)
+ANONCRYPT_MSG = ExpectedMTC(
+    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK,
+    NONREPUDIATION | AUTHENTICATED_ORIGIN
+)
+PLAINTEXT_MSG = ExpectedMTC(
+    DESERIALIZE_OK,
+    CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN  # | NONREPUDIATION ?
+)
+
+
+class AdditionalData:
+    &#34;&#34;&#34;
+    Container for data relevant to Message Trust.
+    &#34;&#34;&#34;
+    __slots__ = (&#39;sender&#39;, &#39;recipient&#39;)
+
+    def __init__(self, sender: str = None, recipient: str = None):
+        self.sender = sender
+        self.recipient = recipient
+
+
+class MessageTrustContext:
+    &#34;&#34;&#34; Message Trust Context
+
+        Holds the contexts as well as data associated with message trust
+        contexts such as the keys used to encrypt the message and allowing us
+        to know that the origin is authenticated, etc.
+    &#34;&#34;&#34;
+    __slots__ = &#39;_affirmed&#39;, &#39;_denied&#39;, &#39;additional_data&#39;
+
+    def __init__(
+            self,
+            affirmed: Context = Context.NONE,
+            denied: Context = Context.NONE,
+            additional_data: AdditionalData = None
+                ):
+
+        if affirmed &amp; denied != Context.NONE:
+            raise ContextsConflict()
+
+        self._affirmed = affirmed
+        self._denied = denied
+        self.additional_data = additional_data \
+            if additional_data else AdditionalData()
+
+    @property
+    def sender(self):
+        &#34;&#34;&#34;Shortcut to sender.&#34;&#34;&#34;
+        return self.additional_data.sender
+
+    @property
+    def recipient(self):
+        &#34;&#34;&#34;Shortcut to recipient.&#34;&#34;&#34;
+        return self.additional_data.recipient
+
+    @property
+    def affirmed(self):
+        &#34;&#34;&#34; Access affirmed contexts &#34;&#34;&#34;
+        return self._affirmed
+
+    @property
+    def denied(self):
+        &#34;&#34;&#34; Access denied contexts &#34;&#34;&#34;
+        return self._denied
+
+    def __getitem__(self, context: Context):
+        if (self._affirmed &amp; context) == context:
+            return True
+        if (self._denied &amp; context) == context:
+            return False
+        return None
+
+    def __setitem__(self, context: Context, value: Optional[bool]):
+        if not isinstance(context, Context):
+            raise TypeError(&#39;index must be of type Context&#39;)
+
+        if value is None:
+            # Set undefined
+            self._affirmed &amp;= ~context
+        elif value is True:
+            self._affirmed |= context
+            self._denied &amp;= ~context
+        elif value is False:
+            self._denied |= context
+            self._affirmed &amp;= ~context
+        else:
+            raise TypeError(
+                &#39;Value of type bool or None was expected, got {}&#39;.format(
+                    type(value)
+                )
+            )
+
+    def __str__(self):
+        str_repr = &#39;mtc:&#39;
+        plus = []
+        minus = []
+        for context, label in LABELS.items():
+            if self[context] is True:
+                plus.append(&#39;+{}&#39;.format(label))
+            elif self[context] is False:
+                minus.append(&#39;-{}&#39;.format(label))
+
+        str_repr = &#39; &#39;.join([str_repr] + plus + minus)
+        return str_repr
+
+    # Convenience methods
+    def set_authcrypted(self, sender: str, recipient: str):
+        &#34;&#34;&#34;Set MTC to match authcrypt.&#34;&#34;&#34;
+        self._affirmed = AUTHCRYPT_MSG.affirmed
+        self._denied = AUTHCRYPT_MSG.denied
+        self.additional_data.sender = sender
+        self.additional_data.recipient = recipient
+
+    def set_anoncrypted(self, recipient: str):
+        &#34;&#34;&#34;Set MTC to match anoncrypt.&#34;&#34;&#34;
+        self._affirmed = ANONCRYPT_MSG.affirmed
+        self._denied = ANONCRYPT_MSG.denied
+        self.additional_data.sender = None
+        self.additional_data.recipient = recipient
+
+    def set_plaintext(self):
+        self._affirmed = PLAINTEXT_MSG.affirmed
+        self._denied = PLAINTEXT_MSG.denied
+        self.additional_data.sender = None
+        self.additional_data.recipient = None
+
+    def is_authcrypted(self):
+        &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
+        return self[AUTHCRYPT_MSG.affirmed] is True and \
+            self[AUTHCRYPT_MSG.denied] is False
+
+    def is_anoncrypted(self):
+        &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
+        return self[ANONCRYPT_MSG.affirmed] is True and \
+            self[ANONCRYPT_MSG.denied] is False
+
+    def is_plaintext(self):
+        &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
+        return self[PLAINTEXT_MSG.affirmed] is True and \
+            self[PLAINTEXT_MSG.denied] is False</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="aries_staticagent.mtc.AdditionalData"><code class="flex name class">
+<span>class <span class="ident">AdditionalData</span></span>
+<span>(</span><span>sender=None, recipient=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Container for data relevant to Message Trust.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AdditionalData:
+    &#34;&#34;&#34;
+    Container for data relevant to Message Trust.
+    &#34;&#34;&#34;
+    __slots__ = (&#39;sender&#39;, &#39;recipient&#39;)
+
+    def __init__(self, sender: str = None, recipient: str = None):
+        self.sender = sender
+        self.recipient = recipient</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="aries_staticagent.mtc.AdditionalData.recipient"><code class="name">var <span class="ident">recipient</span></code></dt>
+<dd>
+<section class="desc"><p>Return an attribute of instance, which is of type owner.</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.AdditionalData.sender"><code class="name">var <span class="ident">sender</span></code></dt>
+<dd>
+<section class="desc"><p>Return an attribute of instance, which is of type owner.</p></section>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.mtc.Context"><code class="flex name class">
+<span>class <span class="ident">Context</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Context(Flag):
+    &#34;&#34;&#34; Flags for MTC &#34;&#34;&#34;
+    NONE = 0
+    SIZE_OK = auto()
+    DESERIALIZE_OK = auto()
+    KEYS_OK = auto()
+    VALUES_OK = auto()
+    CONFIDENTIALITY = auto()
+    INTEGRITY = auto()
+    AUTHENTICATED_ORIGIN = auto()
+    NONREPUDIATION = auto()
+    PFS = auto()
+    UNIQUENESS = auto()
+    LIMITED_SCOPE = auto()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Flag</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="aries_staticagent.mtc.Context.AUTHENTICATED_ORIGIN"><code class="name">var <span class="ident">AUTHENTICATED_ORIGIN</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.CONFIDENTIALITY"><code class="name">var <span class="ident">CONFIDENTIALITY</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.DESERIALIZE_OK"><code class="name">var <span class="ident">DESERIALIZE_OK</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.INTEGRITY"><code class="name">var <span class="ident">INTEGRITY</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.KEYS_OK"><code class="name">var <span class="ident">KEYS_OK</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.LIMITED_SCOPE"><code class="name">var <span class="ident">LIMITED_SCOPE</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.NONE"><code class="name">var <span class="ident">NONE</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.NONREPUDIATION"><code class="name">var <span class="ident">NONREPUDIATION</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.PFS"><code class="name">var <span class="ident">PFS</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.SIZE_OK"><code class="name">var <span class="ident">SIZE_OK</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.UNIQUENESS"><code class="name">var <span class="ident">UNIQUENESS</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.Context.VALUES_OK"><code class="name">var <span class="ident">VALUES_OK</span></code></dt>
+<dd>
+<section class="desc"><p>Flags for MTC</p></section>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.mtc.ContextsConflict"><code class="flex name class">
+<span>class <span class="ident">ContextsConflict</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Thrown when the passed contexts overlap</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ContextsConflict(Exception):
+    &#34;&#34;&#34; Thrown when the passed contexts overlap &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aries_staticagent.mtc.ExpectedMTC"><code class="flex name class">
+<span>class <span class="ident">ExpectedMTC</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>ExpectedMTC(affirmed, denied)</p></section>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.tuple</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="aries_staticagent.mtc.ExpectedMTC.affirmed"><code class="name">var <span class="ident">affirmed</span></code></dt>
+<dd>
+<section class="desc"><p>Alias for field number 0</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.ExpectedMTC.denied"><code class="name">var <span class="ident">denied</span></code></dt>
+<dd>
+<section class="desc"><p>Alias for field number 1</p></section>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext"><code class="flex name class">
+<span>class <span class="ident">MessageTrustContext</span></span>
+<span>(</span><span>affirmed=Context.NONE, denied=Context.NONE, additional_data=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Message Trust Context</p>
+<p>Holds the contexts as well as data associated with message trust
+contexts such as the keys used to encrypt the message and allowing us
+to know that the origin is authenticated, etc.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MessageTrustContext:
+    &#34;&#34;&#34; Message Trust Context
+
+        Holds the contexts as well as data associated with message trust
+        contexts such as the keys used to encrypt the message and allowing us
+        to know that the origin is authenticated, etc.
+    &#34;&#34;&#34;
+    __slots__ = &#39;_affirmed&#39;, &#39;_denied&#39;, &#39;additional_data&#39;
+
+    def __init__(
+            self,
+            affirmed: Context = Context.NONE,
+            denied: Context = Context.NONE,
+            additional_data: AdditionalData = None
+                ):
+
+        if affirmed &amp; denied != Context.NONE:
+            raise ContextsConflict()
+
+        self._affirmed = affirmed
+        self._denied = denied
+        self.additional_data = additional_data \
+            if additional_data else AdditionalData()
+
+    @property
+    def sender(self):
+        &#34;&#34;&#34;Shortcut to sender.&#34;&#34;&#34;
+        return self.additional_data.sender
+
+    @property
+    def recipient(self):
+        &#34;&#34;&#34;Shortcut to recipient.&#34;&#34;&#34;
+        return self.additional_data.recipient
+
+    @property
+    def affirmed(self):
+        &#34;&#34;&#34; Access affirmed contexts &#34;&#34;&#34;
+        return self._affirmed
+
+    @property
+    def denied(self):
+        &#34;&#34;&#34; Access denied contexts &#34;&#34;&#34;
+        return self._denied
+
+    def __getitem__(self, context: Context):
+        if (self._affirmed &amp; context) == context:
+            return True
+        if (self._denied &amp; context) == context:
+            return False
+        return None
+
+    def __setitem__(self, context: Context, value: Optional[bool]):
+        if not isinstance(context, Context):
+            raise TypeError(&#39;index must be of type Context&#39;)
+
+        if value is None:
+            # Set undefined
+            self._affirmed &amp;= ~context
+        elif value is True:
+            self._affirmed |= context
+            self._denied &amp;= ~context
+        elif value is False:
+            self._denied |= context
+            self._affirmed &amp;= ~context
+        else:
+            raise TypeError(
+                &#39;Value of type bool or None was expected, got {}&#39;.format(
+                    type(value)
+                )
+            )
+
+    def __str__(self):
+        str_repr = &#39;mtc:&#39;
+        plus = []
+        minus = []
+        for context, label in LABELS.items():
+            if self[context] is True:
+                plus.append(&#39;+{}&#39;.format(label))
+            elif self[context] is False:
+                minus.append(&#39;-{}&#39;.format(label))
+
+        str_repr = &#39; &#39;.join([str_repr] + plus + minus)
+        return str_repr
+
+    # Convenience methods
+    def set_authcrypted(self, sender: str, recipient: str):
+        &#34;&#34;&#34;Set MTC to match authcrypt.&#34;&#34;&#34;
+        self._affirmed = AUTHCRYPT_MSG.affirmed
+        self._denied = AUTHCRYPT_MSG.denied
+        self.additional_data.sender = sender
+        self.additional_data.recipient = recipient
+
+    def set_anoncrypted(self, recipient: str):
+        &#34;&#34;&#34;Set MTC to match anoncrypt.&#34;&#34;&#34;
+        self._affirmed = ANONCRYPT_MSG.affirmed
+        self._denied = ANONCRYPT_MSG.denied
+        self.additional_data.sender = None
+        self.additional_data.recipient = recipient
+
+    def set_plaintext(self):
+        self._affirmed = PLAINTEXT_MSG.affirmed
+        self._denied = PLAINTEXT_MSG.denied
+        self.additional_data.sender = None
+        self.additional_data.recipient = None
+
+    def is_authcrypted(self):
+        &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
+        return self[AUTHCRYPT_MSG.affirmed] is True and \
+            self[AUTHCRYPT_MSG.denied] is False
+
+    def is_anoncrypted(self):
+        &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
+        return self[ANONCRYPT_MSG.affirmed] is True and \
+            self[ANONCRYPT_MSG.denied] is False
+
+    def is_plaintext(self):
+        &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
+        return self[PLAINTEXT_MSG.affirmed] is True and \
+            self[PLAINTEXT_MSG.denied] is False</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="aries_staticagent.mtc.MessageTrustContext.additional_data"><code class="name">var <span class="ident">additional_data</span></code></dt>
+<dd>
+<section class="desc"><p>Return an attribute of instance, which is of type owner.</p></section>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.affirmed"><code class="name">var <span class="ident">affirmed</span></code></dt>
+<dd>
+<section class="desc"><p>Access affirmed contexts</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def affirmed(self):
+    &#34;&#34;&#34; Access affirmed contexts &#34;&#34;&#34;
+    return self._affirmed</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.denied"><code class="name">var <span class="ident">denied</span></code></dt>
+<dd>
+<section class="desc"><p>Access denied contexts</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def denied(self):
+    &#34;&#34;&#34; Access denied contexts &#34;&#34;&#34;
+    return self._denied</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.recipient"><code class="name">var <span class="ident">recipient</span></code></dt>
+<dd>
+<section class="desc"><p>Shortcut to recipient.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def recipient(self):
+    &#34;&#34;&#34;Shortcut to recipient.&#34;&#34;&#34;
+    return self.additional_data.recipient</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.sender"><code class="name">var <span class="ident">sender</span></code></dt>
+<dd>
+<section class="desc"><p>Shortcut to sender.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sender(self):
+    &#34;&#34;&#34;Shortcut to sender.&#34;&#34;&#34;
+    return self.additional_data.sender</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="aries_staticagent.mtc.MessageTrustContext.is_anoncrypted"><code class="name flex">
+<span>def <span class="ident">is_anoncrypted</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>MTC matches expected anoncrypt.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_anoncrypted(self):
+    &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
+    return self[ANONCRYPT_MSG.affirmed] is True and \
+        self[ANONCRYPT_MSG.denied] is False</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.is_authcrypted"><code class="name flex">
+<span>def <span class="ident">is_authcrypted</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>MTC matches expected authcrypt.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_authcrypted(self):
+    &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
+    return self[AUTHCRYPT_MSG.affirmed] is True and \
+        self[AUTHCRYPT_MSG.denied] is False</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.is_plaintext"><code class="name flex">
+<span>def <span class="ident">is_plaintext</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>MTC matches expected plaintext.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_plaintext(self):
+    &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
+    return self[PLAINTEXT_MSG.affirmed] is True and \
+        self[PLAINTEXT_MSG.denied] is False</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.set_anoncrypted"><code class="name flex">
+<span>def <span class="ident">set_anoncrypted</span></span>(<span>self, recipient)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Set MTC to match anoncrypt.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_anoncrypted(self, recipient: str):
+    &#34;&#34;&#34;Set MTC to match anoncrypt.&#34;&#34;&#34;
+    self._affirmed = ANONCRYPT_MSG.affirmed
+    self._denied = ANONCRYPT_MSG.denied
+    self.additional_data.sender = None
+    self.additional_data.recipient = recipient</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.set_authcrypted"><code class="name flex">
+<span>def <span class="ident">set_authcrypted</span></span>(<span>self, sender, recipient)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Set MTC to match authcrypt.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_authcrypted(self, sender: str, recipient: str):
+    &#34;&#34;&#34;Set MTC to match authcrypt.&#34;&#34;&#34;
+    self._affirmed = AUTHCRYPT_MSG.affirmed
+    self._denied = AUTHCRYPT_MSG.denied
+    self.additional_data.sender = sender
+    self.additional_data.recipient = recipient</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.mtc.MessageTrustContext.set_plaintext"><code class="name flex">
+<span>def <span class="ident">set_plaintext</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_plaintext(self):
+    self._affirmed = PLAINTEXT_MSG.affirmed
+    self._denied = PLAINTEXT_MSG.denied
+    self.additional_data.sender = None
+    self.additional_data.recipient = None</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="aries_staticagent" href="index.html">aries_staticagent</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="aries_staticagent.mtc.AdditionalData" href="#aries_staticagent.mtc.AdditionalData">AdditionalData</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.mtc.AdditionalData.recipient" href="#aries_staticagent.mtc.AdditionalData.recipient">recipient</a></code></li>
+<li><code><a title="aries_staticagent.mtc.AdditionalData.sender" href="#aries_staticagent.mtc.AdditionalData.sender">sender</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.mtc.Context" href="#aries_staticagent.mtc.Context">Context</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.mtc.Context.AUTHENTICATED_ORIGIN" href="#aries_staticagent.mtc.Context.AUTHENTICATED_ORIGIN">AUTHENTICATED_ORIGIN</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.CONFIDENTIALITY" href="#aries_staticagent.mtc.Context.CONFIDENTIALITY">CONFIDENTIALITY</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.DESERIALIZE_OK" href="#aries_staticagent.mtc.Context.DESERIALIZE_OK">DESERIALIZE_OK</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.INTEGRITY" href="#aries_staticagent.mtc.Context.INTEGRITY">INTEGRITY</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.KEYS_OK" href="#aries_staticagent.mtc.Context.KEYS_OK">KEYS_OK</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.LIMITED_SCOPE" href="#aries_staticagent.mtc.Context.LIMITED_SCOPE">LIMITED_SCOPE</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.NONE" href="#aries_staticagent.mtc.Context.NONE">NONE</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.NONREPUDIATION" href="#aries_staticagent.mtc.Context.NONREPUDIATION">NONREPUDIATION</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.PFS" href="#aries_staticagent.mtc.Context.PFS">PFS</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.SIZE_OK" href="#aries_staticagent.mtc.Context.SIZE_OK">SIZE_OK</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.UNIQUENESS" href="#aries_staticagent.mtc.Context.UNIQUENESS">UNIQUENESS</a></code></li>
+<li><code><a title="aries_staticagent.mtc.Context.VALUES_OK" href="#aries_staticagent.mtc.Context.VALUES_OK">VALUES_OK</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.mtc.ContextsConflict" href="#aries_staticagent.mtc.ContextsConflict">ContextsConflict</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.mtc.ExpectedMTC" href="#aries_staticagent.mtc.ExpectedMTC">ExpectedMTC</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.mtc.ExpectedMTC.affirmed" href="#aries_staticagent.mtc.ExpectedMTC.affirmed">affirmed</a></code></li>
+<li><code><a title="aries_staticagent.mtc.ExpectedMTC.denied" href="#aries_staticagent.mtc.ExpectedMTC.denied">denied</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.mtc.MessageTrustContext" href="#aries_staticagent.mtc.MessageTrustContext">MessageTrustContext</a></code></h4>
+<ul class="two-column">
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.additional_data" href="#aries_staticagent.mtc.MessageTrustContext.additional_data">additional_data</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.affirmed" href="#aries_staticagent.mtc.MessageTrustContext.affirmed">affirmed</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.denied" href="#aries_staticagent.mtc.MessageTrustContext.denied">denied</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.is_anoncrypted" href="#aries_staticagent.mtc.MessageTrustContext.is_anoncrypted">is_anoncrypted</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.is_authcrypted" href="#aries_staticagent.mtc.MessageTrustContext.is_authcrypted">is_authcrypted</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.is_plaintext" href="#aries_staticagent.mtc.MessageTrustContext.is_plaintext">is_plaintext</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.recipient" href="#aries_staticagent.mtc.MessageTrustContext.recipient">recipient</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.sender" href="#aries_staticagent.mtc.MessageTrustContext.sender">sender</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.set_anoncrypted" href="#aries_staticagent.mtc.MessageTrustContext.set_anoncrypted">set_anoncrypted</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.set_authcrypted" href="#aries_staticagent.mtc.MessageTrustContext.set_authcrypted">set_authcrypted</a></code></li>
+<li><code><a title="aries_staticagent.mtc.MessageTrustContext.set_plaintext" href="#aries_staticagent.mtc.MessageTrustContext.set_plaintext">set_plaintext</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
