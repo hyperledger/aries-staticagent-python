@@ -1,9 +1,6 @@
 ---
 layout: default
-title: Aries Static Agent Python Docs
+title: Aries Static Agent - Python
 ---
 
-Aries Static Agent Python Docs
-==============================
-
-Test content.
+Documentation can be found [here](aries_staticagent).
