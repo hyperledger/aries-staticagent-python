@@ -293,7 +293,7 @@ Inherits from dict meaning it behaves like a dictionary.</p></section>
 <h3>Static methods</h3>
 <dl>
 <dt id="aries_staticagent.message.Message.deserialize"><code class="name flex">
-<span>def <span class="ident">deserialize</span></span>(<span>serialized)</span>
+<span>def <span class="ident">deserialize</span></span>(<span>serialized: Union[str, bytes]) -> <a title="aries_staticagent.message.Message" href="#aries_staticagent.message.Message">Message</a></span>
 </code></dt>
 <dd>
 <section class="desc"><p>Deserialize a message from a json string.</p></section>
@@ -425,7 +425,7 @@ def version_info(self) -&gt; Semver:
 <h3>Methods</h3>
 <dl>
 <dt id="aries_staticagent.message.Message.pretty_print"><code class="name flex">
-<span>def <span class="ident">pretty_print</span></span>(<span>self)</span>
+<span>def <span class="ident">pretty_print</span></span>(<span>self) -> str</span>
 </code></dt>
 <dd>
 <section class="desc"><p>return a 'pretty print' representation of this message.</p></section>
@@ -439,7 +439,7 @@ def version_info(self) -&gt; Semver:
 </details>
 </dd>
 <dt id="aries_staticagent.message.Message.serialize"><code class="name flex">
-<span>def <span class="ident">serialize</span></span>(<span>self)</span>
+<span>def <span class="ident">serialize</span></span>(<span>self) -> str</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Serialize a message into a json string.</p></section>

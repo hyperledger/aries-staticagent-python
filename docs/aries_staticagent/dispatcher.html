@@ -234,7 +234,7 @@ messages to appropriate handlers.</p></section>
 <h3>Methods</h3>
 <dl>
 <dt id="aries_staticagent.dispatcher.Dispatcher.add_handler"><code class="name flex">
-<span>def <span class="ident">add_handler</span></span>(<span>self, handler)</span>
+<span>def <span class="ident">add_handler</span></span>(<span>self, handler: <a title="aries_staticagent.dispatcher.Handler" href="#aries_staticagent.dispatcher.Handler">Handler</a>)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Add a handler to routing tables.</p></section>
@@ -253,7 +253,7 @@ messages to appropriate handlers.</p></section>
 </details>
 </dd>
 <dt id="aries_staticagent.dispatcher.Dispatcher.add_handlers"><code class="name flex">
-<span>def <span class="ident">add_handlers</span></span>(<span>self, handlers)</span>
+<span>def <span class="ident">add_handlers</span></span>(<span>self, handlers: Sequence[<a title="aries_staticagent.dispatcher.Handler" href="#aries_staticagent.dispatcher.Handler">Handler</a>])</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Add a list of handlers to routing tables.</p></section>
@@ -283,7 +283,7 @@ messages to appropriate handlers.</p></section>
 </details>
 </dd>
 <dt id="aries_staticagent.dispatcher.Dispatcher.dispatch"><code class="name flex">
-<span>async def <span class="ident">dispatch</span></span>(<span>self, msg, *args, **kwargs)</span>
+<span>async def <span class="ident">dispatch</span></span>(<span>self, msg: <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Dispatch message to handler.</p></section>
@@ -326,7 +326,7 @@ messages to appropriate handlers.</p></section>
 </details>
 </dd>
 <dt id="aries_staticagent.dispatcher.Dispatcher.select_handler"><code class="name flex">
-<span>def <span class="ident">select_handler</span></span>(<span>self, msg)</span>
+<span>def <span class="ident">select_handler</span></span>(<span>self, msg: <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Find the closest appropriate module for a given message.</p></section>
@@ -362,7 +362,7 @@ messages to appropriate handlers.</p></section>
 </dd>
 <dt id="aries_staticagent.dispatcher.Handler"><code class="flex name class">
 <span>class <span class="ident">Handler</span></span>
-<span>(</span><span>type_, handler, context=None)</span>
+<span>(</span><span>type_: <a title="aries_staticagent.type.Type" href="type.html#aries_staticagent.type.Type">Type</a>, handler: Callable, context=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A Message Handler.</p></section>

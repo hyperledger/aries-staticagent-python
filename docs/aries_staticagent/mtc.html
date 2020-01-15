@@ -245,7 +245,7 @@ class MessageTrustContext:
 <dl>
 <dt id="aries_staticagent.mtc.AdditionalData"><code class="flex name class">
 <span>class <span class="ident">AdditionalData</span></span>
-<span>(</span><span>sender=None, recipient=None)</span>
+<span>(</span><span>sender: str = None, recipient: str = None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Container for data relevant to Message Trust.</p></section>
@@ -400,7 +400,7 @@ class MessageTrustContext:
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext"><code class="flex name class">
 <span>class <span class="ident">MessageTrustContext</span></span>
-<span>(</span><span>affirmed=Context.NONE, denied=Context.NONE, additional_data=None)</span>
+<span>(</span><span>affirmed: <a title="aries_staticagent.mtc.Context" href="#aries_staticagent.mtc.Context">Context</a> = <a title="aries_staticagent.mtc.Context.NONE" href="#aries_staticagent.mtc.Context.NONE">Context.NONE</a>, denied: <a title="aries_staticagent.mtc.Context" href="#aries_staticagent.mtc.Context">Context</a> = <a title="aries_staticagent.mtc.Context.NONE" href="#aries_staticagent.mtc.Context.NONE">Context.NONE</a>, additional_data: <a title="aries_staticagent.mtc.AdditionalData" href="#aries_staticagent.mtc.AdditionalData">AdditionalData</a> = None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Message Trust Context</p>
@@ -638,7 +638,7 @@ def sender(self):
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.set_anoncrypted"><code class="name flex">
-<span>def <span class="ident">set_anoncrypted</span></span>(<span>self, recipient)</span>
+<span>def <span class="ident">set_anoncrypted</span></span>(<span>self, recipient: str)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Set MTC to match anoncrypt.</p></section>
@@ -655,7 +655,7 @@ def sender(self):
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.set_authcrypted"><code class="name flex">
-<span>def <span class="ident">set_authcrypted</span></span>(<span>self, sender, recipient)</span>
+<span>def <span class="ident">set_authcrypted</span></span>(<span>self, sender: str, recipient: str)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Set MTC to match authcrypt.</p></section>

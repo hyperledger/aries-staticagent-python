@@ -104,7 +104,7 @@ async def http_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="aries_staticagent.utils.ensure_key_b58"><code class="name flex">
-<span>def <span class="ident">ensure_key_b58</span></span>(<span>key)</span>
+<span>def <span class="ident">ensure_key_b58</span></span>(<span>key: Union[bytes, str])</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Ensure key is formatted as b58 string.</p></section>
@@ -123,7 +123,7 @@ async def http_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
 </details>
 </dd>
 <dt id="aries_staticagent.utils.ensure_key_bytes"><code class="name flex">
-<span>def <span class="ident">ensure_key_bytes</span></span>(<span>key)</span>
+<span>def <span class="ident">ensure_key_bytes</span></span>(<span>key: Union[bytes, str])</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Ensure key is formatted as bytes.</p></section>
@@ -142,7 +142,7 @@ async def http_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
 </details>
 </dd>
 <dt id="aries_staticagent.utils.forward_msg"><code class="name flex">
-<span>def <span class="ident">forward_msg</span></span>(<span>to, msg)</span>
+<span>def <span class="ident">forward_msg</span></span>(<span>to: Union[bytes, str], msg: dict)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Return a forward message.</p></section>
@@ -160,7 +160,7 @@ async def http_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
 </details>
 </dd>
 <dt id="aries_staticagent.utils.http_send"><code class="name flex">
-<span>async def <span class="ident">http_send</span></span>(<span>msg, endpoint)</span>
+<span>async def <span class="ident">http_send</span></span>(<span>msg: bytes, endpoint: str) -> Union[bytes, NoneType]</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Send over HTTP.</p></section>

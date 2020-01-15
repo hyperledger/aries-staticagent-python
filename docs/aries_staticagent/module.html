@@ -27,8 +27,6 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34; Module base class &#34;&#34;&#34;
 
-from functools import partial
-from operator import is_
 from typing import Union, Callable
 from .type import Type
 
@@ -69,9 +67,9 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
             version: str = None
                 ):
         &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
-        doc_uri = doc_uri if doc_uri is not None else self.__class__.DOC_URI
-        protocol = protocol if protocol is not None else self.__class__.PROTOCOL
-        version = version if version is not None else self.__class__.VERSION
+        doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
+        protocol = protocol if protocol is not None else self.PROTOCOL
+        version = version if version is not None else self.VERSION
         if doc_uri is None:
             raise TypeError(&#39;doc_uri must be str&#39;)
         if protocol is None:
@@ -331,9 +329,9 @@ Ensures Module classes are well formed and provides convenience methods</p></sec
             version: str = None
                 ):
         &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
-        doc_uri = doc_uri if doc_uri is not None else self.__class__.DOC_URI
-        protocol = protocol if protocol is not None else self.__class__.PROTOCOL
-        version = version if version is not None else self.__class__.VERSION
+        doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
+        protocol = protocol if protocol is not None else self.PROTOCOL
+        version = version if version is not None else self.VERSION
         if doc_uri is None:
             raise TypeError(&#39;doc_uri must be str&#39;)
         if protocol is None:
@@ -405,7 +403,7 @@ def routes(self):
 <h3>Methods</h3>
 <dl>
 <dt id="aries_staticagent.module.Module.type"><code class="name flex">
-<span>def <span class="ident">type</span></span>(<span>self, name, doc_uri=None, protocol=None, version=None)</span>
+<span>def <span class="ident">type</span></span>(<span>self, name: str, doc_uri: str = None, protocol: str = None, version: str = None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Build a type string for this module.</p></section>
@@ -421,9 +419,9 @@ def routes(self):
         version: str = None
             ):
     &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
-    doc_uri = doc_uri if doc_uri is not None else self.__class__.DOC_URI
-    protocol = protocol if protocol is not None else self.__class__.PROTOCOL
-    version = version if version is not None else self.__class__.VERSION
+    doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
+    protocol = protocol if protocol is not None else self.PROTOCOL
+    version = version if version is not None else self.VERSION
     if doc_uri is None:
         raise TypeError(&#39;doc_uri must be str&#39;)
     if protocol is None:
@@ -437,7 +435,7 @@ def routes(self):
 </dd>
 <dt id="aries_staticagent.module.PartialType"><code class="flex name class">
 <span>class <span class="ident">PartialType</span></span>
-<span>(</span><span>name, doc_uri=None, protocol=None, version=None)</span>
+<span>(</span><span>name: str, doc_uri: str = None, protocol: str = None, version: str = None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Class containing the type information of a route before having the
@@ -506,7 +504,7 @@ a module definition.</p></section>
 <h3>Methods</h3>
 <dl>
 <dt id="aries_staticagent.module.PartialType.complete"><code class="name flex">
-<span>def <span class="ident">complete</span></span>(<span>self, mod)</span>
+<span>def <span class="ident">complete</span></span>(<span>self, mod: <a title="aries_staticagent.module.Module" href="#aries_staticagent.module.Module">Module</a>) -> <a title="aries_staticagent.type.Type" href="type.html#aries_staticagent.type.Type">Type</a></span>
 </code></dt>
 <dd>
 <section class="desc"><p>Return a complete type given the module context.</p></section>
