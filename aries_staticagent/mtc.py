@@ -5,7 +5,7 @@
 """
 from collections import namedtuple
 from enum import Flag, auto
-from typing import Optional
+from typing import Optional, TypeVar
 
 
 class ContextsConflict(Exception):
@@ -58,19 +58,17 @@ UNIQUENESS = Context.UNIQUENESS
 LIMITED_SCOPE = Context.LIMITED_SCOPE
 
 # Typical MTCs
-ExpectedMTC = namedtuple('ExpectedMTC', 'affirmed, denied')
-AUTHCRYPT_MSG = ExpectedMTC(
-    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN,
-    NONREPUDIATION
+AUTHCRYPT_AFFIRMED = (
+    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN
 )
-ANONCRYPT_MSG = ExpectedMTC(
-    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK,
-    NONREPUDIATION | AUTHENTICATED_ORIGIN
-)
-PLAINTEXT_MSG = ExpectedMTC(
-    DESERIALIZE_OK,
-    CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN  # | NONREPUDIATION ?
-)
+AUTHCRYPT_DENIED = NONREPUDIATION
+
+ANONCRYPT_AFFIRMED = CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK
+ANONCRYPT_DENIED = NONREPUDIATION | AUTHENTICATED_ORIGIN
+
+PLAINTEXT_AFFIRMED = DESERIALIZE_OK
+PLAINTEXT_DENIED = CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN
+# | NONREPUDIATION ?
 
 
 class AdditionalData:
@@ -171,35 +169,36 @@ class MessageTrustContext:
     # Convenience methods
     def set_authcrypted(self, sender: str, recipient: str):
         """Set MTC to match authcrypt."""
-        self._affirmed = AUTHCRYPT_MSG.affirmed
-        self._denied = AUTHCRYPT_MSG.denied
+        self._affirmed = AUTHCRYPT_AFFIRMED
+        self._denied = AUTHCRYPT_DENIED
         self.additional_data.sender = sender
         self.additional_data.recipient = recipient
 
     def set_anoncrypted(self, recipient: str):
         """Set MTC to match anoncrypt."""
-        self._affirmed = ANONCRYPT_MSG.affirmed
-        self._denied = ANONCRYPT_MSG.denied
+        self._affirmed = ANONCRYPT_AFFIRMED
+        self._denied = ANONCRYPT_DENIED
         self.additional_data.sender = None
         self.additional_data.recipient = recipient
 
     def set_plaintext(self):
-        self._affirmed = PLAINTEXT_MSG.affirmed
-        self._denied = PLAINTEXT_MSG.denied
+        """Set MTC to match plaintext."""
+        self._affirmed = PLAINTEXT_AFFIRMED
+        self._denied = PLAINTEXT_DENIED
         self.additional_data.sender = None
         self.additional_data.recipient = None
 
     def is_authcrypted(self):
         """MTC matches expected authcrypt."""
-        return self[AUTHCRYPT_MSG.affirmed] is True and \
-            self[AUTHCRYPT_MSG.denied] is False
+        return self[AUTHCRYPT_AFFIRMED] is True and \
+            self[AUTHCRYPT_DENIED] is False
 
     def is_anoncrypted(self):
         """MTC matches expected anoncrypt."""
-        return self[ANONCRYPT_MSG.affirmed] is True and \
-            self[ANONCRYPT_MSG.denied] is False
+        return self[ANONCRYPT_AFFIRMED] is True and \
+            self[ANONCRYPT_DENIED] is False
 
     def is_plaintext(self):
         """MTC matches expected plaintext."""
-        return self[PLAINTEXT_MSG.affirmed] is True and \
-            self[PLAINTEXT_MSG.denied] is False
+        return self[PLAINTEXT_AFFIRMED] is True and \
+            self[PLAINTEXT_DENIED] is False
