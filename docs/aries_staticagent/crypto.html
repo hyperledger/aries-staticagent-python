@@ -650,7 +650,7 @@ def unpack_message(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="aries_staticagent.crypto.anon_crypt_message"><code class="name flex">
-<span>def <span class="ident">anon_crypt_message</span></span>(<span>message: bytes, to_verkey: bytes) -> bytes</span>
+<span>def <span class="ident">anon_crypt_message</span></span>(<span>message, to_verkey)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Apply anon_crypt to a binary message.</p>
@@ -688,7 +688,7 @@ def unpack_message(
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.anon_decrypt_message"><code class="name flex">
-<span>def <span class="ident">anon_decrypt_message</span></span>(<span>enc_message: bytes, secret: bytes) -> bytes</span>
+<span>def <span class="ident">anon_decrypt_message</span></span>(<span>enc_message, secret)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Apply anon_decrypt to a binary message.</p>
@@ -729,7 +729,7 @@ def unpack_message(
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.auth_crypt_message"><code class="name flex">
-<span>def <span class="ident">auth_crypt_message</span></span>(<span>message: bytes, to_verkey: bytes, from_verkey: bytes, from_sigkey: bytes) -> bytes</span>
+<span>def <span class="ident">auth_crypt_message</span></span>(<span>message, to_verkey, from_verkey, from_sigkey)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Apply auth_crypt to a binary message.</p>
@@ -789,7 +789,7 @@ def unpack_message(
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.auth_decrypt_message"><code class="name flex">
-<span>def <span class="ident">auth_decrypt_message</span></span>(<span>enc_message: bytes, my_verkey: bytes, my_sigkey: bytes) -> Tuple[bytes, str]</span>
+<span>def <span class="ident">auth_decrypt_message</span></span>(<span>enc_message, my_verkey, my_sigkey)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Apply auth_decrypt to a binary message.</p>
@@ -841,7 +841,7 @@ def unpack_message(
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.b58_to_bytes"><code class="name flex">
-<span>def <span class="ident">b58_to_bytes</span></span>(<span>val: str) -> bytes</span>
+<span>def <span class="ident">b58_to_bytes</span></span>(<span>val)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Convert a base 58 string to bytes.</p>
@@ -863,7 +863,7 @@ def b58_to_bytes(val: str) -&gt; bytes:
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.b64_to_bytes"><code class="name flex">
-<span>def <span class="ident">b64_to_bytes</span></span>(<span>val: str, urlsafe=False) -> bytes</span>
+<span>def <span class="ident">b64_to_bytes</span></span>(<span>val, urlsafe=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Convert a base 64 string to bytes.</p></section>
@@ -879,7 +879,7 @@ def b58_to_bytes(val: str) -&gt; bytes:
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.bytes_to_b58"><code class="name flex">
-<span>def <span class="ident">bytes_to_b58</span></span>(<span>val: bytes) -> str</span>
+<span>def <span class="ident">bytes_to_b58</span></span>(<span>val)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Convert a byte string to base 58.</p>
@@ -901,7 +901,7 @@ def bytes_to_b58(val: bytes) -&gt; str:
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.bytes_to_b64"><code class="name flex">
-<span>def <span class="ident">bytes_to_b64</span></span>(<span>val: bytes, urlsafe=False) -> str</span>
+<span>def <span class="ident">bytes_to_b64</span></span>(<span>val, urlsafe=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Convert a byte string to base 64.</p></section>
@@ -917,7 +917,7 @@ def bytes_to_b58(val: bytes) -&gt; str:
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.create_keypair"><code class="name flex">
-<span>def <span class="ident">create_keypair</span></span>(<span>seed: bytes = None) -> Tuple[bytes, bytes]</span>
+<span>def <span class="ident">create_keypair</span></span>(<span>seed=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Create a public and private signing keypair from a seed value.</p>
@@ -955,7 +955,7 @@ def bytes_to_b58(val: bytes) -&gt; str:
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.decrypt_plaintext"><code class="name flex">
-<span>def <span class="ident">decrypt_plaintext</span></span>(<span>ciphertext: bytes, recips_bin: bytes, nonce: bytes, key: bytes) -> str</span>
+<span>def <span class="ident">decrypt_plaintext</span></span>(<span>ciphertext, recips_bin, nonce, key)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Decrypt the payload of a packed message.</p>
@@ -996,7 +996,7 @@ key:</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.encrypt_plaintext"><code class="name flex">
-<span>def <span class="ident">encrypt_plaintext</span></span>(<span>message: str, add_data: bytes, key: bytes) -> Tuple[bytes, bytes, bytes]</span>
+<span>def <span class="ident">encrypt_plaintext</span></span>(<span>message, add_data, key)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Encrypt the payload of a packed message.</p>
@@ -1046,7 +1046,7 @@ key:</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.locate_pack_recipient_key"><code class="name flex">
-<span>def <span class="ident">locate_pack_recipient_key</span></span>(<span>recipients: Sequence[dict], my_verkey: bytes, my_sigkey: bytes) -> Tuple[bytes, str, str]</span>
+<span>def <span class="ident">locate_pack_recipient_key</span></span>(<span>recipients, my_verkey, my_sigkey)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Locate pack recipient key.</p>
@@ -1151,7 +1151,7 @@ corresponding recipient block, if any is defined.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.pack_message"><code class="name flex">
-<span>def <span class="ident">pack_message</span></span>(<span>message: str, to_verkeys: Sequence[bytes], from_verkey: bytes = None, from_sigkey: bytes = None) -> collections.OrderedDict</span>
+<span>def <span class="ident">pack_message</span></span>(<span>message, to_verkeys, from_verkey=None, from_sigkey=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Assemble a packed message for a set of recipients, optionally including
@@ -1221,7 +1221,7 @@ the sender.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.prepare_pack_recipient_keys"><code class="name flex">
-<span>def <span class="ident">prepare_pack_recipient_keys</span></span>(<span>to_verkeys: Sequence[bytes], from_verkey: bytes = None, from_sigkey: bytes = None) -> Tuple[str, bytes]</span>
+<span>def <span class="ident">prepare_pack_recipient_keys</span></span>(<span>to_verkeys, from_verkey=None, from_sigkey=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Assemble the recipients block of a packed message.</p>
@@ -1327,7 +1327,7 @@ the sender.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.random_seed"><code class="name flex">
-<span>def <span class="ident">random_seed</span></span>(<span>) -> bytes</span>
+<span>def <span class="ident">random_seed</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Generate a random seed value.</p>
@@ -1352,7 +1352,7 @@ the sender.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.sign_message"><code class="name flex">
-<span>def <span class="ident">sign_message</span></span>(<span>message: bytes, secret: bytes) -> bytes</span>
+<span>def <span class="ident">sign_message</span></span>(<span>message, secret)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Sign a message using a private signing key.</p>
@@ -1390,7 +1390,7 @@ the sender.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.sign_message_field"><code class="name flex">
-<span>def <span class="ident">sign_message_field</span></span>(<span>field_value: Dict, signer: str, secret: bytes) -> Dict</span>
+<span>def <span class="ident">sign_message_field</span></span>(<span>field_value, signer, secret)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Sign a field of a message and return the value of a signature decorator.</p></section>
@@ -1421,7 +1421,7 @@ the sender.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.unpack_message"><code class="name flex">
-<span>def <span class="ident">unpack_message</span></span>(<span>enc_message: Union[Dict, bytes], my_verkey: bytes, my_sigkey: bytes) -> Tuple[str, Union[str, NoneType], str]</span>
+<span>def <span class="ident">unpack_message</span></span>(<span>enc_message, my_verkey, my_sigkey)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Decode a packed message.</p>
@@ -1521,7 +1521,7 @@ recipient.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.validate_seed"><code class="name flex">
-<span>def <span class="ident">validate_seed</span></span>(<span>seed: Union[str, bytes]) -> Union[bytes, NoneType]</span>
+<span>def <span class="ident">validate_seed</span></span>(<span>seed)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Convert a seed parameter to standard format and check length.</p>
@@ -1565,7 +1565,7 @@ recipient.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.verify_signed_message"><code class="name flex">
-<span>def <span class="ident">verify_signed_message</span></span>(<span>signed: bytes, verkey: bytes) -> bool</span>
+<span>def <span class="ident">verify_signed_message</span></span>(<span>signed, verkey)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Verify a signed message according to a public verification key.</p>
@@ -1605,7 +1605,7 @@ recipient.</p>
 </details>
 </dd>
 <dt id="aries_staticagent.crypto.verify_signed_message_field"><code class="name flex">
-<span>def <span class="ident">verify_signed_message_field</span></span>(<span>signed_field: Dict) -> Tuple[str, Dict]</span>
+<span>def <span class="ident">verify_signed_message_field</span></span>(<span>signed_field)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Verify a signed message field</p></section>

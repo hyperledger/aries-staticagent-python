@@ -22,6 +22,9 @@ title: Aries Static Agent - Python
 description: >- # this means to ignore newlines until "baseurl:"
     A library for creating static agents.
 
+show_doc_button: true
+doc_url: aries_staticagent
+
 # Build settings
 theme: jekyll-theme-cayman 
 

@@ -34,7 +34,7 @@ that RFC.</p>
 &#34;&#34;&#34;
 from collections import namedtuple
 from enum import Flag, auto
-from typing import Optional
+from typing import Optional, TypeVar
 
 
 class ContextsConflict(Exception):
@@ -87,19 +87,17 @@ UNIQUENESS = Context.UNIQUENESS
 LIMITED_SCOPE = Context.LIMITED_SCOPE
 
 # Typical MTCs
-ExpectedMTC = namedtuple(&#39;ExpectedMTC&#39;, &#39;affirmed, denied&#39;)
-AUTHCRYPT_MSG = ExpectedMTC(
-    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN,
-    NONREPUDIATION
+AUTHCRYPT_AFFIRMED = (
+    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN
 )
-ANONCRYPT_MSG = ExpectedMTC(
-    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK,
-    NONREPUDIATION | AUTHENTICATED_ORIGIN
-)
-PLAINTEXT_MSG = ExpectedMTC(
-    DESERIALIZE_OK,
-    CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN  # | NONREPUDIATION ?
-)
+AUTHCRYPT_DENIED = NONREPUDIATION
+
+ANONCRYPT_AFFIRMED = CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK
+ANONCRYPT_DENIED = NONREPUDIATION | AUTHENTICATED_ORIGIN
+
+PLAINTEXT_AFFIRMED = DESERIALIZE_OK
+PLAINTEXT_DENIED = CONFIDENTIALITY | INTEGRITY | AUTHENTICATED_ORIGIN
+# | NONREPUDIATION ?
 
 
 class AdditionalData:
@@ -200,38 +198,39 @@ class MessageTrustContext:
     # Convenience methods
     def set_authcrypted(self, sender: str, recipient: str):
         &#34;&#34;&#34;Set MTC to match authcrypt.&#34;&#34;&#34;
-        self._affirmed = AUTHCRYPT_MSG.affirmed
-        self._denied = AUTHCRYPT_MSG.denied
+        self._affirmed = AUTHCRYPT_AFFIRMED
+        self._denied = AUTHCRYPT_DENIED
         self.additional_data.sender = sender
         self.additional_data.recipient = recipient
 
     def set_anoncrypted(self, recipient: str):
         &#34;&#34;&#34;Set MTC to match anoncrypt.&#34;&#34;&#34;
-        self._affirmed = ANONCRYPT_MSG.affirmed
-        self._denied = ANONCRYPT_MSG.denied
+        self._affirmed = ANONCRYPT_AFFIRMED
+        self._denied = ANONCRYPT_DENIED
         self.additional_data.sender = None
         self.additional_data.recipient = recipient
 
     def set_plaintext(self):
-        self._affirmed = PLAINTEXT_MSG.affirmed
-        self._denied = PLAINTEXT_MSG.denied
+        &#34;&#34;&#34;Set MTC to match plaintext.&#34;&#34;&#34;
+        self._affirmed = PLAINTEXT_AFFIRMED
+        self._denied = PLAINTEXT_DENIED
         self.additional_data.sender = None
         self.additional_data.recipient = None
 
     def is_authcrypted(self):
         &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
-        return self[AUTHCRYPT_MSG.affirmed] is True and \
-            self[AUTHCRYPT_MSG.denied] is False
+        return self[AUTHCRYPT_AFFIRMED] is True and \
+            self[AUTHCRYPT_DENIED] is False
 
     def is_anoncrypted(self):
         &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
-        return self[ANONCRYPT_MSG.affirmed] is True and \
-            self[ANONCRYPT_MSG.denied] is False
+        return self[ANONCRYPT_AFFIRMED] is True and \
+            self[ANONCRYPT_DENIED] is False
 
     def is_plaintext(self):
         &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
-        return self[PLAINTEXT_MSG.affirmed] is True and \
-            self[PLAINTEXT_MSG.denied] is False</code></pre>
+        return self[PLAINTEXT_AFFIRMED] is True and \
+            self[PLAINTEXT_DENIED] is False</code></pre>
 </details>
 </section>
 <section>
@@ -245,7 +244,7 @@ class MessageTrustContext:
 <dl>
 <dt id="aries_staticagent.mtc.AdditionalData"><code class="flex name class">
 <span>class <span class="ident">AdditionalData</span></span>
-<span>(</span><span>sender: str = None, recipient: str = None)</span>
+<span>(</span><span>sender=None, recipient=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Container for data relevant to Message Trust.</p></section>
@@ -376,31 +375,9 @@ class MessageTrustContext:
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="aries_staticagent.mtc.ExpectedMTC"><code class="flex name class">
-<span>class <span class="ident">ExpectedMTC</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>ExpectedMTC(affirmed, denied)</p></section>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.tuple</li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="aries_staticagent.mtc.ExpectedMTC.affirmed"><code class="name">var <span class="ident">affirmed</span></code></dt>
-<dd>
-<section class="desc"><p>Alias for field number 0</p></section>
-</dd>
-<dt id="aries_staticagent.mtc.ExpectedMTC.denied"><code class="name">var <span class="ident">denied</span></code></dt>
-<dd>
-<section class="desc"><p>Alias for field number 1</p></section>
-</dd>
-</dl>
-</dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext"><code class="flex name class">
 <span>class <span class="ident">MessageTrustContext</span></span>
-<span>(</span><span>affirmed: <a title="aries_staticagent.mtc.Context" href="#aries_staticagent.mtc.Context">Context</a> = <a title="aries_staticagent.mtc.Context.NONE" href="#aries_staticagent.mtc.Context.NONE">Context.NONE</a>, denied: <a title="aries_staticagent.mtc.Context" href="#aries_staticagent.mtc.Context">Context</a> = <a title="aries_staticagent.mtc.Context.NONE" href="#aries_staticagent.mtc.Context.NONE">Context.NONE</a>, additional_data: <a title="aries_staticagent.mtc.AdditionalData" href="#aries_staticagent.mtc.AdditionalData">AdditionalData</a> = None)</span>
+<span>(</span><span>affirmed=Context.NONE, denied=Context.NONE, additional_data=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Message Trust Context</p>
@@ -498,38 +475,39 @@ to know that the origin is authenticated, etc.</p></section>
     # Convenience methods
     def set_authcrypted(self, sender: str, recipient: str):
         &#34;&#34;&#34;Set MTC to match authcrypt.&#34;&#34;&#34;
-        self._affirmed = AUTHCRYPT_MSG.affirmed
-        self._denied = AUTHCRYPT_MSG.denied
+        self._affirmed = AUTHCRYPT_AFFIRMED
+        self._denied = AUTHCRYPT_DENIED
         self.additional_data.sender = sender
         self.additional_data.recipient = recipient
 
     def set_anoncrypted(self, recipient: str):
         &#34;&#34;&#34;Set MTC to match anoncrypt.&#34;&#34;&#34;
-        self._affirmed = ANONCRYPT_MSG.affirmed
-        self._denied = ANONCRYPT_MSG.denied
+        self._affirmed = ANONCRYPT_AFFIRMED
+        self._denied = ANONCRYPT_DENIED
         self.additional_data.sender = None
         self.additional_data.recipient = recipient
 
     def set_plaintext(self):
-        self._affirmed = PLAINTEXT_MSG.affirmed
-        self._denied = PLAINTEXT_MSG.denied
+        &#34;&#34;&#34;Set MTC to match plaintext.&#34;&#34;&#34;
+        self._affirmed = PLAINTEXT_AFFIRMED
+        self._denied = PLAINTEXT_DENIED
         self.additional_data.sender = None
         self.additional_data.recipient = None
 
     def is_authcrypted(self):
         &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
-        return self[AUTHCRYPT_MSG.affirmed] is True and \
-            self[AUTHCRYPT_MSG.denied] is False
+        return self[AUTHCRYPT_AFFIRMED] is True and \
+            self[AUTHCRYPT_DENIED] is False
 
     def is_anoncrypted(self):
         &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
-        return self[ANONCRYPT_MSG.affirmed] is True and \
-            self[ANONCRYPT_MSG.denied] is False
+        return self[ANONCRYPT_AFFIRMED] is True and \
+            self[ANONCRYPT_DENIED] is False
 
     def is_plaintext(self):
         &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
-        return self[PLAINTEXT_MSG.affirmed] is True and \
-            self[PLAINTEXT_MSG.denied] is False</code></pre>
+        return self[PLAINTEXT_AFFIRMED] is True and \
+            self[PLAINTEXT_DENIED] is False</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -603,8 +581,8 @@ def sender(self):
 </summary>
 <pre><code class="python">def is_anoncrypted(self):
     &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
-    return self[ANONCRYPT_MSG.affirmed] is True and \
-        self[ANONCRYPT_MSG.denied] is False</code></pre>
+    return self[ANONCRYPT_AFFIRMED] is True and \
+        self[ANONCRYPT_DENIED] is False</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.is_authcrypted"><code class="name flex">
@@ -618,8 +596,8 @@ def sender(self):
 </summary>
 <pre><code class="python">def is_authcrypted(self):
     &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
-    return self[AUTHCRYPT_MSG.affirmed] is True and \
-        self[AUTHCRYPT_MSG.denied] is False</code></pre>
+    return self[AUTHCRYPT_AFFIRMED] is True and \
+        self[AUTHCRYPT_DENIED] is False</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.is_plaintext"><code class="name flex">
@@ -633,12 +611,12 @@ def sender(self):
 </summary>
 <pre><code class="python">def is_plaintext(self):
     &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
-    return self[PLAINTEXT_MSG.affirmed] is True and \
-        self[PLAINTEXT_MSG.denied] is False</code></pre>
+    return self[PLAINTEXT_AFFIRMED] is True and \
+        self[PLAINTEXT_DENIED] is False</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.set_anoncrypted"><code class="name flex">
-<span>def <span class="ident">set_anoncrypted</span></span>(<span>self, recipient: str)</span>
+<span>def <span class="ident">set_anoncrypted</span></span>(<span>self, recipient)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Set MTC to match anoncrypt.</p></section>
@@ -648,14 +626,14 @@ def sender(self):
 </summary>
 <pre><code class="python">def set_anoncrypted(self, recipient: str):
     &#34;&#34;&#34;Set MTC to match anoncrypt.&#34;&#34;&#34;
-    self._affirmed = ANONCRYPT_MSG.affirmed
-    self._denied = ANONCRYPT_MSG.denied
+    self._affirmed = ANONCRYPT_AFFIRMED
+    self._denied = ANONCRYPT_DENIED
     self.additional_data.sender = None
     self.additional_data.recipient = recipient</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.set_authcrypted"><code class="name flex">
-<span>def <span class="ident">set_authcrypted</span></span>(<span>self, sender: str, recipient: str)</span>
+<span>def <span class="ident">set_authcrypted</span></span>(<span>self, sender, recipient)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Set MTC to match authcrypt.</p></section>
@@ -665,8 +643,8 @@ def sender(self):
 </summary>
 <pre><code class="python">def set_authcrypted(self, sender: str, recipient: str):
     &#34;&#34;&#34;Set MTC to match authcrypt.&#34;&#34;&#34;
-    self._affirmed = AUTHCRYPT_MSG.affirmed
-    self._denied = AUTHCRYPT_MSG.denied
+    self._affirmed = AUTHCRYPT_AFFIRMED
+    self._denied = AUTHCRYPT_DENIED
     self.additional_data.sender = sender
     self.additional_data.recipient = recipient</code></pre>
 </details>
@@ -675,14 +653,15 @@ def sender(self):
 <span>def <span class="ident">set_plaintext</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Set MTC to match plaintext.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_plaintext(self):
-    self._affirmed = PLAINTEXT_MSG.affirmed
-    self._denied = PLAINTEXT_MSG.denied
+    &#34;&#34;&#34;Set MTC to match plaintext.&#34;&#34;&#34;
+    self._affirmed = PLAINTEXT_AFFIRMED
+    self._denied = PLAINTEXT_DENIED
     self.additional_data.sender = None
     self.additional_data.recipient = None</code></pre>
 </details>
@@ -731,13 +710,6 @@ def sender(self):
 </li>
 <li>
 <h4><code><a title="aries_staticagent.mtc.ContextsConflict" href="#aries_staticagent.mtc.ContextsConflict">ContextsConflict</a></code></h4>
-</li>
-<li>
-<h4><code><a title="aries_staticagent.mtc.ExpectedMTC" href="#aries_staticagent.mtc.ExpectedMTC">ExpectedMTC</a></code></h4>
-<ul class="">
-<li><code><a title="aries_staticagent.mtc.ExpectedMTC.affirmed" href="#aries_staticagent.mtc.ExpectedMTC.affirmed">affirmed</a></code></li>
-<li><code><a title="aries_staticagent.mtc.ExpectedMTC.denied" href="#aries_staticagent.mtc.ExpectedMTC.denied">denied</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="aries_staticagent.mtc.MessageTrustContext" href="#aries_staticagent.mtc.MessageTrustContext">MessageTrustContext</a></code></h4>
