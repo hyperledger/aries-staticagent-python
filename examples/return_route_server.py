@@ -5,6 +5,7 @@ return routing.
 """
 
 import hashlib
+import os
 from aiohttp import web
 from aries_staticagent import StaticConnection, crypto, utils
 
@@ -43,7 +44,7 @@ def main():
     app = web.Application()
     app.add_routes([web.post('/', handle)])
 
-    web.run_app(app, port=3000)
+    web.run_app(app, port=os.environ.get('PORT', 3000))
 
 
 if __name__ == '__main__':

@@ -30,5 +30,9 @@ def config():
         '--my-sigkey',
         **environ_or_required('ARIES_MY_PRIVATE_KEY')
     )
+    parser.add_argument(
+        '--port',
+        default=os.environ.get('PORT', 3000)
+    )
     args = parser.parse_args()
     return args

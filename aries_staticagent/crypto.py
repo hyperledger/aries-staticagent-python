@@ -449,7 +449,7 @@ def locate_pack_recipient_key(
             cek = nacl.bindings.crypto_box_seal_open(encrypted_key, pk, sk)
         return cek, sender_vk, recip_vk_b58
     raise ValueError(
-        "No corresponding recipient key found in {}".format(not_found)
+        "Verkey {} not found in {}".format(bytes_to_b58(my_verkey), not_found)
     )
 
 
