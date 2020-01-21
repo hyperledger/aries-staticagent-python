@@ -3,9 +3,8 @@
     This file is inspired by the example implementation contained within
     that RFC.
 """
-from collections import namedtuple
 from enum import Flag, auto
-from typing import Optional, TypeVar
+from typing import Optional
 
 
 class ContextsConflict(Exception):
