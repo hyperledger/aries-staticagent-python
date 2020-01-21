@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>aries_staticagent.module API documentation</title>
+<meta name="description" content="Module base class" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>aries_staticagent.module</code></h1>
+</header>
+<section id="section-intro">
+<p>Module base class</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34; Module base class &#34;&#34;&#34;
+
+from typing import Union, Callable
+from .type import Type
+
+
+class InvalidModule(Exception):
+    &#34;&#34;&#34; Thrown when module is malformed. &#34;&#34;&#34;
+
+
+class MetaModule(type):
+    &#34;&#34;&#34; MetaModule:
+        Ensures Module classes are well formed and provides convenience methods
+    &#34;&#34;&#34;
+    def __new__(cls, name, bases, dct):
+        if &#39;DOC_URI&#39; not in dct:
+            raise InvalidModule(&#39;DOC_URI missing from module definition&#39;)
+        if &#39;PROTOCOL&#39; not in dct:
+            raise InvalidModule(&#34;PROTOCOL missing from module definition&#34;)
+        if &#39;VERSION&#39; not in dct:
+            raise InvalidModule(&#39;VERSION missing from module definition&#39;)
+
+        return type.__new__(cls, name, bases, dct)
+
+
+class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
+    &#34;&#34;&#34; Base Module class &#34;&#34;&#34;
+    DOC_URI = None
+    PROTOCOL = None
+    VERSION = None
+
+    def __init__(self):
+        self._routes = None
+
+    def type(
+            self,
+            name: str,
+            doc_uri: str = None,
+            protocol: str = None,
+            version: str = None
+                ):
+        &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
+        doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
+        protocol = protocol if protocol is not None else self.PROTOCOL
+        version = version if version is not None else self.VERSION
+        if doc_uri is None:
+            raise TypeError(&#39;doc_uri must be str&#39;)
+        if protocol is None:
+            raise TypeError(&#39;protocol must be str&#39;)
+        if version is None:
+            raise TypeError(&#39;version must be str&#39;)
+        return Type(doc_uri, protocol, version, name)
+
+    def _find_routes(self):
+        found = {}
+        for key in dir(self):
+            if key == &#39;routes&#39; or key.startswith(&#39;__&#39;):
+                continue
+            val = getattr(self, key)
+            if hasattr(val, &#39;handler_for&#39;):
+                msg_type = val.handler_for
+                if isinstance(msg_type, PartialType):
+                    msg_type = msg_type.complete(self)
+
+                found[msg_type] = val
+
+        return found
+
+    @property
+    def routes(self):
+        &#34;&#34;&#34; Get the routes statically defined for this module and
+            save in instance.
+        &#34;&#34;&#34;
+        if self._routes is None:
+            self._routes = self._find_routes()
+        return self._routes
+
+
+class PartialType():
+    &#34;&#34;&#34; Class containing the type information of a route before having the
+        context of the module as is the case when statically defining routes in
+        a module definition.
+    &#34;&#34;&#34;
+    __slots__ = (
+        &#39;doc_uri&#39;,
+        &#39;protocol&#39;,
+        &#39;version&#39;,
+        &#39;name&#39;
+    )
+
+    def __init__(
+            self,
+            name: str,
+            doc_uri: str = None,
+            protocol: str = None,
+            version: str = None
+                ):
+        self.name = name
+        self.version = version
+        self.protocol = protocol
+        self.doc_uri = doc_uri
+
+    def complete(self, mod: Module) -&gt; Type:
+        &#34;&#34;&#34; Return a complete type given the module context. &#34;&#34;&#34;
+        doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
+        protocol = self.protocol if self.protocol else type(mod).PROTOCOL
+        version = self.version if self.version else type(mod).VERSION
+        if doc_uri is None:
+            raise TypeError(&#39;doc_uri must be str&#39;)
+        if protocol is None:
+            raise TypeError(&#39;protocol must be str&#39;)
+        if version is None:
+            raise TypeError(&#39;version must be str&#39;)
+        return Type(doc_uri, protocol, version, self.name)
+
+
+def route(*args, **kwargs):
+    &#34;&#34;&#34; Route definition decorator
+        if just @route is used, type_or_func is the decorated function
+        if @route(type) is used, type_or_func is the type string.
+    &#34;&#34;&#34;
+    if args:
+        type_or_func: Union[Callable, str, Type] = args[0]
+        if callable(type_or_func):
+            func = type_or_func
+            func.handler_for = PartialType(func.__name__)
+            return func
+
+        if isinstance(type_or_func, str):
+            msg_type = type_or_func
+
+            def _route(func):
+                func.handler_for = Type.from_str(msg_type)
+                return func
+
+            return _route
+
+        if isinstance(type_or_func, Type):
+            msg_type = type_or_func
+
+            def _route(func):
+                func.handler_for = msg_type
+                return func
+
+            return _route
+
+    if kwargs:
+        def _route(func):
+            name = kwargs.get(&#39;name&#39;, func.__name__)
+            del kwargs[&#39;name&#39;]
+            func.handler_for = PartialType(name, **kwargs)
+            return func
+
+        return _route
+
+    raise ValueError(
+        &#39;Expecting @route before a function or @route(msg_type) &#39;
+        &#39;before a function!&#39;
+    )</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="aries_staticagent.module.route"><code class="name flex">
+<span>def <span class="ident">route</span></span>(<span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Route definition decorator
+if just @route is used, type_or_func is the decorated function
+if @route(type) is used, type_or_func is the type string.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def route(*args, **kwargs):
+    &#34;&#34;&#34; Route definition decorator
+        if just @route is used, type_or_func is the decorated function
+        if @route(type) is used, type_or_func is the type string.
+    &#34;&#34;&#34;
+    if args:
+        type_or_func: Union[Callable, str, Type] = args[0]
+        if callable(type_or_func):
+            func = type_or_func
+            func.handler_for = PartialType(func.__name__)
+            return func
+
+        if isinstance(type_or_func, str):
+            msg_type = type_or_func
+
+            def _route(func):
+                func.handler_for = Type.from_str(msg_type)
+                return func
+
+            return _route
+
+        if isinstance(type_or_func, Type):
+            msg_type = type_or_func
+
+            def _route(func):
+                func.handler_for = msg_type
+                return func
+
+            return _route
+
+    if kwargs:
+        def _route(func):
+            name = kwargs.get(&#39;name&#39;, func.__name__)
+            del kwargs[&#39;name&#39;]
+            func.handler_for = PartialType(name, **kwargs)
+            return func
+
+        return _route
+
+    raise ValueError(
+        &#39;Expecting @route before a function or @route(msg_type) &#39;
+        &#39;before a function!&#39;
+    )</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="aries_staticagent.module.InvalidModule"><code class="flex name class">
+<span>class <span class="ident">InvalidModule</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Thrown when module is malformed.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidModule(Exception):
+    &#34;&#34;&#34; Thrown when module is malformed. &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="aries_staticagent.module.MetaModule"><code class="flex name class">
+<span>class <span class="ident">MetaModule</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>MetaModule:
+Ensures Module classes are well formed and provides convenience methods</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MetaModule(type):
+    &#34;&#34;&#34; MetaModule:
+        Ensures Module classes are well formed and provides convenience methods
+    &#34;&#34;&#34;
+    def __new__(cls, name, bases, dct):
+        if &#39;DOC_URI&#39; not in dct:
+            raise InvalidModule(&#39;DOC_URI missing from module definition&#39;)
+        if &#39;PROTOCOL&#39; not in dct:
+            raise InvalidModule(&#34;PROTOCOL missing from module definition&#34;)
+        if &#39;VERSION&#39; not in dct:
+            raise InvalidModule(&#39;VERSION missing from module definition&#39;)
+
+        return type.__new__(cls, name, bases, dct)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.type</li>
+</ul>
+</dd>
+<dt id="aries_staticagent.module.Module"><code class="flex name class">
+<span>class <span class="ident">Module</span></span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base Module class</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
+    &#34;&#34;&#34; Base Module class &#34;&#34;&#34;
+    DOC_URI = None
+    PROTOCOL = None
+    VERSION = None
+
+    def __init__(self):
+        self._routes = None
+
+    def type(
+            self,
+            name: str,
+            doc_uri: str = None,
+            protocol: str = None,
+            version: str = None
+                ):
+        &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
+        doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
+        protocol = protocol if protocol is not None else self.PROTOCOL
+        version = version if version is not None else self.VERSION
+        if doc_uri is None:
+            raise TypeError(&#39;doc_uri must be str&#39;)
+        if protocol is None:
+            raise TypeError(&#39;protocol must be str&#39;)
+        if version is None:
+            raise TypeError(&#39;version must be str&#39;)
+        return Type(doc_uri, protocol, version, name)
+
+    def _find_routes(self):
+        found = {}
+        for key in dir(self):
+            if key == &#39;routes&#39; or key.startswith(&#39;__&#39;):
+                continue
+            val = getattr(self, key)
+            if hasattr(val, &#39;handler_for&#39;):
+                msg_type = val.handler_for
+                if isinstance(msg_type, PartialType):
+                    msg_type = msg_type.complete(self)
+
+                found[msg_type] = val
+
+        return found
+
+    @property
+    def routes(self):
+        &#34;&#34;&#34; Get the routes statically defined for this module and
+            save in instance.
+        &#34;&#34;&#34;
+        if self._routes is None:
+            self._routes = self._find_routes()
+        return self._routes</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="aries_staticagent.module.Module.DOC_URI"><code class="name">var <span class="ident">DOC_URI</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="aries_staticagent.module.Module.PROTOCOL"><code class="name">var <span class="ident">PROTOCOL</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt id="aries_staticagent.module.Module.VERSION"><code class="name">var <span class="ident">VERSION</span></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="aries_staticagent.module.Module.routes"><code class="name">var <span class="ident">routes</span></code></dt>
+<dd>
+<section class="desc"><p>Get the routes statically defined for this module and
+save in instance.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def routes(self):
+    &#34;&#34;&#34; Get the routes statically defined for this module and
+        save in instance.
+    &#34;&#34;&#34;
+    if self._routes is None:
+        self._routes = self._find_routes()
+    return self._routes</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="aries_staticagent.module.Module.type"><code class="name flex">
+<span>def <span class="ident">type</span></span>(<span>self, name, doc_uri=None, protocol=None, version=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Build a type string for this module.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def type(
+        self,
+        name: str,
+        doc_uri: str = None,
+        protocol: str = None,
+        version: str = None
+            ):
+    &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
+    doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
+    protocol = protocol if protocol is not None else self.PROTOCOL
+    version = version if version is not None else self.VERSION
+    if doc_uri is None:
+        raise TypeError(&#39;doc_uri must be str&#39;)
+    if protocol is None:
+        raise TypeError(&#39;protocol must be str&#39;)
+    if version is None:
+        raise TypeError(&#39;version must be str&#39;)
+    return Type(doc_uri, protocol, version, name)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.module.PartialType"><code class="flex name class">
+<span>class <span class="ident">PartialType</span></span>
+<span>(</span><span>name, doc_uri=None, protocol=None, version=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Class containing the type information of a route before having the
+context of the module as is the case when statically defining routes in
+a module definition.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PartialType():
+    &#34;&#34;&#34; Class containing the type information of a route before having the
+        context of the module as is the case when statically defining routes in
+        a module definition.
+    &#34;&#34;&#34;
+    __slots__ = (
+        &#39;doc_uri&#39;,
+        &#39;protocol&#39;,
+        &#39;version&#39;,
+        &#39;name&#39;
+    )
+
+    def __init__(
+            self,
+            name: str,
+            doc_uri: str = None,
+            protocol: str = None,
+            version: str = None
+                ):
+        self.name = name
+        self.version = version
+        self.protocol = protocol
+        self.doc_uri = doc_uri
+
+    def complete(self, mod: Module) -&gt; Type:
+        &#34;&#34;&#34; Return a complete type given the module context. &#34;&#34;&#34;
+        doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
+        protocol = self.protocol if self.protocol else type(mod).PROTOCOL
+        version = self.version if self.version else type(mod).VERSION
+        if doc_uri is None:
+            raise TypeError(&#39;doc_uri must be str&#39;)
+        if protocol is None:
+            raise TypeError(&#39;protocol must be str&#39;)
+        if version is None:
+            raise TypeError(&#39;version must be str&#39;)
+        return Type(doc_uri, protocol, version, self.name)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="aries_staticagent.module.PartialType.doc_uri"><code class="name">var <span class="ident">doc_uri</span></code></dt>
+<dd>
+<section class="desc"><p>Return an attribute of instance, which is of type owner.</p></section>
+</dd>
+<dt id="aries_staticagent.module.PartialType.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<section class="desc"><p>Return an attribute of instance, which is of type owner.</p></section>
+</dd>
+<dt id="aries_staticagent.module.PartialType.protocol"><code class="name">var <span class="ident">protocol</span></code></dt>
+<dd>
+<section class="desc"><p>Return an attribute of instance, which is of type owner.</p></section>
+</dd>
+<dt id="aries_staticagent.module.PartialType.version"><code class="name">var <span class="ident">version</span></code></dt>
+<dd>
+<section class="desc"><p>Return an attribute of instance, which is of type owner.</p></section>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="aries_staticagent.module.PartialType.complete"><code class="name flex">
+<span>def <span class="ident">complete</span></span>(<span>self, mod)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Return a complete type given the module context.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def complete(self, mod: Module) -&gt; Type:
+    &#34;&#34;&#34; Return a complete type given the module context. &#34;&#34;&#34;
+    doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
+    protocol = self.protocol if self.protocol else type(mod).PROTOCOL
+    version = self.version if self.version else type(mod).VERSION
+    if doc_uri is None:
+        raise TypeError(&#39;doc_uri must be str&#39;)
+    if protocol is None:
+        raise TypeError(&#39;protocol must be str&#39;)
+    if version is None:
+        raise TypeError(&#39;version must be str&#39;)
+    return Type(doc_uri, protocol, version, self.name)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="aries_staticagent" href="index.html">aries_staticagent</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="aries_staticagent.module.route" href="#aries_staticagent.module.route">route</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="aries_staticagent.module.InvalidModule" href="#aries_staticagent.module.InvalidModule">InvalidModule</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.module.MetaModule" href="#aries_staticagent.module.MetaModule">MetaModule</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.module.Module" href="#aries_staticagent.module.Module">Module</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.module.Module.DOC_URI" href="#aries_staticagent.module.Module.DOC_URI">DOC_URI</a></code></li>
+<li><code><a title="aries_staticagent.module.Module.PROTOCOL" href="#aries_staticagent.module.Module.PROTOCOL">PROTOCOL</a></code></li>
+<li><code><a title="aries_staticagent.module.Module.VERSION" href="#aries_staticagent.module.Module.VERSION">VERSION</a></code></li>
+<li><code><a title="aries_staticagent.module.Module.routes" href="#aries_staticagent.module.Module.routes">routes</a></code></li>
+<li><code><a title="aries_staticagent.module.Module.type" href="#aries_staticagent.module.Module.type">type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.module.PartialType" href="#aries_staticagent.module.PartialType">PartialType</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.module.PartialType.complete" href="#aries_staticagent.module.PartialType.complete">complete</a></code></li>
+<li><code><a title="aries_staticagent.module.PartialType.doc_uri" href="#aries_staticagent.module.PartialType.doc_uri">doc_uri</a></code></li>
+<li><code><a title="aries_staticagent.module.PartialType.name" href="#aries_staticagent.module.PartialType.name">name</a></code></li>
+<li><code><a title="aries_staticagent.module.PartialType.protocol" href="#aries_staticagent.module.PartialType.protocol">protocol</a></code></li>
+<li><code><a title="aries_staticagent.module.PartialType.version" href="#aries_staticagent.module.PartialType.version">version</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

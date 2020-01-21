@@ -1,0 +1,1710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>aries_staticagent.crypto API documentation</title>
+<meta name="description" content="Crypto neccessary for packing and unpacking a message …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>aries_staticagent.crypto</code></h1>
+</header>
+<section id="section-intro">
+<p>Crypto neccessary for packing and unpacking a message.</p>
+<p>Adapted from BC Gov's Indy Catalyst Agent.
+Borrowed at this point in history:
+<a href="https://github.com/bcgov/indy-catalyst/blob/14328a3eb/agent/indy_catalyst_agent/wallet/crypto.py">https://github.com/bcgov/indy-catalyst/blob/14328a3eb/agent/indy_catalyst_agent/wallet/crypto.py</a></p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34; Crypto neccessary for packing and unpacking a message.
+
+    Adapted from BC Gov&#39;s Indy Catalyst Agent.
+    Borrowed at this point in history:
+    https://github.com/bcgov/indy-catalyst/blob/14328a3eb/agent/indy_catalyst_agent/wallet/crypto.py
+&#34;&#34;&#34;
+
+from collections import OrderedDict
+from functools import lru_cache
+from typing import Optional, Sequence, Dict, Union, Tuple
+import base64
+import json
+import struct
+import time
+
+import base58
+import msgpack
+import nacl.bindings
+import nacl.exceptions
+import nacl.utils
+
+# pylint: disable=invalid-name
+
+
+class CryptoError(Exception):
+    &#34;&#34;&#34; CryptoError raised on failed crypto call. &#34;&#34;&#34;
+
+
+def b64_to_bytes(val: str, urlsafe=False) -&gt; bytes:
+    &#34;&#34;&#34;Convert a base 64 string to bytes.&#34;&#34;&#34;
+    if urlsafe:
+        return base64.urlsafe_b64decode(val)
+    return base64.b64decode(val)
+
+
+def bytes_to_b64(val: bytes, urlsafe=False) -&gt; str:
+    &#34;&#34;&#34;Convert a byte string to base 64.&#34;&#34;&#34;
+    if urlsafe:
+        return base64.urlsafe_b64encode(val).decode(&#34;ascii&#34;)
+    return base64.b64encode(val).decode(&#34;ascii&#34;)
+
+
+@lru_cache(maxsize=16)
+def b58_to_bytes(val: str) -&gt; bytes:
+    &#34;&#34;&#34;
+    Convert a base 58 string to bytes.
+
+    Small cache provided for key conversions which happen frequently in pack
+    and unpack and message handling.
+    &#34;&#34;&#34;
+    return base58.b58decode(val)
+
+
+@lru_cache(maxsize=16)
+def bytes_to_b58(val: bytes) -&gt; str:
+    &#34;&#34;&#34;
+    Convert a byte string to base 58.
+
+    Small cache provided for key conversions which happen frequently in pack
+    and unpack and message handling.
+    &#34;&#34;&#34;
+    return base58.b58encode(val).decode(&#34;ascii&#34;)
+
+
+def create_keypair(seed: bytes = None) -&gt; Tuple[bytes, bytes]:
+    &#34;&#34;&#34;
+    Create a public and private signing keypair from a seed value.
+
+    Args:
+        seed: Seed for keypair
+
+    Returns:
+        A tuple of (public key, secret key)
+
+    &#34;&#34;&#34;
+    if seed:
+        validate_seed(seed)
+    else:
+        seed = random_seed()
+    pk, sk = nacl.bindings.crypto_sign_seed_keypair(seed)
+    return pk, sk
+
+
+def random_seed() -&gt; bytes:
+    &#34;&#34;&#34;
+    Generate a random seed value.
+
+    Returns:
+        A new random seed
+
+    &#34;&#34;&#34;
+    return nacl.utils.random(nacl.bindings.crypto_secretbox_KEYBYTES)
+
+
+def validate_seed(seed: Union[str, bytes]) -&gt; Optional[bytes]:
+    &#34;&#34;&#34;
+    Convert a seed parameter to standard format and check length.
+
+    Args:
+        seed: The seed to validate
+
+    Returns:
+        The validated and encoded seed
+
+    &#34;&#34;&#34;
+    if not seed:
+        return None
+    if isinstance(seed, str):
+        if &#34;=&#34; in seed:
+            seed = b64_to_bytes(seed)
+        else:
+            seed = seed.encode(&#34;ascii&#34;)
+    if not isinstance(seed, bytes):
+        raise CryptoError(&#34;Seed value is not a string or bytes&#34;)
+    if len(seed) != 32:
+        raise CryptoError(&#34;Seed value must be 32 bytes in length&#34;)
+    return seed
+
+
+def sign_message(message: bytes, secret: bytes) -&gt; bytes:
+    &#34;&#34;&#34;
+    Sign a message using a private signing key.
+
+    Args:
+        message: The message to sign
+        secret: The private signing key
+
+    Returns:
+        The signature
+
+    &#34;&#34;&#34;
+    result = nacl.bindings.crypto_sign(message, secret)
+    sig = result[: nacl.bindings.crypto_sign_BYTES]
+    return sig
+
+
+def verify_signed_message(signed: bytes, verkey: bytes) -&gt; bool:
+    &#34;&#34;&#34;
+    Verify a signed message according to a public verification key.
+
+    Args:
+        signed: The signed message
+        verkey: The verkey to use in verification
+
+    Returns:
+        True if verified, else False
+
+    &#34;&#34;&#34;
+    try:
+        nacl.bindings.crypto_sign_open(signed, verkey)
+    except nacl.exceptions.BadSignatureError:
+        return False
+    return True
+
+
+def sign_message_field(field_value: Dict, signer: str, secret: bytes) -&gt; Dict:
+    &#34;&#34;&#34; Sign a field of a message and return the value of a signature decorator.
+    &#34;&#34;&#34;
+    timestamp_bytes = struct.pack(&#34;&gt;Q&#34;, int(time.time()))
+    sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode(&#39;ascii&#39;)
+    sig_data = base64.urlsafe_b64encode(sig_data_bytes).decode(&#39;ascii&#39;)
+
+    signature_bytes = nacl.bindings.crypto_sign(
+        sig_data_bytes,
+        secret
+    )[:nacl.bindings.crypto_sign_BYTES]
+    signature = base64.urlsafe_b64encode(signature_bytes).decode(&#39;ascii&#39;)
+
+    return {
+        &#34;@type&#34;: &#34;did:sov:BzCbsNYhMrjHiqZDTUASHg;spec&#34;
+                 &#34;/signature/1.0/ed25519Sha512_single&#34;,
+        &#34;signer&#34;: signer,
+        &#34;sig_data&#34;: sig_data,
+        &#34;signature&#34;: signature
+    }
+
+
+def verify_signed_message_field(signed_field: Dict) -&gt; Tuple[str, Dict]:
+    &#34;&#34;&#34; Verify a signed message field &#34;&#34;&#34;
+    data_bytes = base64.urlsafe_b64decode(signed_field[&#39;sig_data&#39;])
+    signature_bytes = base64.urlsafe_b64decode(
+        signed_field[&#39;signature&#39;].encode(&#39;ascii&#39;)
+    )
+    nacl.bindings.crypto_sign_open(
+        signature_bytes + data_bytes,
+        b58_to_bytes(signed_field[&#39;signer&#39;])
+    )
+
+    fieldjson = data_bytes[8:]
+    return signed_field[&#39;signer&#39;], json.loads(fieldjson)
+
+
+def anon_crypt_message(message: bytes, to_verkey: bytes) -&gt; bytes:
+    &#34;&#34;&#34;
+    Apply anon_crypt to a binary message.
+
+    Args:
+        message: The message to encrypt
+        to_verkey: The verkey to encrypt the message for
+
+    Returns:
+        The anon encrypted message
+
+    &#34;&#34;&#34;
+    pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(to_verkey)
+    enc_message = nacl.bindings.crypto_box_seal(message, pk)
+    return enc_message
+
+
+def anon_decrypt_message(enc_message: bytes, secret: bytes) -&gt; bytes:
+    &#34;&#34;&#34;
+    Apply anon_decrypt to a binary message.
+
+    Args:
+        enc_message: The encrypted message
+        secret: The seed to use
+
+    Returns:
+        The decrypted message
+
+    &#34;&#34;&#34;
+    sign_pk, sign_sk = create_keypair(secret)
+    pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(sign_pk)
+    sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(sign_sk)
+
+    message = nacl.bindings.crypto_box_seal_open(enc_message, pk, sk)
+    return message
+
+
+def auth_crypt_message(
+        message: bytes,
+        to_verkey: bytes,
+        from_verkey: bytes,
+        from_sigkey: bytes
+) -&gt; bytes:
+    &#34;&#34;&#34;
+    Apply auth_crypt to a binary message.
+
+    Args:
+        message: The message to encrypt
+        to_verkey: To recipient&#39;s verkey
+        from_verkey: Sender verkey, included in combo box for verification
+        from_sigkey: Sender sigkey, included to auth encrypt the message
+
+    Returns:
+        The encrypted message
+
+    &#34;&#34;&#34;
+    nonce = nacl.utils.random(nacl.bindings.crypto_box_NONCEBYTES)
+    target_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(to_verkey)
+    sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(from_sigkey)
+    enc_body = nacl.bindings.crypto_box(message, nonce, target_pk, sk)
+    combo_box = OrderedDict(
+        [
+            (&#34;msg&#34;, bytes_to_b64(enc_body)),
+            (&#34;sender&#34;, bytes_to_b58(from_verkey)),
+            (&#34;nonce&#34;, bytes_to_b64(nonce)),
+        ]
+    )
+    combo_box_bin = msgpack.packb(combo_box, use_bin_type=True)
+    enc_message = nacl.bindings.crypto_box_seal(combo_box_bin, target_pk)
+    return enc_message
+
+
+def auth_decrypt_message(
+        enc_message: bytes,
+        my_verkey: bytes,
+        my_sigkey: bytes
+) -&gt; Tuple[bytes, str]:
+    &#34;&#34;&#34;
+    Apply auth_decrypt to a binary message.
+
+    Args:
+        enc_message: The encrypted message
+        secret: Secret for signing keys
+
+    Returns:
+        A tuple of (decrypted message, sender verkey)
+
+    &#34;&#34;&#34;
+    pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(my_verkey)
+    sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(my_sigkey)
+    body = nacl.bindings.crypto_box_seal_open(enc_message, pk, sk)
+
+    unpacked = msgpack.unpackb(body, raw=False)
+    sender_vk = unpacked[&#34;sender&#34;]
+    nonce = b64_to_bytes(unpacked[&#34;nonce&#34;])
+    enc_message = b64_to_bytes(unpacked[&#34;msg&#34;])
+    sender_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
+        b58_to_bytes(sender_vk)
+    )
+    message = nacl.bindings.crypto_box_open(enc_message, nonce, sender_pk, sk)
+    return message, sender_vk
+
+
+def prepare_pack_recipient_keys(
+        to_verkeys: Sequence[bytes],
+        from_verkey: bytes = None,
+        from_sigkey: bytes = None
+) -&gt; Tuple[str, bytes]:
+    &#34;&#34;&#34;
+    Assemble the recipients block of a packed message.
+
+    Args:
+        to_verkeys: Verkeys of recipients
+        from_verkey: Sender Verkey needed to authcrypt package
+        from_sigkey: Sender Sigkey needed to authcrypt package
+
+    Returns:
+        A tuple of (json result, key)
+
+    &#34;&#34;&#34;
+    if from_verkey is not None and from_sigkey is None or \
+            from_sigkey is not None and from_verkey is None:
+        raise CryptoError(
+            &#39;Both verkey and sigkey needed to authenticated encrypt message&#39;
+        )
+
+    cek = nacl.bindings.crypto_secretstream_xchacha20poly1305_keygen()
+    recips = []
+
+    for target_vk in to_verkeys:
+        target_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
+            target_vk
+        )
+        if from_verkey:
+            sender_vk = bytes_to_b58(from_verkey).encode(&#34;ascii&#34;)
+            enc_sender = nacl.bindings.crypto_box_seal(sender_vk, target_pk)
+            sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(
+                from_sigkey
+            )
+
+            nonce = nacl.utils.random(nacl.bindings.crypto_box_NONCEBYTES)
+            enc_cek = nacl.bindings.crypto_box(cek, nonce, target_pk, sk)
+        else:
+            enc_sender = None
+            nonce = None
+            enc_cek = nacl.bindings.crypto_box_seal(cek, target_pk)
+
+        recips.append(
+            OrderedDict(
+                [
+                    (&#34;encrypted_key&#34;, bytes_to_b64(enc_cek, urlsafe=True)),
+                    (
+                        &#34;header&#34;,
+                        OrderedDict(
+                            [
+                                (&#34;kid&#34;, bytes_to_b58(target_vk)),
+                                (
+                                    &#34;sender&#34;,
+                                    bytes_to_b64(enc_sender, urlsafe=True)
+                                    if enc_sender
+                                    else None,
+                                ),
+                                (
+                                    &#34;iv&#34;,
+                                    bytes_to_b64(nonce, urlsafe=True)
+                                    if nonce
+                                    else None,
+                                ),
+                            ]
+                        ),
+                    ),
+                ]
+            )
+        )
+
+    data = OrderedDict(
+        [
+            (&#34;enc&#34;, &#34;xchacha20poly1305_ietf&#34;),
+            (&#34;typ&#34;, &#34;JWM/1.0&#34;),
+            (&#34;alg&#34;, &#34;Authcrypt&#34; if from_verkey else &#34;Anoncrypt&#34;),
+            (&#34;recipients&#34;, recips),
+        ]
+    )
+    return json.dumps(data), cek
+
+
+def locate_pack_recipient_key(
+        recipients: Sequence[dict],
+        my_verkey: bytes,
+        my_sigkey: bytes
+) -&gt; Tuple[bytes, str, str]:
+    &#34;&#34;&#34;
+    Locate pack recipient key.
+
+    Decode the encryption key and sender verification key from a
+    corresponding recipient block, if any is defined.
+
+    Args:
+        recipients: Recipients to locate
+        find_key: Function used to find private key
+
+    Returns:
+        A tuple of (cek, sender_vk, recip_vk_b58)
+
+    Raises:
+        ValueError: If no corresponding recipient key found
+
+    &#34;&#34;&#34;
+    not_found = []
+    for recip in recipients:
+        if not recip or &#34;header&#34; not in recip or &#34;encrypted_key&#34; not in recip:
+            raise ValueError(&#34;Invalid recipient header&#34;)
+
+        recip_vk_b58 = recip[&#34;header&#34;].get(&#34;kid&#34;)
+
+        if bytes_to_b58(my_verkey) != recip_vk_b58:
+            not_found.append(recip_vk_b58)
+            continue
+
+        pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(my_verkey)
+        sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(my_sigkey)
+
+        encrypted_key = b64_to_bytes(recip[&#34;encrypted_key&#34;], urlsafe=True)
+
+        if &#34;iv&#34; in recip[&#34;header&#34;] and recip[&#34;header&#34;][&#34;iv&#34;] and \
+                &#34;sender&#34; in recip[&#34;header&#34;] and recip[&#34;header&#34;][&#34;sender&#34;]:
+            nonce: Optional[bytes] = b64_to_bytes(
+                recip[&#34;header&#34;][&#34;iv&#34;],
+                urlsafe=True
+            )
+            enc_sender: Optional[bytes] = b64_to_bytes(
+                recip[&#34;header&#34;][&#34;sender&#34;],
+                urlsafe=True
+            )
+
+        else:
+            nonce = None
+            enc_sender = None
+
+        if nonce and enc_sender:
+            sender_vk = nacl.bindings.crypto_box_seal_open(
+                enc_sender,
+                pk,
+                sk
+            ).decode(&#34;ascii&#34;)
+            sender_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
+                b58_to_bytes(sender_vk)
+            )
+            cek = nacl.bindings.crypto_box_open(
+                encrypted_key,
+                nonce,
+                sender_pk,
+                sk
+            )
+        else:
+            sender_vk = None
+            cek = nacl.bindings.crypto_box_seal_open(encrypted_key, pk, sk)
+        return cek, sender_vk, recip_vk_b58
+    raise ValueError(
+        &#34;No corresponding recipient key found in {}&#34;.format(not_found)
+    )
+
+
+def encrypt_plaintext(
+        message: str, add_data: bytes, key: bytes
+) -&gt; Tuple[bytes, bytes, bytes]:
+    &#34;&#34;&#34;
+    Encrypt the payload of a packed message.
+
+    Args:
+        message: Message to encrypt
+        add_data:
+        key: Key used for encryption
+
+    Returns:
+        A tuple of (ciphertext, nonce, tag)
+
+    &#34;&#34;&#34;
+    nonce = nacl.utils.random(
+        nacl.bindings.crypto_aead_chacha20poly1305_ietf_NPUBBYTES
+    )
+    message_bin = message.encode(&#34;ascii&#34;)
+    output = nacl.bindings.crypto_aead_chacha20poly1305_ietf_encrypt(
+        message_bin, add_data, nonce, key
+    )
+    mlen = len(message)
+    ciphertext = output[:mlen]
+    tag = output[mlen:]
+    return ciphertext, nonce, tag
+
+
+def decrypt_plaintext(
+        ciphertext: bytes, recips_bin: bytes, nonce: bytes, key: bytes
+) -&gt; str:
+    &#34;&#34;&#34;
+    Decrypt the payload of a packed message.
+
+    Args:
+        ciphertext:
+        recips_bin:
+        nonce:
+        key:
+
+    Returns:
+        The decrypted string
+
+    &#34;&#34;&#34;
+    output = nacl.bindings.crypto_aead_chacha20poly1305_ietf_decrypt(
+        ciphertext, recips_bin, nonce, key
+    )
+    return output.decode(&#34;ascii&#34;)
+
+
+def pack_message(
+        message: str,
+        to_verkeys: Sequence[bytes],
+        from_verkey: bytes = None,
+        from_sigkey: bytes = None,
+) -&gt; OrderedDict:
+    &#34;&#34;&#34;
+    Assemble a packed message for a set of recipients, optionally including
+    the sender.
+
+    Args:
+        message: The message to pack
+        to_verkeys: The verkeys to pack the message for
+        from_verkey: The sender verkey
+        from_sigkey: The sender sigkey
+
+    Returns:
+        The encoded message
+
+    &#34;&#34;&#34;
+    recips_json, cek = prepare_pack_recipient_keys(
+        to_verkeys,
+        from_verkey,
+        from_sigkey
+    )
+    recips_b64 = bytes_to_b64(recips_json.encode(&#34;ascii&#34;), urlsafe=True)
+
+    ciphertext, nonce, tag = encrypt_plaintext(
+        message,
+        recips_b64.encode(&#34;ascii&#34;),
+        cek
+    )
+
+    data = OrderedDict(
+        [
+            (&#34;protected&#34;, recips_b64),
+            (&#34;iv&#34;, bytes_to_b64(nonce, urlsafe=True)),
+            (&#34;ciphertext&#34;, bytes_to_b64(ciphertext, urlsafe=True)),
+            (&#34;tag&#34;, bytes_to_b64(tag, urlsafe=True)),
+        ]
+    )
+    return data
+
+
+def unpack_message(
+        enc_message: Union[Dict, bytes], my_verkey: bytes, my_sigkey: bytes
+) -&gt; Tuple[str, Optional[str], str]:
+    &#34;&#34;&#34;
+    Decode a packed message.
+
+    Disassemble and unencrypt a packed message, returning the message content,
+    verification key of the sender (if available), and verification key of the
+    recipient.
+
+    Args:
+        enc_message: The encrypted message
+        find_key: Function to retrieve private key
+
+    Returns:
+        A tuple of (message, sender_vk, recip_vk)
+
+    Raises:
+        ValueError: If the packed message is invalid
+        ValueError: If the packed message reipients are invalid
+        ValueError: If the pack algorithm is unsupported
+        ValueError: If the sender&#39;s public key was not provided
+
+    &#34;&#34;&#34;
+    if isinstance(enc_message, bytes):
+        try:
+            enc_message = json.loads(enc_message)
+        except Exception as err:
+            raise ValueError(&#34;Invalid packed message&#34;) from err
+    if not isinstance(enc_message, dict):
+        raise TypeError(
+            &#39;Expected bytes or dict, got {}&#39;.format(type(enc_message))
+        )
+
+    protected_bin = enc_message[&#34;protected&#34;].encode(&#34;ascii&#34;)
+    recips_json = b64_to_bytes(
+        enc_message[&#34;protected&#34;], urlsafe=True
+    ).decode(&#34;ascii&#34;)
+    try:
+        recips_outer = json.loads(recips_json)
+    except Exception as err:
+        raise ValueError(&#34;Invalid packed message recipients&#34;) from err
+
+    alg = recips_outer[&#34;alg&#34;]
+    is_authcrypt = alg == &#34;Authcrypt&#34;
+    if not is_authcrypt and alg != &#34;Anoncrypt&#34;:
+        raise ValueError(&#34;Unsupported pack algorithm: {}&#34;.format(alg))
+    cek, sender_vk, recip_vk = locate_pack_recipient_key(
+        recips_outer[&#34;recipients&#34;], my_verkey, my_sigkey
+    )
+    if not sender_vk and is_authcrypt:
+        raise ValueError(
+            &#34;Sender public key not provided for Authcrypt message&#34;
+        )
+
+    ciphertext = b64_to_bytes(enc_message[&#34;ciphertext&#34;], urlsafe=True)
+    nonce = b64_to_bytes(enc_message[&#34;iv&#34;], urlsafe=True)
+    tag = b64_to_bytes(enc_message[&#34;tag&#34;], urlsafe=True)
+
+    payload_bin = ciphertext + tag
+    message = decrypt_plaintext(payload_bin, protected_bin, nonce, cek)
+
+    return message, sender_vk, recip_vk</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="aries_staticagent.crypto.anon_crypt_message"><code class="name flex">
+<span>def <span class="ident">anon_crypt_message</span></span>(<span>message, to_verkey)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Apply anon_crypt to a binary message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong></dt>
+<dd>The message to encrypt</dd>
+<dt><strong><code>to_verkey</code></strong></dt>
+<dd>The verkey to encrypt the message for</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>The</code> <code>anon</code> <code>encrypted</code> <code>message</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def anon_crypt_message(message: bytes, to_verkey: bytes) -&gt; bytes:
+    &#34;&#34;&#34;
+    Apply anon_crypt to a binary message.
+
+    Args:
+        message: The message to encrypt
+        to_verkey: The verkey to encrypt the message for
+
+    Returns:
+        The anon encrypted message
+
+    &#34;&#34;&#34;
+    pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(to_verkey)
+    enc_message = nacl.bindings.crypto_box_seal(message, pk)
+    return enc_message</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.anon_decrypt_message"><code class="name flex">
+<span>def <span class="ident">anon_decrypt_message</span></span>(<span>enc_message, secret)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Apply anon_decrypt to a binary message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>enc_message</code></strong></dt>
+<dd>The encrypted message</dd>
+<dt><strong><code>secret</code></strong></dt>
+<dd>The seed to use</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>The</code> <code>decrypted</code> <code>message</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def anon_decrypt_message(enc_message: bytes, secret: bytes) -&gt; bytes:
+    &#34;&#34;&#34;
+    Apply anon_decrypt to a binary message.
+
+    Args:
+        enc_message: The encrypted message
+        secret: The seed to use
+
+    Returns:
+        The decrypted message
+
+    &#34;&#34;&#34;
+    sign_pk, sign_sk = create_keypair(secret)
+    pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(sign_pk)
+    sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(sign_sk)
+
+    message = nacl.bindings.crypto_box_seal_open(enc_message, pk, sk)
+    return message</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.auth_crypt_message"><code class="name flex">
+<span>def <span class="ident">auth_crypt_message</span></span>(<span>message, to_verkey, from_verkey, from_sigkey)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Apply auth_crypt to a binary message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong></dt>
+<dd>The message to encrypt</dd>
+<dt><strong><code>to_verkey</code></strong></dt>
+<dd>To recipient's verkey</dd>
+<dt><strong><code>from_verkey</code></strong></dt>
+<dd>Sender verkey, included in combo box for verification</dd>
+<dt><strong><code>from_sigkey</code></strong></dt>
+<dd>Sender sigkey, included to auth encrypt the message</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>The</code> <code>encrypted</code> <code>message</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def auth_crypt_message(
+        message: bytes,
+        to_verkey: bytes,
+        from_verkey: bytes,
+        from_sigkey: bytes
+) -&gt; bytes:
+    &#34;&#34;&#34;
+    Apply auth_crypt to a binary message.
+
+    Args:
+        message: The message to encrypt
+        to_verkey: To recipient&#39;s verkey
+        from_verkey: Sender verkey, included in combo box for verification
+        from_sigkey: Sender sigkey, included to auth encrypt the message
+
+    Returns:
+        The encrypted message
+
+    &#34;&#34;&#34;
+    nonce = nacl.utils.random(nacl.bindings.crypto_box_NONCEBYTES)
+    target_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(to_verkey)
+    sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(from_sigkey)
+    enc_body = nacl.bindings.crypto_box(message, nonce, target_pk, sk)
+    combo_box = OrderedDict(
+        [
+            (&#34;msg&#34;, bytes_to_b64(enc_body)),
+            (&#34;sender&#34;, bytes_to_b58(from_verkey)),
+            (&#34;nonce&#34;, bytes_to_b64(nonce)),
+        ]
+    )
+    combo_box_bin = msgpack.packb(combo_box, use_bin_type=True)
+    enc_message = nacl.bindings.crypto_box_seal(combo_box_bin, target_pk)
+    return enc_message</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.auth_decrypt_message"><code class="name flex">
+<span>def <span class="ident">auth_decrypt_message</span></span>(<span>enc_message, my_verkey, my_sigkey)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Apply auth_decrypt to a binary message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>enc_message</code></strong></dt>
+<dd>The encrypted message</dd>
+<dt><strong><code>secret</code></strong></dt>
+<dd>Secret for signing keys</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>A</code> <code>tuple</code> of (<code>decrypted</code> <code>message</code>, <code>sender</code> <code>verkey</code>)</dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def auth_decrypt_message(
+        enc_message: bytes,
+        my_verkey: bytes,
+        my_sigkey: bytes
+) -&gt; Tuple[bytes, str]:
+    &#34;&#34;&#34;
+    Apply auth_decrypt to a binary message.
+
+    Args:
+        enc_message: The encrypted message
+        secret: Secret for signing keys
+
+    Returns:
+        A tuple of (decrypted message, sender verkey)
+
+    &#34;&#34;&#34;
+    pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(my_verkey)
+    sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(my_sigkey)
+    body = nacl.bindings.crypto_box_seal_open(enc_message, pk, sk)
+
+    unpacked = msgpack.unpackb(body, raw=False)
+    sender_vk = unpacked[&#34;sender&#34;]
+    nonce = b64_to_bytes(unpacked[&#34;nonce&#34;])
+    enc_message = b64_to_bytes(unpacked[&#34;msg&#34;])
+    sender_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
+        b58_to_bytes(sender_vk)
+    )
+    message = nacl.bindings.crypto_box_open(enc_message, nonce, sender_pk, sk)
+    return message, sender_vk</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.b58_to_bytes"><code class="name flex">
+<span>def <span class="ident">b58_to_bytes</span></span>(<span>val)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Convert a base 58 string to bytes.</p>
+<p>Small cache provided for key conversions which happen frequently in pack
+and unpack and message handling.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@lru_cache(maxsize=16)
+def b58_to_bytes(val: str) -&gt; bytes:
+    &#34;&#34;&#34;
+    Convert a base 58 string to bytes.
+
+    Small cache provided for key conversions which happen frequently in pack
+    and unpack and message handling.
+    &#34;&#34;&#34;
+    return base58.b58decode(val)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.b64_to_bytes"><code class="name flex">
+<span>def <span class="ident">b64_to_bytes</span></span>(<span>val, urlsafe=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Convert a base 64 string to bytes.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def b64_to_bytes(val: str, urlsafe=False) -&gt; bytes:
+    &#34;&#34;&#34;Convert a base 64 string to bytes.&#34;&#34;&#34;
+    if urlsafe:
+        return base64.urlsafe_b64decode(val)
+    return base64.b64decode(val)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.bytes_to_b58"><code class="name flex">
+<span>def <span class="ident">bytes_to_b58</span></span>(<span>val)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Convert a byte string to base 58.</p>
+<p>Small cache provided for key conversions which happen frequently in pack
+and unpack and message handling.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@lru_cache(maxsize=16)
+def bytes_to_b58(val: bytes) -&gt; str:
+    &#34;&#34;&#34;
+    Convert a byte string to base 58.
+
+    Small cache provided for key conversions which happen frequently in pack
+    and unpack and message handling.
+    &#34;&#34;&#34;
+    return base58.b58encode(val).decode(&#34;ascii&#34;)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.bytes_to_b64"><code class="name flex">
+<span>def <span class="ident">bytes_to_b64</span></span>(<span>val, urlsafe=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Convert a byte string to base 64.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bytes_to_b64(val: bytes, urlsafe=False) -&gt; str:
+    &#34;&#34;&#34;Convert a byte string to base 64.&#34;&#34;&#34;
+    if urlsafe:
+        return base64.urlsafe_b64encode(val).decode(&#34;ascii&#34;)
+    return base64.b64encode(val).decode(&#34;ascii&#34;)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.create_keypair"><code class="name flex">
+<span>def <span class="ident">create_keypair</span></span>(<span>seed=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Create a public and private signing keypair from a seed value.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>seed</code></strong></dt>
+<dd>Seed for keypair</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>A</code> <code>tuple</code> of (<code>public</code> <code>key</code>, <code>secret</code> <code>key</code>)</dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_keypair(seed: bytes = None) -&gt; Tuple[bytes, bytes]:
+    &#34;&#34;&#34;
+    Create a public and private signing keypair from a seed value.
+
+    Args:
+        seed: Seed for keypair
+
+    Returns:
+        A tuple of (public key, secret key)
+
+    &#34;&#34;&#34;
+    if seed:
+        validate_seed(seed)
+    else:
+        seed = random_seed()
+    pk, sk = nacl.bindings.crypto_sign_seed_keypair(seed)
+    return pk, sk</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.decrypt_plaintext"><code class="name flex">
+<span>def <span class="ident">decrypt_plaintext</span></span>(<span>ciphertext, recips_bin, nonce, key)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Decrypt the payload of a packed message.</p>
+<h2 id="args">Args</h2>
+<p>ciphertext:
+recips_bin:
+nonce:
+key:</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>The</code> <code>decrypted</code> <code>string</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decrypt_plaintext(
+        ciphertext: bytes, recips_bin: bytes, nonce: bytes, key: bytes
+) -&gt; str:
+    &#34;&#34;&#34;
+    Decrypt the payload of a packed message.
+
+    Args:
+        ciphertext:
+        recips_bin:
+        nonce:
+        key:
+
+    Returns:
+        The decrypted string
+
+    &#34;&#34;&#34;
+    output = nacl.bindings.crypto_aead_chacha20poly1305_ietf_decrypt(
+        ciphertext, recips_bin, nonce, key
+    )
+    return output.decode(&#34;ascii&#34;)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.encrypt_plaintext"><code class="name flex">
+<span>def <span class="ident">encrypt_plaintext</span></span>(<span>message, add_data, key)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Encrypt the payload of a packed message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong></dt>
+<dd>Message to encrypt</dd>
+<dt>add_data:</dt>
+<dt><strong><code>key</code></strong></dt>
+<dd>Key used for encryption</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>A</code> <code>tuple</code> of (<code>ciphertext</code>, <code>nonce</code>, <code>tag</code>)</dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encrypt_plaintext(
+        message: str, add_data: bytes, key: bytes
+) -&gt; Tuple[bytes, bytes, bytes]:
+    &#34;&#34;&#34;
+    Encrypt the payload of a packed message.
+
+    Args:
+        message: Message to encrypt
+        add_data:
+        key: Key used for encryption
+
+    Returns:
+        A tuple of (ciphertext, nonce, tag)
+
+    &#34;&#34;&#34;
+    nonce = nacl.utils.random(
+        nacl.bindings.crypto_aead_chacha20poly1305_ietf_NPUBBYTES
+    )
+    message_bin = message.encode(&#34;ascii&#34;)
+    output = nacl.bindings.crypto_aead_chacha20poly1305_ietf_encrypt(
+        message_bin, add_data, nonce, key
+    )
+    mlen = len(message)
+    ciphertext = output[:mlen]
+    tag = output[mlen:]
+    return ciphertext, nonce, tag</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.locate_pack_recipient_key"><code class="name flex">
+<span>def <span class="ident">locate_pack_recipient_key</span></span>(<span>recipients, my_verkey, my_sigkey)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Locate pack recipient key.</p>
+<p>Decode the encryption key and sender verification key from a
+corresponding recipient block, if any is defined.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>recipients</code></strong></dt>
+<dd>Recipients to locate</dd>
+<dt><strong><code>find_key</code></strong></dt>
+<dd>Function used to find private key</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>A</code> <code>tuple</code> of (<code>cek</code>, <code>sender_vk</code>, <code>recip_vk_b58</code>)</dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>ValueError</code></strong></dt>
+<dd>If no corresponding recipient key found</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def locate_pack_recipient_key(
+        recipients: Sequence[dict],
+        my_verkey: bytes,
+        my_sigkey: bytes
+) -&gt; Tuple[bytes, str, str]:
+    &#34;&#34;&#34;
+    Locate pack recipient key.
+
+    Decode the encryption key and sender verification key from a
+    corresponding recipient block, if any is defined.
+
+    Args:
+        recipients: Recipients to locate
+        find_key: Function used to find private key
+
+    Returns:
+        A tuple of (cek, sender_vk, recip_vk_b58)
+
+    Raises:
+        ValueError: If no corresponding recipient key found
+
+    &#34;&#34;&#34;
+    not_found = []
+    for recip in recipients:
+        if not recip or &#34;header&#34; not in recip or &#34;encrypted_key&#34; not in recip:
+            raise ValueError(&#34;Invalid recipient header&#34;)
+
+        recip_vk_b58 = recip[&#34;header&#34;].get(&#34;kid&#34;)
+
+        if bytes_to_b58(my_verkey) != recip_vk_b58:
+            not_found.append(recip_vk_b58)
+            continue
+
+        pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(my_verkey)
+        sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(my_sigkey)
+
+        encrypted_key = b64_to_bytes(recip[&#34;encrypted_key&#34;], urlsafe=True)
+
+        if &#34;iv&#34; in recip[&#34;header&#34;] and recip[&#34;header&#34;][&#34;iv&#34;] and \
+                &#34;sender&#34; in recip[&#34;header&#34;] and recip[&#34;header&#34;][&#34;sender&#34;]:
+            nonce: Optional[bytes] = b64_to_bytes(
+                recip[&#34;header&#34;][&#34;iv&#34;],
+                urlsafe=True
+            )
+            enc_sender: Optional[bytes] = b64_to_bytes(
+                recip[&#34;header&#34;][&#34;sender&#34;],
+                urlsafe=True
+            )
+
+        else:
+            nonce = None
+            enc_sender = None
+
+        if nonce and enc_sender:
+            sender_vk = nacl.bindings.crypto_box_seal_open(
+                enc_sender,
+                pk,
+                sk
+            ).decode(&#34;ascii&#34;)
+            sender_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
+                b58_to_bytes(sender_vk)
+            )
+            cek = nacl.bindings.crypto_box_open(
+                encrypted_key,
+                nonce,
+                sender_pk,
+                sk
+            )
+        else:
+            sender_vk = None
+            cek = nacl.bindings.crypto_box_seal_open(encrypted_key, pk, sk)
+        return cek, sender_vk, recip_vk_b58
+    raise ValueError(
+        &#34;No corresponding recipient key found in {}&#34;.format(not_found)
+    )</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.pack_message"><code class="name flex">
+<span>def <span class="ident">pack_message</span></span>(<span>message, to_verkeys, from_verkey=None, from_sigkey=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Assemble a packed message for a set of recipients, optionally including
+the sender.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong></dt>
+<dd>The message to pack</dd>
+<dt><strong><code>to_verkeys</code></strong></dt>
+<dd>The verkeys to pack the message for</dd>
+<dt><strong><code>from_verkey</code></strong></dt>
+<dd>The sender verkey</dd>
+<dt><strong><code>from_sigkey</code></strong></dt>
+<dd>The sender sigkey</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>The</code> <code>encoded</code> <code>message</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pack_message(
+        message: str,
+        to_verkeys: Sequence[bytes],
+        from_verkey: bytes = None,
+        from_sigkey: bytes = None,
+) -&gt; OrderedDict:
+    &#34;&#34;&#34;
+    Assemble a packed message for a set of recipients, optionally including
+    the sender.
+
+    Args:
+        message: The message to pack
+        to_verkeys: The verkeys to pack the message for
+        from_verkey: The sender verkey
+        from_sigkey: The sender sigkey
+
+    Returns:
+        The encoded message
+
+    &#34;&#34;&#34;
+    recips_json, cek = prepare_pack_recipient_keys(
+        to_verkeys,
+        from_verkey,
+        from_sigkey
+    )
+    recips_b64 = bytes_to_b64(recips_json.encode(&#34;ascii&#34;), urlsafe=True)
+
+    ciphertext, nonce, tag = encrypt_plaintext(
+        message,
+        recips_b64.encode(&#34;ascii&#34;),
+        cek
+    )
+
+    data = OrderedDict(
+        [
+            (&#34;protected&#34;, recips_b64),
+            (&#34;iv&#34;, bytes_to_b64(nonce, urlsafe=True)),
+            (&#34;ciphertext&#34;, bytes_to_b64(ciphertext, urlsafe=True)),
+            (&#34;tag&#34;, bytes_to_b64(tag, urlsafe=True)),
+        ]
+    )
+    return data</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.prepare_pack_recipient_keys"><code class="name flex">
+<span>def <span class="ident">prepare_pack_recipient_keys</span></span>(<span>to_verkeys, from_verkey=None, from_sigkey=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Assemble the recipients block of a packed message.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>to_verkeys</code></strong></dt>
+<dd>Verkeys of recipients</dd>
+<dt><strong><code>from_verkey</code></strong></dt>
+<dd>Sender Verkey needed to authcrypt package</dd>
+<dt><strong><code>from_sigkey</code></strong></dt>
+<dd>Sender Sigkey needed to authcrypt package</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>A</code> <code>tuple</code> of (<code>json</code> <code>result</code>, <code>key</code>)</dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prepare_pack_recipient_keys(
+        to_verkeys: Sequence[bytes],
+        from_verkey: bytes = None,
+        from_sigkey: bytes = None
+) -&gt; Tuple[str, bytes]:
+    &#34;&#34;&#34;
+    Assemble the recipients block of a packed message.
+
+    Args:
+        to_verkeys: Verkeys of recipients
+        from_verkey: Sender Verkey needed to authcrypt package
+        from_sigkey: Sender Sigkey needed to authcrypt package
+
+    Returns:
+        A tuple of (json result, key)
+
+    &#34;&#34;&#34;
+    if from_verkey is not None and from_sigkey is None or \
+            from_sigkey is not None and from_verkey is None:
+        raise CryptoError(
+            &#39;Both verkey and sigkey needed to authenticated encrypt message&#39;
+        )
+
+    cek = nacl.bindings.crypto_secretstream_xchacha20poly1305_keygen()
+    recips = []
+
+    for target_vk in to_verkeys:
+        target_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
+            target_vk
+        )
+        if from_verkey:
+            sender_vk = bytes_to_b58(from_verkey).encode(&#34;ascii&#34;)
+            enc_sender = nacl.bindings.crypto_box_seal(sender_vk, target_pk)
+            sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(
+                from_sigkey
+            )
+
+            nonce = nacl.utils.random(nacl.bindings.crypto_box_NONCEBYTES)
+            enc_cek = nacl.bindings.crypto_box(cek, nonce, target_pk, sk)
+        else:
+            enc_sender = None
+            nonce = None
+            enc_cek = nacl.bindings.crypto_box_seal(cek, target_pk)
+
+        recips.append(
+            OrderedDict(
+                [
+                    (&#34;encrypted_key&#34;, bytes_to_b64(enc_cek, urlsafe=True)),
+                    (
+                        &#34;header&#34;,
+                        OrderedDict(
+                            [
+                                (&#34;kid&#34;, bytes_to_b58(target_vk)),
+                                (
+                                    &#34;sender&#34;,
+                                    bytes_to_b64(enc_sender, urlsafe=True)
+                                    if enc_sender
+                                    else None,
+                                ),
+                                (
+                                    &#34;iv&#34;,
+                                    bytes_to_b64(nonce, urlsafe=True)
+                                    if nonce
+                                    else None,
+                                ),
+                            ]
+                        ),
+                    ),
+                ]
+            )
+        )
+
+    data = OrderedDict(
+        [
+            (&#34;enc&#34;, &#34;xchacha20poly1305_ietf&#34;),
+            (&#34;typ&#34;, &#34;JWM/1.0&#34;),
+            (&#34;alg&#34;, &#34;Authcrypt&#34; if from_verkey else &#34;Anoncrypt&#34;),
+            (&#34;recipients&#34;, recips),
+        ]
+    )
+    return json.dumps(data), cek</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.random_seed"><code class="name flex">
+<span>def <span class="ident">random_seed</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Generate a random seed value.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>A</code> <code>new</code> <code>random</code> <code>seed</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def random_seed() -&gt; bytes:
+    &#34;&#34;&#34;
+    Generate a random seed value.
+
+    Returns:
+        A new random seed
+
+    &#34;&#34;&#34;
+    return nacl.utils.random(nacl.bindings.crypto_secretbox_KEYBYTES)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.sign_message"><code class="name flex">
+<span>def <span class="ident">sign_message</span></span>(<span>message, secret)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sign a message using a private signing key.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong></dt>
+<dd>The message to sign</dd>
+<dt><strong><code>secret</code></strong></dt>
+<dd>The private signing key</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>The</code> <code>signature</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sign_message(message: bytes, secret: bytes) -&gt; bytes:
+    &#34;&#34;&#34;
+    Sign a message using a private signing key.
+
+    Args:
+        message: The message to sign
+        secret: The private signing key
+
+    Returns:
+        The signature
+
+    &#34;&#34;&#34;
+    result = nacl.bindings.crypto_sign(message, secret)
+    sig = result[: nacl.bindings.crypto_sign_BYTES]
+    return sig</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.sign_message_field"><code class="name flex">
+<span>def <span class="ident">sign_message_field</span></span>(<span>field_value, signer, secret)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sign a field of a message and return the value of a signature decorator.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sign_message_field(field_value: Dict, signer: str, secret: bytes) -&gt; Dict:
+    &#34;&#34;&#34; Sign a field of a message and return the value of a signature decorator.
+    &#34;&#34;&#34;
+    timestamp_bytes = struct.pack(&#34;&gt;Q&#34;, int(time.time()))
+    sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode(&#39;ascii&#39;)
+    sig_data = base64.urlsafe_b64encode(sig_data_bytes).decode(&#39;ascii&#39;)
+
+    signature_bytes = nacl.bindings.crypto_sign(
+        sig_data_bytes,
+        secret
+    )[:nacl.bindings.crypto_sign_BYTES]
+    signature = base64.urlsafe_b64encode(signature_bytes).decode(&#39;ascii&#39;)
+
+    return {
+        &#34;@type&#34;: &#34;did:sov:BzCbsNYhMrjHiqZDTUASHg;spec&#34;
+                 &#34;/signature/1.0/ed25519Sha512_single&#34;,
+        &#34;signer&#34;: signer,
+        &#34;sig_data&#34;: sig_data,
+        &#34;signature&#34;: signature
+    }</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.unpack_message"><code class="name flex">
+<span>def <span class="ident">unpack_message</span></span>(<span>enc_message, my_verkey, my_sigkey)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Decode a packed message.</p>
+<p>Disassemble and unencrypt a packed message, returning the message content,
+verification key of the sender (if available), and verification key of the
+recipient.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>enc_message</code></strong></dt>
+<dd>The encrypted message</dd>
+<dt><strong><code>find_key</code></strong></dt>
+<dd>Function to retrieve private key</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>A</code> <code>tuple</code> of (<code>message</code>, <code>sender_vk</code>, <code>recip_vk</code>)</dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>ValueError</code></strong></dt>
+<dd>If the packed message is invalid</dd>
+<dt><strong><code>ValueError</code></strong></dt>
+<dd>If the packed message reipients are invalid</dd>
+<dt><strong><code>ValueError</code></strong></dt>
+<dd>If the pack algorithm is unsupported</dd>
+<dt><strong><code>ValueError</code></strong></dt>
+<dd>If the sender's public key was not provided</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unpack_message(
+        enc_message: Union[Dict, bytes], my_verkey: bytes, my_sigkey: bytes
+) -&gt; Tuple[str, Optional[str], str]:
+    &#34;&#34;&#34;
+    Decode a packed message.
+
+    Disassemble and unencrypt a packed message, returning the message content,
+    verification key of the sender (if available), and verification key of the
+    recipient.
+
+    Args:
+        enc_message: The encrypted message
+        find_key: Function to retrieve private key
+
+    Returns:
+        A tuple of (message, sender_vk, recip_vk)
+
+    Raises:
+        ValueError: If the packed message is invalid
+        ValueError: If the packed message reipients are invalid
+        ValueError: If the pack algorithm is unsupported
+        ValueError: If the sender&#39;s public key was not provided
+
+    &#34;&#34;&#34;
+    if isinstance(enc_message, bytes):
+        try:
+            enc_message = json.loads(enc_message)
+        except Exception as err:
+            raise ValueError(&#34;Invalid packed message&#34;) from err
+    if not isinstance(enc_message, dict):
+        raise TypeError(
+            &#39;Expected bytes or dict, got {}&#39;.format(type(enc_message))
+        )
+
+    protected_bin = enc_message[&#34;protected&#34;].encode(&#34;ascii&#34;)
+    recips_json = b64_to_bytes(
+        enc_message[&#34;protected&#34;], urlsafe=True
+    ).decode(&#34;ascii&#34;)
+    try:
+        recips_outer = json.loads(recips_json)
+    except Exception as err:
+        raise ValueError(&#34;Invalid packed message recipients&#34;) from err
+
+    alg = recips_outer[&#34;alg&#34;]
+    is_authcrypt = alg == &#34;Authcrypt&#34;
+    if not is_authcrypt and alg != &#34;Anoncrypt&#34;:
+        raise ValueError(&#34;Unsupported pack algorithm: {}&#34;.format(alg))
+    cek, sender_vk, recip_vk = locate_pack_recipient_key(
+        recips_outer[&#34;recipients&#34;], my_verkey, my_sigkey
+    )
+    if not sender_vk and is_authcrypt:
+        raise ValueError(
+            &#34;Sender public key not provided for Authcrypt message&#34;
+        )
+
+    ciphertext = b64_to_bytes(enc_message[&#34;ciphertext&#34;], urlsafe=True)
+    nonce = b64_to_bytes(enc_message[&#34;iv&#34;], urlsafe=True)
+    tag = b64_to_bytes(enc_message[&#34;tag&#34;], urlsafe=True)
+
+    payload_bin = ciphertext + tag
+    message = decrypt_plaintext(payload_bin, protected_bin, nonce, cek)
+
+    return message, sender_vk, recip_vk</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.validate_seed"><code class="name flex">
+<span>def <span class="ident">validate_seed</span></span>(<span>seed)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Convert a seed parameter to standard format and check length.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>seed</code></strong></dt>
+<dd>The seed to validate</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>The</code> <code>validated</code> <code>and</code> <code>encoded</code> <code>seed</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate_seed(seed: Union[str, bytes]) -&gt; Optional[bytes]:
+    &#34;&#34;&#34;
+    Convert a seed parameter to standard format and check length.
+
+    Args:
+        seed: The seed to validate
+
+    Returns:
+        The validated and encoded seed
+
+    &#34;&#34;&#34;
+    if not seed:
+        return None
+    if isinstance(seed, str):
+        if &#34;=&#34; in seed:
+            seed = b64_to_bytes(seed)
+        else:
+            seed = seed.encode(&#34;ascii&#34;)
+    if not isinstance(seed, bytes):
+        raise CryptoError(&#34;Seed value is not a string or bytes&#34;)
+    if len(seed) != 32:
+        raise CryptoError(&#34;Seed value must be 32 bytes in length&#34;)
+    return seed</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.verify_signed_message"><code class="name flex">
+<span>def <span class="ident">verify_signed_message</span></span>(<span>signed, verkey)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Verify a signed message according to a public verification key.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>signed</code></strong></dt>
+<dd>The signed message</dd>
+<dt><strong><code>verkey</code></strong></dt>
+<dd>The verkey to use in verification</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>True</code> <code>if</code> <code>verified</code>, <code>else</code> <code>False</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def verify_signed_message(signed: bytes, verkey: bytes) -&gt; bool:
+    &#34;&#34;&#34;
+    Verify a signed message according to a public verification key.
+
+    Args:
+        signed: The signed message
+        verkey: The verkey to use in verification
+
+    Returns:
+        True if verified, else False
+
+    &#34;&#34;&#34;
+    try:
+        nacl.bindings.crypto_sign_open(signed, verkey)
+    except nacl.exceptions.BadSignatureError:
+        return False
+    return True</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.crypto.verify_signed_message_field"><code class="name flex">
+<span>def <span class="ident">verify_signed_message_field</span></span>(<span>signed_field)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Verify a signed message field</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def verify_signed_message_field(signed_field: Dict) -&gt; Tuple[str, Dict]:
+    &#34;&#34;&#34; Verify a signed message field &#34;&#34;&#34;
+    data_bytes = base64.urlsafe_b64decode(signed_field[&#39;sig_data&#39;])
+    signature_bytes = base64.urlsafe_b64decode(
+        signed_field[&#39;signature&#39;].encode(&#39;ascii&#39;)
+    )
+    nacl.bindings.crypto_sign_open(
+        signature_bytes + data_bytes,
+        b58_to_bytes(signed_field[&#39;signer&#39;])
+    )
+
+    fieldjson = data_bytes[8:]
+    return signed_field[&#39;signer&#39;], json.loads(fieldjson)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="aries_staticagent.crypto.CryptoError"><code class="flex name class">
+<span>class <span class="ident">CryptoError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>CryptoError raised on failed crypto call.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CryptoError(Exception):
+    &#34;&#34;&#34; CryptoError raised on failed crypto call. &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="aries_staticagent" href="index.html">aries_staticagent</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="aries_staticagent.crypto.anon_crypt_message" href="#aries_staticagent.crypto.anon_crypt_message">anon_crypt_message</a></code></li>
+<li><code><a title="aries_staticagent.crypto.anon_decrypt_message" href="#aries_staticagent.crypto.anon_decrypt_message">anon_decrypt_message</a></code></li>
+<li><code><a title="aries_staticagent.crypto.auth_crypt_message" href="#aries_staticagent.crypto.auth_crypt_message">auth_crypt_message</a></code></li>
+<li><code><a title="aries_staticagent.crypto.auth_decrypt_message" href="#aries_staticagent.crypto.auth_decrypt_message">auth_decrypt_message</a></code></li>
+<li><code><a title="aries_staticagent.crypto.b58_to_bytes" href="#aries_staticagent.crypto.b58_to_bytes">b58_to_bytes</a></code></li>
+<li><code><a title="aries_staticagent.crypto.b64_to_bytes" href="#aries_staticagent.crypto.b64_to_bytes">b64_to_bytes</a></code></li>
+<li><code><a title="aries_staticagent.crypto.bytes_to_b58" href="#aries_staticagent.crypto.bytes_to_b58">bytes_to_b58</a></code></li>
+<li><code><a title="aries_staticagent.crypto.bytes_to_b64" href="#aries_staticagent.crypto.bytes_to_b64">bytes_to_b64</a></code></li>
+<li><code><a title="aries_staticagent.crypto.create_keypair" href="#aries_staticagent.crypto.create_keypair">create_keypair</a></code></li>
+<li><code><a title="aries_staticagent.crypto.decrypt_plaintext" href="#aries_staticagent.crypto.decrypt_plaintext">decrypt_plaintext</a></code></li>
+<li><code><a title="aries_staticagent.crypto.encrypt_plaintext" href="#aries_staticagent.crypto.encrypt_plaintext">encrypt_plaintext</a></code></li>
+<li><code><a title="aries_staticagent.crypto.locate_pack_recipient_key" href="#aries_staticagent.crypto.locate_pack_recipient_key">locate_pack_recipient_key</a></code></li>
+<li><code><a title="aries_staticagent.crypto.pack_message" href="#aries_staticagent.crypto.pack_message">pack_message</a></code></li>
+<li><code><a title="aries_staticagent.crypto.prepare_pack_recipient_keys" href="#aries_staticagent.crypto.prepare_pack_recipient_keys">prepare_pack_recipient_keys</a></code></li>
+<li><code><a title="aries_staticagent.crypto.random_seed" href="#aries_staticagent.crypto.random_seed">random_seed</a></code></li>
+<li><code><a title="aries_staticagent.crypto.sign_message" href="#aries_staticagent.crypto.sign_message">sign_message</a></code></li>
+<li><code><a title="aries_staticagent.crypto.sign_message_field" href="#aries_staticagent.crypto.sign_message_field">sign_message_field</a></code></li>
+<li><code><a title="aries_staticagent.crypto.unpack_message" href="#aries_staticagent.crypto.unpack_message">unpack_message</a></code></li>
+<li><code><a title="aries_staticagent.crypto.validate_seed" href="#aries_staticagent.crypto.validate_seed">validate_seed</a></code></li>
+<li><code><a title="aries_staticagent.crypto.verify_signed_message" href="#aries_staticagent.crypto.verify_signed_message">verify_signed_message</a></code></li>
+<li><code><a title="aries_staticagent.crypto.verify_signed_message_field" href="#aries_staticagent.crypto.verify_signed_message_field">verify_signed_message_field</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="aries_staticagent.crypto.CryptoError" href="#aries_staticagent.crypto.CryptoError">CryptoError</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

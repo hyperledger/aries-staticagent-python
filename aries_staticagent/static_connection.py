@@ -30,7 +30,75 @@ class MessageDeliveryError(Exception):
 
 
 class StaticConnection:
-    """A Static Agent Connection to another agent."""
+    """Create a Static Agent Connection to another agent.
+
+    The following will create a Static Connection with just the receiving end
+    in place. This makes it possible to receive a message over this connection
+    without yet knowing where messages will be sent.
+
+    >>> my_keys = crypto.create_keypair()
+    >>> connection = StaticConnection(my_keys)
+
+    To create a Static Agent Connection with both ends configured:
+    >>> their_pretend_verkey = crypto.create_keypair()[0]
+    >>> connection = StaticConnection(my_keys, their_vk=their_pretend_verkey)
+    >>> connection.recipients == [their_pretend_verkey]
+    True
+
+    Or, when there are multiple recipients:
+    >>> pretend_recips = [ crypto.create_keypair()[0] for i in range(5) ]
+    >>> connection = StaticConnection(my_keys, recipients=pretend_recips)
+    >>> connection.recipients == pretend_recips
+    True
+
+    To specify mediators responsible for forwarding messages to the recipient:
+    >>> pretend_mediators = [ crypto.create_keypair()[0] for i in range(5) ]
+    >>> connection = StaticConnection(
+    ...     my_keys, their_vk=their_pretend_verkey,
+    ...     routing_keys=pretend_mediators
+    ... )
+    >>> connection.routing_keys == pretend_mediators
+    True
+
+    By default, `StaticConnection` will POST messages to the endpoint given
+    over HTTP. You can, however, specify an alternative `Send` method for
+    `StaticConnection` as in the example below:
+    >>> async def my_send(msg: bytes, endpoint: str) -> Optional[bytes]:
+    ...     print('pretending to send message to', endpoint)
+    ...     response = None
+    ...     return response
+    >>> connection = StaticConnection(
+    ...     my_keys, their_vk=their_pretend_verkey,
+    ...     endpoint='example.com', send=my_send
+    ... )
+    >>> connection.send({'@type': 'doc_uri/protocol/0.1/test'})
+    pretending to send message to example.com
+
+
+    Arguments:
+
+        keys (tuple of bytes or str): A tuple of our public and private key.
+
+    NamedArguments:
+
+        their_vk (bytes or str): Specify "their" verification key for this
+            connection. Specifies only one recipient. Mutually exclusive with
+            recipients.
+
+        recipients ([bytes or str]): Specify one or more recipients for this
+            connection. Mutually exclusive with their_vk.
+
+        routing_keys ([bytes or str]): Specify one or more mediators for this
+            connection.
+
+        send (Send): Specify the send method for this connection. See notes
+            above for function signature.  Defaults to
+            `aries_staticagent.utils.http_send`.
+
+        dispatcher (aries_staticagent.dispatcher.Dispatcher): Specify a
+            dispatcher for this connection.  Defaults to
+            `aries_staticagent.dispatcher.Dispatcher`.
+    """
 
     Keys = namedtuple('KeyPair', 'verkey, sigkey')
 
