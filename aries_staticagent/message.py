@@ -1,8 +1,10 @@
 """ Define Message base class. """
 import json
 import uuid
+from typing import Optional, Union
 
 from .type import Type, Semver
+from .mtc import MessageTrustContext
 
 
 def generate_id():
@@ -39,6 +41,7 @@ class Message(dict):
             self['@type'] = str(self._type)
         else:
             self._type = Type.from_str(self.type)
+        self.mtc: Optional[MessageTrustContext] = None
 
     @property
     def type(self):
@@ -82,22 +85,22 @@ class Message(dict):
 
     # Serialization
     @classmethod
-    def deserialize(cls, serialized: str):
+    def deserialize(cls, serialized: Union[str, bytes]) -> 'Message':
         """ Deserialize a message from a json string. """
         try:
             return cls(json.loads(serialized))
         except json.decoder.JSONDecodeError as err:
             raise InvalidMessage('Could not deserialize message') from err
 
-    def serialize(self):
+    def serialize(self) -> str:
         """ Serialize a message into a json string. """
         return json.dumps(self)
 
-    def pretty_print(self):
+    def pretty_print(self) -> str:
         """ return a 'pretty print' representation of this message. """
         return json.dumps(self, indent=2)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Message):
             return False
 

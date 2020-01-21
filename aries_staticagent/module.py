@@ -40,9 +40,15 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
             version: str = None
                 ):
         """ Build a type string for this module. """
-        doc_uri = doc_uri if doc_uri is not None else self.__class__.DOC_URI
-        protocol = protocol if protocol is not None else self.__class__.PROTOCOL
-        version = version if version is not None else self.__class__.VERSION
+        doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
+        protocol = protocol if protocol is not None else self.PROTOCOL
+        version = version if version is not None else self.VERSION
+        if doc_uri is None:
+            raise TypeError('doc_uri must be str')
+        if protocol is None:
+            raise TypeError('protocol must be str')
+        if version is None:
+            raise TypeError('version must be str')
         return Type(doc_uri, protocol, version, name)
 
     def _find_routes(self):
@@ -99,6 +105,12 @@ class PartialType():
         doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
         protocol = self.protocol if self.protocol else type(mod).PROTOCOL
         version = self.version if self.version else type(mod).VERSION
+        if doc_uri is None:
+            raise TypeError('doc_uri must be str')
+        if protocol is None:
+            raise TypeError('protocol must be str')
+        if version is None:
+            raise TypeError('version must be str')
         return Type(doc_uri, protocol, version, self.name)
 
 

@@ -2,7 +2,6 @@
 import pytest
 
 from aries_staticagent.module import Module, InvalidModule, route
-from aries_staticagent.type import Semver, Type
 
 
 def test_module_def():

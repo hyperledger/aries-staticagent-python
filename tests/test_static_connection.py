@@ -203,6 +203,7 @@ def test_update(my_test_info, their_test_info):
     )
     assert conn.recipients == [their_test_info.keys.verkey]
 
+
 def test_message_delivery_error():
     """Test MessageDeliveryError."""
     error = MessageDeliveryError(status=10, msg='asdf')

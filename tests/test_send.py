@@ -31,6 +31,7 @@ def bob_keys():
     """Bob's keys."""
     return StaticConnection.Keys(*crypto.create_keypair())
 
+
 @pytest.fixture
 def alice_gen(alice_keys, bob_keys):
     def _gen(send=None, dispatcher=None):
@@ -43,9 +44,11 @@ def alice_gen(alice_keys, bob_keys):
         )
     return _gen
 
+
 @pytest.fixture
 def alice(alice_gen):
     return alice_gen()
+
 
 @pytest.fixture
 def bob_gen(alice_keys, bob_keys):
@@ -59,6 +62,7 @@ def bob_gen(alice_keys, bob_keys):
         )
     return _gen
 
+
 @pytest.fixture
 def bob(bob_gen):
     return bob_gen()
@@ -71,27 +75,23 @@ def send():
         def __init__(self):
             self.sent_message = None
 
-        async def __call__(
-                self, msg, _endpoint, _response_handler, _error_handler):
+        async def __call__(self, msg, _endpoint):
             self.sent_message = msg
 
-        async def call_response(
-                self, response, msg, _endpoint, response_handler,
-                _error_handler):
+        async def return_response(self, response, msg, _endpoint):
             self.sent_message = msg
-            await response_handler(response)
+            return response
 
-        async def call_error(
-                self, msg, _endpoint, _response_handler, error_handler):
+        async def raise_error(self, msg, _endpoint):
             self.sent_message = msg
-            await error_handler('error')
-
+            raise Exception('error')
 
     return _Send()
 
+
 @pytest.fixture
 def reply():
-    """Mock send callable."""
+    """Mock reply callable."""
     class _Reply:
         def __init__(self):
             self.replied = None
@@ -100,6 +100,7 @@ def reply():
             self.replied = msg
 
     return _Reply()
+
 
 @pytest.fixture
 def dispatcher():
@@ -165,7 +166,7 @@ async def test_reply_works(alice, bob, reply):
 async def test_response_handler(alice_gen, bob, send, dispatcher):
     """Test response handler works."""
     alice = alice_gen(
-        partial(send.call_response, bob.pack(RESPONSE)),
+        partial(send.return_response, bob.pack(RESPONSE)),
         dispatcher
     )
     await alice.send_async(MESSAGE, return_route='all')
@@ -178,7 +179,7 @@ async def test_response_handler_no_return_route_raises_error(
         alice_gen, bob, send, dispatcher):
     """Test response handler works."""
     alice = alice_gen(
-        partial(send.call_response, bob.pack(RESPONSE)),
+        partial(send.return_response, bob.pack(RESPONSE)),
         dispatcher
     )
     with pytest.raises(RuntimeError):
@@ -188,7 +189,7 @@ async def test_response_handler_no_return_route_raises_error(
 @pytest.mark.asyncio
 async def test_error_handler(alice_gen, bob, send):
     """Test error handler works."""
-    alice = alice_gen(send.call_error)
+    alice = alice_gen(send.raise_error)
     with pytest.raises(MessageDeliveryError, match='error'):
         await alice.send_async(MESSAGE)
 
@@ -262,7 +263,7 @@ async def test_next_with_type_and_cond_raises_error(alice):
 @pytest.mark.asyncio
 async def test_send_and_await_reply(alice_gen, bob, send):
     """Test holding and awaiting messages."""
-    alice = alice_gen(partial(send.call_response, bob.pack(RESPONSE)))
+    alice = alice_gen(partial(send.return_response, bob.pack(RESPONSE)))
     response = await alice.send_and_await_reply_async(MESSAGE)
     assert response == RESPONSE
 
@@ -286,6 +287,6 @@ def test_blocking_send(alice_gen, bob, send):
 
 def test_blocking_send_and_await_reply(alice_gen, bob, send):
     """Test blocking send and await reply"""
-    alice = alice_gen(send=partial(send.call_response, bob.pack(RESPONSE)))
+    alice = alice_gen(send=partial(send.return_response, bob.pack(RESPONSE)))
     response = alice.send_and_await_reply(MESSAGE)
     assert response == RESPONSE
