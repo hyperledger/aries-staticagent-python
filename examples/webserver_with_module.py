@@ -1,50 +1,15 @@
-""" Webserver with module example. """
-import argparse
-import os
+"""Webserver with module example."""
 from aiohttp import web
 
 from aries_staticagent import StaticConnection, Module, route, utils
 
-
-def environ_or_required(key):
-    """ Pull arg from environment or require it in args. """
-    if os.environ.get(key):
-        return {'default': os.environ.get(key)}
-
-    return {'required': True}
-
-
-def config():
-    """ Get StaticConnection parameters from env or command line args. """
-    parser = argparse.ArgumentParser()
-    # endpoint can be http or ws, auto handled by staticagent library.
-    parser.add_argument(
-        '--endpoint',
-        **environ_or_required('ARIES_ENDPOINT')
-    )
-    parser.add_argument(
-        '--endpointkey',
-        **environ_or_required('ARIES_ENDPOINT_KEY')
-    )
-    parser.add_argument(
-        '--mypublickey',
-        **environ_or_required('ARIES_MY_PUBLIC_KEY')
-    )
-    parser.add_argument(
-        '--myprivatekey',
-        **environ_or_required('ARIES_MY_PRIVATE_KEY')
-    )
-    parser.add_argument(
-        '--port',
-        **environ_or_required('PORT')
-    )
-    args = parser.parse_args()
-    return args
+from common import config
 
 
 class BasicMessageCounter(Module):
-    """ A BasicMessage module that responds with the number of messages
-        received.
+    """A simple BasicMessage module.
+
+    Responds with the number of messages received.
     """
     DOC_URI = 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/'
     PROTOCOL = 'basicmessage'
@@ -67,11 +32,11 @@ class BasicMessageCounter(Module):
 
 
 def main():
-    """ Create connection and start web server. """
+    """Create connection and start web server."""
     args = config()
     conn = StaticConnection(
-        (args.mypublickey, args.myprivatekey),
-        their_vk=args.endpointkey,
+        (args.my_verkey, args.my_sigkey),
+        their_vk=args.their_verkey,
         endpoint=args.endpoint,
     )
 

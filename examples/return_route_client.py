@@ -1,11 +1,15 @@
-"""Example client to return route capable agent."""
+"""Example client to return route capable agent.
+
+This example is intended to be run with return_route_server to demonstrate
+return routing.
+"""
 
 import hashlib
 from aries_staticagent import StaticConnection, crypto, utils
 
 
 def main():
-    """Start a server with a static connection."""
+    """Send a message and await the reply."""
     keys = crypto.create_keypair(
         seed=hashlib.sha256(b'client').digest()
     )

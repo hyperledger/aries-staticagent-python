@@ -1,4 +1,8 @@
-"""Example return route capable agent."""
+"""Example return route capable agent.
+
+This example is intended to be run with the return_route_client to demonstrate
+return routing.
+"""
 
 import hashlib
 from aiohttp import web
