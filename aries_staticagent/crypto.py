@@ -26,9 +26,14 @@ class CryptoError(Exception):
     """ CryptoError raised on failed crypto call. """
 
 
-def b64_to_bytes(val: str, urlsafe=False) -> bytes:
+def b64_to_bytes(val: Union[str, bytes], urlsafe=False) -> bytes:
     """Convert a base 64 string to bytes."""
+    if isinstance(val, str):
+        val = val.encode('ascii')
     if urlsafe:
+        missing_padding = len(val) % 4
+        if missing_padding:
+            val += b'=' * (4 - missing_padding)
         return base64.urlsafe_b64decode(val)
     return base64.b64decode(val)
 
@@ -158,13 +163,13 @@ def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
     """
     timestamp_bytes = struct.pack(">Q", int(time.time()))
     sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode('ascii')
-    sig_data = base64.urlsafe_b64encode(sig_data_bytes).decode('ascii')
+    sig_data = bytes_to_b64(sig_data_bytes, urlsafe=True)
 
     signature_bytes = nacl.bindings.crypto_sign(
         sig_data_bytes,
         secret
     )[:nacl.bindings.crypto_sign_BYTES]
-    signature = base64.urlsafe_b64encode(signature_bytes).decode('ascii')
+    signature = bytes_to_b64(signature_bytes, urlsafe=True)
 
     return {
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec"
@@ -177,10 +182,8 @@ def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
 
 def verify_signed_message_field(signed_field: Dict) -> (str, Dict):
     """ Verify a signed message field """
-    data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
-    signature_bytes = base64.urlsafe_b64decode(
-        signed_field['signature'].encode('ascii')
-    )
+    data_bytes = b64_to_bytes(signed_field['sig_data'], urlsafe=True)
+    signature_bytes = b64_to_bytes(signed_field['signature'], urlsafe=True)
     nacl.bindings.crypto_sign_open(
         signature_bytes + data_bytes,
         b58_to_bytes(signed_field['signer'])
