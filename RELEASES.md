@@ -1,3 +1,9 @@
+Version 0.7.1 (2020-01-23)
+==========================
+
+## Hotfix Patch
+- Accept Base64URL encoded values with and without padding.
+
 Version 0.7.0 (2019-11-25)
 ==========================
 
