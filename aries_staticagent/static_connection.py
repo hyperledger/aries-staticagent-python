@@ -339,7 +339,18 @@ class StaticConnection:
         """Call reply method."""
         if self._reply is None:
             raise RuntimeError('Cannot reply; no reply handler is set')
-        await self._reply(message)
+
+        if not callable(self._reply) and not asyncio.iscoroutine(self._reply):
+            raise RuntimeError(
+                'Invalid reply method; expected coroutine or function, got {}'
+                .format(type(self._reply).__name__)
+            )
+
+        ret = self._reply(message)
+        if asyncio.iscoroutine(ret):
+            return await ret
+
+        return ret
 
     async def handle(self, packed_message: bytes):
         """Unpack and dispatch message to handler."""
