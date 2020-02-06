@@ -408,13 +408,13 @@ class StaticConnection(ConnectionInfo):
             )
 
         if self.routing_keys:
-            to = self.recipients[0]
+            forward_to = self.recipients[0]
             for routing_key in self.routing_keys:
                 packed_message = crypto.pack_message(
-                    forward_msg(to=to, msg=packed_message).serialize(),
+                    forward_msg(to=forward_to, msg=packed_message).serialize(),
                     [routing_key],
                 )
-                to = routing_key
+                forward_to = routing_key
 
         return json.dumps(packed_message).encode('ascii')
 
