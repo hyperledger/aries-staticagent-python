@@ -107,7 +107,84 @@ class Session:
         return self.session_id == other.session_id
 
 
-class StaticConnection():
+class ConnectionInfo:
+    """Info required to send a message to a connection."""
+
+    Keypair = namedtuple('Keypair', 'verkey, sigkey')
+
+    def __init__(
+            self,
+            keys: Tuple[Union[bytes, str], Union[bytes, str]],
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: Sequence[Union[bytes, str]] = None,
+            routing_keys: Sequence[Union[bytes, str]] = None
+    ):
+
+        if their_vk and recipients:
+            raise ValueError('their_vk and recipients are mutually exclusive.')
+
+        self.keys = self.Keypair(*map(ensure_key_bytes, keys))
+        self.endpoint: Optional[str] = endpoint
+        self.recipients: Optional[List[bytes]] = None
+        self.routing_keys: Optional[List[bytes]] = None
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+
+    def update(
+            self,
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: Sequence[Union[bytes, str]] = None,
+            routing_keys: Sequence[Union[bytes, str]] = None,
+            **_kwargs):
+        """Update their information."""
+        if their_vk and recipients:
+            raise ValueError('their_vk and recipients are mutually exclusive.')
+
+        if endpoint:
+            self.endpoint = endpoint
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+
+    @property
+    def verkey(self):
+        """My verification key for this connection."""
+        return self.keys.verkey
+
+    @property
+    def verkey_b58(self):
+        """Get Base58 encoded my_vk."""
+        return crypto.bytes_to_b58(self.keys.verkey)
+
+    @property
+    def sigkey(self):
+        """My signing key for this connection."""
+        return self.keys.sigkey
+
+    @property
+    def did(self):
+        """Get verkey based DID for this connection."""
+        return crypto.bytes_to_b58(self.keys.verkey[:16])
+
+
+class StaticConnection(ConnectionInfo):
     """Create a Static Agent Connection to another agent.
 
     The following will create a Static Connection with just the receiving end
@@ -191,71 +268,15 @@ class StaticConnection():
             send: Send = None,
             dispatcher: Dispatcher = None):
 
-        if their_vk and recipients:
-            raise ValueError('their_vk and recipients are mutually exclusive.')
-
-        self.keys = StaticConnection.Keys(*map(ensure_key_bytes, keys))
-        self.endpoint: Optional[str] = endpoint
-        self.recipients: Optional[List[bytes]] = None
-        self.routing_keys: Optional[List[bytes]] = None
-
-        if their_vk:
-            self.recipients = [ensure_key_bytes(their_vk)]
-
-        if recipients:
-            self.recipients = list(map(ensure_key_bytes, recipients))
-
-        if routing_keys:
-            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+        super().__init__(
+            keys, endpoint=endpoint, their_vk=their_vk,
+            recipients=recipients, routing_keys=routing_keys
+        )
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
         self._next: ConditionFutureMap = {}
         self._sessions: Set[Session] = set()
         self._send: Send = send if send else http_send
-
-    def update(
-            self,
-            *,
-            endpoint: str = None,
-            their_vk: Union[bytes, str] = None,
-            recipients: Sequence[Union[bytes, str]] = None,
-            routing_keys: Sequence[Union[bytes, str]] = None,
-            **_kwargs):
-        """Update their information."""
-        if their_vk and recipients:
-            raise ValueError('their_vk and recipients are mutually exclusive.')
-
-        if endpoint:
-            self.endpoint = endpoint
-
-        if their_vk:
-            self.recipients = [ensure_key_bytes(their_vk)]
-
-        if recipients:
-            self.recipients = list(map(ensure_key_bytes, recipients))
-
-        if routing_keys:
-            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
-
-    @property
-    def verkey(self):
-        """My verification key for this connection."""
-        return self.keys.verkey
-
-    @property
-    def verkey_b58(self):
-        """Get Base58 encoded my_vk."""
-        return crypto.bytes_to_b58(self.keys.verkey)
-
-    @property
-    def sigkey(self):
-        """My signing key for this connection."""
-        return self.keys.sigkey
-
-    @property
-    def did(self):
-        """Get verkey based DID for this connection."""
-        return crypto.bytes_to_b58(self.keys.verkey[:16])
 
     def route(self, msg_type: str) -> Callable:
         """Register route decorator."""
