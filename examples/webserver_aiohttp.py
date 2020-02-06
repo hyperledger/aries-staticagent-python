@@ -28,8 +28,8 @@ def main():
     async def handle(request):
         """aiohttp handle POST."""
         response = []
-        with conn.reply_handler(response.append):
-            await conn.handle(await request.read())
+        with conn.session(response.append) as session:
+            await conn.handle(await request.read(), session)
 
         if response:
             return web.Response(text=response.pop())

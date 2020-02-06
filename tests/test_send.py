@@ -1,14 +1,16 @@
 """Test StaticConection send method."""
 import asyncio
+from asyncio import wait_for
+import uuid
 import copy
 from functools import partial
-from asyncio import wait_for
 
 import pytest
 
 from aries_staticagent import (
     StaticConnection, Message, MessageDeliveryError, crypto
 )
+from aries_staticagent.static_connection import Session
 
 # pylint: disable=redefined-outer-name
 
@@ -155,11 +157,44 @@ async def test_outbound_return_route_set(alice_gen, bob, send):
 
 
 @pytest.mark.asyncio
-async def test_reply_works(alice, bob, reply):
+async def test_session_all(alice, bob, reply):
     """Test reply mechanism."""
-    with alice.reply_handler(reply):
+    with alice.session(reply) as session:
+        session._thread = Session.THREAD_ALL
         await alice.send_async(MESSAGE)
     assert bob.unpack(reply.replied) == MESSAGE
+
+
+@pytest.mark.asyncio
+async def test_session_thread(alice, bob, reply):
+    """Test reply mechanism."""
+    threaded_msg = copy.deepcopy(MESSAGE)
+    thread_id = str(uuid.uuid4())
+    threaded_msg['~thread'] = {'thid': thread_id}
+    with alice.session(reply) as session:
+        session._thread = thread_id
+        await alice.send_async(threaded_msg)
+    assert bob.unpack(reply.replied) == threaded_msg
+
+
+@pytest.mark.asyncio
+async def test_session_thread_all(alice, bob, reply):
+    """Test reply mechanism."""
+    threaded_msg = copy.deepcopy(MESSAGE)
+    thread_id = str(uuid.uuid4())
+    threaded_msg['~thread'] = {'thid': thread_id}
+    thread_response = []
+    with alice.session(reply) as session, \
+            alice.session(thread_response.append) as thread_session:
+        session._thread = Session.THREAD_ALL
+        thread_session._thread = thread_id
+        await alice.send_async(MESSAGE)
+        assert bob.unpack(reply.replied) == MESSAGE
+        assert not thread_response
+
+        await alice.send_async(threaded_msg)
+        assert bob.unpack(thread_response.pop()) == threaded_msg
+        assert bob.unpack(reply.replied) == threaded_msg
 
 
 @pytest.mark.asyncio

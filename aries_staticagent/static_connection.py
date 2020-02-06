@@ -4,8 +4,10 @@ import json
 from contextlib import contextmanager
 from typing import (
     Union, Callable, Awaitable, Dict,
-    Tuple, Sequence, Optional, List
+    Tuple, Sequence, Optional, List,
+    Set
 )
+import uuid
 from collections import namedtuple
 
 from . import crypto
@@ -18,7 +20,7 @@ from .utils import ensure_key_bytes, forward_msg, http_send
 
 
 Send = Callable[[bytes, str], Awaitable[Optional[bytes]]]
-Reply = Callable[[bytes], Awaitable[None]]
+SessionSend = Callable[[bytes], Awaitable[None]]
 ConditionFutureMap = Dict[Callable[[Message], bool], asyncio.Future]
 
 
@@ -29,7 +31,83 @@ class MessageDeliveryError(Exception):
         self.status = status
 
 
-class StaticConnection:
+class Session:
+    """An active transport-layer connection/socket providing a send method."""
+
+    THREAD_ALL = 'all'
+
+    def __init__(self, send: SessionSend, thread: str = None):
+        if send is None:
+            raise TypeError('Must supply send method to Session')
+
+        if not callable(send) and not asyncio.iscoroutine(send):
+            raise TypeError(
+                'Invalid send method; expected coroutine or function, got {}'
+                .format(type(send).__name__)
+            )
+
+        self._id = str(uuid.uuid4())
+        self._send = send
+        self._thread = thread
+        self._status = None
+
+    @property
+    def session_id(self):
+        """Unique Identifier for this session."""
+        return self._id
+
+    @property
+    def thread(self):
+        """Get this session's assigned thread."""
+        return self._thread
+
+    def update_thread_from_msg(self, msg: Message):
+        """Update a thread with info from the ~transport decorator."""
+        if '~transport' not in msg and self._thread is None:
+            return
+
+        transport = msg['~transport']
+        if transport['return_route'] == 'all':
+            self._thread = self.THREAD_ALL
+            return
+
+        if transport['return_route'] == 'thread':
+            self._thread = transport['return_route_thread']
+            return
+
+        if transport['return_route'] == 'none':
+            self._thread = None
+            return
+
+    def returning(self) -> bool:
+        """Session set to return route?"""
+        return bool(self._thread)
+
+    def thread_all(self) -> bool:
+        """Session is set to return all messages."""
+        return self.thread == self.THREAD_ALL
+
+    async def send(self, message: bytes):
+        """Send a packed message to this session."""
+        if not self.returning():
+            raise RuntimeError('Session is not set to return route')
+
+        ret = self._send(message)
+        if asyncio.iscoroutine(ret):
+            return await ret
+
+        return ret
+
+    def __hash__(self):
+        return hash(self.session_id)
+
+    def __eq__(self, other):
+        if not isinstance(other, Session):
+            return False
+        return self.session_id == other.session_id
+
+
+class StaticConnection():
     """Create a Static Agent Connection to another agent.
 
     The following will create a Static Connection with just the receiving end
@@ -132,7 +210,7 @@ class StaticConnection:
 
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
         self._next: ConditionFutureMap = {}
-        self._reply: Optional[Reply] = None
+        self._sessions: Set[Session] = set()
         self._send: Send = send if send else http_send
 
     def update(
@@ -320,45 +398,44 @@ class StaticConnection:
         return json.dumps(packed_message).encode('ascii')
 
     @contextmanager
-    def reply_handler(
+    def session(self, send: SessionSend):
+        """Open a new session for this connection."""
+
+        session = Session(send)
+        self._sessions.add(session)
+        yield session
+        self._sessions.remove(session)
+
+    def session_open(self) -> bool:
+        """Check whether connection has sessions open."""
+        return bool(self._sessions)
+
+    async def send_to_session(
             self,
-            reply: Reply):
-        """
-        Set a reply handler to be used in sending messages rather than opening
-        a new connection.
-        """
-        self._reply = reply
-        yield
-        self._reply = None
-
-    def can_reply(self) -> bool:
-        """Check whether connection can reply."""
-        return self._reply is not None
-
-    async def reply(self, message: bytes):
-        """Call reply method."""
-        if self._reply is None:
-            raise RuntimeError('Cannot reply; no reply handler is set')
-
-        if not callable(self._reply) and not asyncio.iscoroutine(self._reply):
+            message: bytes,
+            thread: str = None
+    ) -> bool:
+        """Send a message to all sessions with a matching thread."""
+        if not self._sessions:
             raise RuntimeError(
-                'Invalid reply method; expected coroutine or function, got {}'
-                .format(type(self._reply).__name__)
+                'Cannot send message to session; no open sessions'
             )
 
-        ret = self._reply(message)
-        if asyncio.iscoroutine(ret):
-            return await ret
+        sent = False
+        for session in self._sessions:
+            if not session.returning():
+                continue
 
-        return ret
+            if session.thread == thread or session.thread_all():
+                await session.send(message)
+                sent = True
+        return sent
 
-    async def handle(self, packed_message: bytes):
+    async def handle(self, packed_message: bytes, session: Session = None):
         """Unpack and dispatch message to handler."""
         msg = self.unpack(packed_message)
-        if ('~transport' not in msg or
-                'return_route' not in msg['~transport'] or
-                msg['~transport']['return_route'] == 'none'):
-            self._reply = None
+        if session:
+            session.update_thread_from_msg(msg)
 
         for condition, next_message_future in self._next.items():
             if condition(msg) and not next_message_future.done():
@@ -377,8 +454,14 @@ class StaticConnection:
         """
         Send a message to the agent connected through this StaticConnection.
         """
-        # not can_reply indicates this is an outbound message
-        if return_route and not self.can_reply():
+        if not isinstance(msg, Message):
+            if isinstance(msg, dict):
+                msg = Message(msg)
+            else:
+                raise TypeError('msg must be type Message or dict')
+
+        # TODO: Don't specify return route on messages sent to sessions?
+        if return_route:
             if '~transport' not in msg:
                 msg['~transport'] = {}
             msg['~transport']['return_route'] = return_route
@@ -387,9 +470,9 @@ class StaticConnection:
             msg, anoncrypt=anoncrypt, plaintext=plaintext
         )
 
-        if self.can_reply():
-            await self.reply(packed_message)
-            return
+        if self.session_open():
+            if await self.send_to_session(packed_message, msg.thread['thid']):
+                return
 
         if not self.endpoint:
             raise MessageDeliveryError(
@@ -420,7 +503,8 @@ class StaticConnection:
             return_route: str = "all",
             plaintext: bool = False,
             anoncrypt: bool = False,
-            timeout: int = None) -> Message:
+            timeout: int = None
+    ) -> Message:
         """Send a message and wait for a reply."""
 
         with self.next(type_=type_, condition=condition) as next_message:
@@ -437,7 +521,8 @@ class StaticConnection:
             *,
             type_: str = None,
             condition: Callable[[Message], bool] = None,
-            timeout: int = None):
+            timeout: int = None
+    ):
         """
         Wait for a message.
 
