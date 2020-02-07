@@ -67,3 +67,25 @@ async def http_send(msg: bytes, endpoint: str) -> Optional[bytes]:
                 return body
 
     return None
+
+
+# TODO: Persist websocket until return_route = None sent
+async def ws_send(msg: bytes, endpoint: str) -> Optional[bytes]:
+    """Send over WS.
+
+    This send method is experimental and should not be used for more than
+    experimenting. This method is very inefficient as it throws out the created
+    websocket after receiving only a single msg.
+    """
+    async with aiohttp.ClientSession() as session:
+        async with session.ws_connect(endpoint) as sock:
+            await sock.send_bytes(msg)
+            async for msg in sock:
+                if msg.type == aiohttp.WSMsgType.BINARY:
+                    return msg.data
+
+                if msg.type == aiohttp.WSMsgType.ERROR:
+                    raise Exception(
+                        'ws connection closed with exception %s' %
+                        sock.exception()
+                    )
