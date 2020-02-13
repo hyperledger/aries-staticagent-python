@@ -54,6 +54,11 @@ class Message(dict):
         return self['@id']
 
     @property
+    def thread(self):
+        """Shortcut to msg['~thread'], if present."""
+        return self.get('~thread', {'thid': None})
+
+    @property
     def doc_uri(self) -> str:
         """ Get type doc_uri """
         return self._type.doc_uri
