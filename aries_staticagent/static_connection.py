@@ -8,7 +8,6 @@ from typing import (
     Set
 )
 import uuid
-from collections import namedtuple
 
 from . import crypto
 from .dispatcher import Dispatcher, Handler
