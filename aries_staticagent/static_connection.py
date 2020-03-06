@@ -107,7 +107,111 @@ class Session:
         return self.session_id == other.session_id
 
 
-class StaticConnection():
+class Keys:
+    """Container for keys with convenience methods."""
+    class Mixin:
+        """Mixin for shortcuts to keys."""
+        def __init__(self, keys: 'Keys'):
+            self.keys = keys
+
+        @property
+        def verkey(self):
+            """Get verkey."""
+            return self.keys.verkey
+
+        @property
+        def verkey_b58(self):
+            """Get Base58 encoded verkey."""
+            return self.keys.verkey_b58
+
+        @property
+        def sigkey(self):
+            """Get sigkey."""
+            return self.keys.sigkey
+
+        @property
+        def did(self):
+            """Get verkey based DID for this connection."""
+            return self.keys.did
+
+    def __init__(self, verkey: bytes, sigkey: bytes):
+        self._verkey = verkey
+        self._sigkey = sigkey
+
+    @property
+    def verkey(self):
+        """Get verkey."""
+        return self._verkey
+
+    @property
+    def verkey_b58(self):
+        """Get Base58 encoded verkey."""
+        return crypto.bytes_to_b58(self.verkey)
+
+    @property
+    def sigkey(self):
+        """Get sigkey."""
+        return self._sigkey
+
+    @property
+    def did(self):
+        """Get verkey based DID for this connection."""
+        return crypto.bytes_to_b58(self._verkey[:16])
+
+
+class Target:
+    """Container for information about our message destination."""
+    def __init__(
+            self,
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: Sequence[Union[bytes, str]] = None,
+            routing_keys: Sequence[Union[bytes, str]] = None
+    ):
+        if their_vk and recipients:
+            raise ValueError('their_vk and recipients are mutually exclusive.')
+
+        self.endpoint: Optional[str] = endpoint
+        self.recipients: Optional[List[bytes]] = None
+        self.routing_keys: Optional[List[bytes]] = None
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+
+    def update(
+            self,
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: Sequence[Union[bytes, str]] = None,
+            routing_keys: Sequence[Union[bytes, str]] = None,
+            **_kwargs
+    ):
+        """Update their information."""
+        if their_vk and recipients:
+            raise ValueError('their_vk and recipients are mutually exclusive.')
+
+        if endpoint:
+            self.endpoint = endpoint
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+
+
+class StaticConnection(Keys.Mixin):
     """Create a Static Agent Connection to another agent.
 
     The following will create a Static Connection with just the receiving end
@@ -115,28 +219,26 @@ class StaticConnection():
     without yet knowing where messages will be sent.
 
     >>> my_keys = crypto.create_keypair()
-    >>> connection = StaticConnection(my_keys)
+    >>> connection = StaticConnection.receiver(my_keys)
 
     To create a Static Agent Connection with both ends configured:
     >>> their_pretend_verkey = crypto.create_keypair()[0]
-    >>> connection = StaticConnection(my_keys, their_vk=their_pretend_verkey)
-    >>> connection.recipients == [their_pretend_verkey]
-    True
+    >>> connection = StaticConnection.from_parts(
+    ...     my_keys, their_vk=their_pretend_verkey
+    ... )
 
     Or, when there are multiple recipients:
     >>> pretend_recips = [ crypto.create_keypair()[0] for i in range(5) ]
-    >>> connection = StaticConnection(my_keys, recipients=pretend_recips)
-    >>> connection.recipients == pretend_recips
-    True
+    >>> connection = StaticConnection.from_parts(
+    ...     my_keys, recipients=pretend_recips
+    ... )
 
     To specify mediators responsible for forwarding messages to the recipient:
     >>> pretend_mediators = [ crypto.create_keypair()[0] for i in range(5) ]
-    >>> connection = StaticConnection(
+    >>> connection = StaticConnection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey,
     ...     routing_keys=pretend_mediators
     ... )
-    >>> connection.routing_keys == pretend_mediators
-    True
 
     By default, `StaticConnection` will POST messages to the endpoint given
     over HTTP. You can, however, specify an alternative `Send` method for
@@ -145,7 +247,7 @@ class StaticConnection():
     ...     print('pretending to send message to', endpoint)
     ...     response = None
     ...     return response
-    >>> connection = StaticConnection(
+    >>> connection = StaticConnection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey,
     ...     endpoint='example.com', send=my_send
     ... )
@@ -182,80 +284,97 @@ class StaticConnection():
 
     def __init__(
             self,
-            keys: Tuple[Union[bytes, str], Union[bytes, str]],
+            keys: Keys,
+            target: Target = None,
             *,
-            endpoint: str = None,
-            their_vk: Union[bytes, str] = None,
-            recipients: Sequence[Union[bytes, str]] = None,
-            routing_keys: Sequence[Union[bytes, str]] = None,
+            modules: Sequence[Union[Module, type]] = None,
             send: Send = None,
-            dispatcher: Dispatcher = None):
+            dispatcher: Dispatcher = None
+    ):
 
-        if their_vk and recipients:
-            raise ValueError('their_vk and recipients are mutually exclusive.')
+        Keys.Mixin.__init__(self, keys)
+        self.target = target
 
-        self.keys = StaticConnection.Keys(*map(ensure_key_bytes, keys))
-        self.endpoint: Optional[str] = endpoint
-        self.recipients: Optional[List[bytes]] = None
-        self.routing_keys: Optional[List[bytes]] = None
+        if modules:
+            for mod in modules:
+                if isinstance(mod, type):  # attempt to instantiate module
+                    mod = mod()
+                self.route_module(mod)
 
-        if their_vk:
-            self.recipients = [ensure_key_bytes(their_vk)]
-
-        if recipients:
-            self.recipients = list(map(ensure_key_bytes, recipients))
-
-        if routing_keys:
-            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
-
+        self._send: Send = send if send else http_send
         self._dispatcher = dispatcher if dispatcher else Dispatcher()
+
         self._next: ConditionFutureMap = {}
         self._sessions: Set[Session] = set()
-        self._send: Send = send if send else http_send
 
-    def update(
-            self,
+    @classmethod
+    def from_parts(
+            cls,
+            keys: Tuple[Union[str, bytes], Union[str, bytes]],
             *,
             endpoint: str = None,
             their_vk: Union[bytes, str] = None,
             recipients: Sequence[Union[bytes, str]] = None,
             routing_keys: Sequence[Union[bytes, str]] = None,
-            **_kwargs):
-        """Update their information."""
-        if their_vk and recipients:
-            raise ValueError('their_vk and recipients are mutually exclusive.')
+            **kwargs
+    ):
+        """Construct a static connection from its parts.
 
-        if endpoint:
-            self.endpoint = endpoint
+        Arguments:
 
-        if their_vk:
-            self.recipients = [ensure_key_bytes(their_vk)]
+            keys (tuple of bytes or str): A tuple of our public and private
+            key.
 
-        if recipients:
-            self.recipients = list(map(ensure_key_bytes, recipients))
+        NamedArguments:
 
-        if routing_keys:
-            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+            their_vk (bytes or str): Specify "their" verification key for this
+                connection. Specifies only one recipient. Mutually exclusive
+                with recipients.
 
-    @property
-    def verkey(self):
-        """My verification key for this connection."""
-        return self.keys.verkey
+            recipients ([bytes or str]): Specify one or more recipients for
+                this connection. Mutually exclusive with their_vk.
 
-    @property
-    def verkey_b58(self):
-        """Get Base58 encoded my_vk."""
-        return crypto.bytes_to_b58(self.keys.verkey)
+            routing_keys ([bytes or str]): Specify one or more mediators for
+                this connection.
 
-    @property
-    def sigkey(self):
-        """My signing key for this connection."""
-        return self.keys.sigkey
+            send (Send): Specify the send method for this connection. See notes
+                above for function signature.  Defaults to
+                `aries_staticagent.utils.http_send`.
 
-    @property
-    def did(self):
-        """Get verkey based DID for this connection."""
-        return crypto.bytes_to_b58(self.keys.verkey[:16])
+            dispatcher (aries_staticagent.dispatcher.Dispatcher): Specify a
+                dispatcher for this connection.  Defaults to
+                `aries_staticagent.dispatcher.Dispatcher`.
+        """
+        keys = Keys(*list(map(ensure_key_bytes, keys)))
+        target = None
+        if endpoint or their_vk or recipients or routing_keys:
+            target = Target(
+                endpoint=endpoint,
+                their_vk=their_vk,
+                recipients=recipients,
+                routing_keys=routing_keys
+            )
+        return cls(keys, target, **kwargs)
+
+    @classmethod
+    def receiver(
+            cls,
+            keys: Tuple[Union[bytes, str], Union[bytes, str]],
+            **kwargs
+    ):
+        """Create a static connection to be used only for receiving messages.
+
+        Arguments:
+
+            keys (Keys or Tuple of keys): Our public and private keys.
+        """
+        keys = Keys(*list(map(ensure_key_bytes, keys)))
+        return cls(keys, **kwargs)
+
+    @classmethod
+    def random(cls, target: Target = None, **kwargs):
+        """Generate connection with random keys."""
+        return cls(Keys(*crypto.create_keypair()), target, **kwargs)
 
     def route(self, msg_type: str) -> Callable:
         """Register route decorator."""
@@ -370,30 +489,30 @@ class StaticConnection():
         if plaintext:
             return json.dumps(msg).encode('ascii')
 
-        if not self.recipients:
+        if not self.target or not self.target.recipients:
             raise RuntimeError('No recipients for whom to pack this message')
 
         if anoncrypt:
             packed_message = crypto.pack_message(
                 msg.serialize(),
-                self.recipients,
+                self.target.recipients,
             )
         else:
             packed_message = crypto.pack_message(
                 msg.serialize(),
-                self.recipients,
+                self.target.recipients,
                 self.verkey,
                 self.sigkey,
             )
 
-        if self.routing_keys:
-            to = self.recipients[0]
-            for routing_key in self.routing_keys:
+        if self.target.routing_keys:
+            forward_to = self.target.recipients[0]
+            for routing_key in self.target.routing_keys:
                 packed_message = crypto.pack_message(
-                    forward_msg(to=to, msg=packed_message).serialize(),
+                    forward_msg(to=forward_to, msg=packed_message).serialize(),
                     [routing_key],
                 )
-                to = routing_key
+                forward_to = routing_key
 
         return json.dumps(packed_message).encode('ascii')
 
@@ -474,7 +593,7 @@ class StaticConnection():
             if await self.send_to_session(packed_message, msg.thread['thid']):
                 return
 
-        if not self.endpoint:
+        if not self.target or not self.target.endpoint:
             raise MessageDeliveryError(
                 msg='Cannot send message; no endpoint and no return route.'
             )
@@ -482,7 +601,7 @@ class StaticConnection():
         try:
             response = await self._send(
                 packed_message,
-                self.endpoint
+                self.target.endpoint
             )
         except Exception as err:
             raise MessageDeliveryError(msg=str(err)) from err

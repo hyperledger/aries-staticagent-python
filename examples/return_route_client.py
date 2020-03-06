@@ -17,7 +17,7 @@ def main():
     their_vk, _ = crypto.create_keypair(
         seed=hashlib.sha256(b'server').digest()
     )
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         keys, their_vk=their_vk,
         endpoint='http://localhost:{}'.format(os.environ.get('PORT', 3000))
     )

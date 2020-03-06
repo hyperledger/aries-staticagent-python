@@ -8,7 +8,7 @@ from common import config
 def main():
     """Create StaticConnection and start web server."""
     args = config()
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         (args.my_verkey, args.my_sigkey),
         their_vk=args.their_verkey,
         endpoint=args.endpoint,

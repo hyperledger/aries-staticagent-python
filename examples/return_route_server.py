@@ -18,7 +18,7 @@ def main():
     their_vk, _ = crypto.create_keypair(
         seed=hashlib.sha256(b'client').digest()
     )
-    conn = StaticConnection(keys, their_vk=their_vk, endpoint=None)
+    conn = StaticConnection.from_parts(keys, their_vk=their_vk, endpoint=None)
 
     @conn.route('did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message')
     async def basic_message_auto_responder(msg, conn):

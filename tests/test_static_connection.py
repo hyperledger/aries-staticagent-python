@@ -52,12 +52,12 @@ def their_test_info():
 def test_bad_inputs(args):
     """Test that bad inputs raise an error."""
     with pytest.raises(TypeError):
-        StaticConnection(*args)
+        StaticConnection.from_parts(*args)
 
 
 def test_byte_inputs_without_their_info(my_test_info):
     """Test that valid byte inputs yield expected values."""
-    conn = StaticConnection(my_test_info.keys)
+    conn = StaticConnection.from_parts(my_test_info.keys)
     assert conn.verkey == my_test_info.keys.verkey
     assert conn.sigkey == my_test_info.keys.sigkey
     assert conn.verkey_b58 == my_test_info.keys_b58.verkey
@@ -66,7 +66,7 @@ def test_byte_inputs_without_their_info(my_test_info):
 
 def test_b58_inputs_without_their_info(my_test_info):
     """Test that valid b58 inputs yield expected values."""
-    conn = StaticConnection(my_test_info.keys_b58)
+    conn = StaticConnection.from_parts(my_test_info.keys_b58)
     assert conn.verkey == my_test_info.keys.verkey
     assert conn.sigkey == my_test_info.keys.sigkey
     assert conn.verkey_b58 == my_test_info.keys_b58.verkey
@@ -75,7 +75,7 @@ def test_b58_inputs_without_their_info(my_test_info):
 
 def test_byte_inputs_with_their_info(my_test_info, their_test_info):
     """Test that valid byte inputs yield expected values."""
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         my_test_info.keys,
         their_vk=their_test_info.keys.verkey,
         endpoint='endpoint'
@@ -84,13 +84,13 @@ def test_byte_inputs_with_their_info(my_test_info, their_test_info):
     assert conn.sigkey == my_test_info.keys.sigkey
     assert conn.verkey_b58 == my_test_info.keys_b58.verkey
     assert conn.did == my_test_info.did
-    assert conn.recipients == [their_test_info.keys.verkey]
-    assert conn.endpoint == 'endpoint'
+    assert conn.target.recipients == [their_test_info.keys.verkey]
+    assert conn.target.endpoint == 'endpoint'
 
 
 def test_b58_inputs_with_their_info(my_test_info, their_test_info):
     """Test that valid b58 inputs yield expected values."""
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         my_test_info.keys_b58,
         their_vk=their_test_info.keys_b58.verkey
     )
@@ -98,13 +98,13 @@ def test_b58_inputs_with_their_info(my_test_info, their_test_info):
     assert conn.sigkey == my_test_info.keys.sigkey
     assert conn.verkey_b58 == my_test_info.keys_b58.verkey
     assert conn.did == my_test_info.did
-    assert conn.recipients == [their_test_info.keys.verkey]
+    assert conn.target.recipients == [their_test_info.keys.verkey]
 
 
 def test_their_vk_and_recipients_raises_error(my_test_info, their_test_info):
     """Test specifying both their_vk and recipients raises an error."""
     with pytest.raises(ValueError):
-        StaticConnection(
+        StaticConnection.from_parts(
             my_test_info.keys,
             their_vk=their_test_info.keys.verkey,
             recipients=[their_test_info.keys.verkey]
@@ -113,47 +113,47 @@ def test_their_vk_and_recipients_raises_error(my_test_info, their_test_info):
 
 def test_give_recipients(my_test_info, their_test_info):
     """Test recipients set when specified."""
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         my_test_info.keys,
         recipients=[their_test_info.keys.verkey],
     )
-    assert conn.recipients == [their_test_info.keys.verkey]
+    assert conn.target.recipients == [their_test_info.keys.verkey]
 
 
 def test_give_recipients_b58(my_test_info, their_test_info):
     """Test recipients set when specified."""
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         my_test_info.keys,
         recipients=[their_test_info.keys_b58.verkey],
     )
-    assert conn.recipients == [their_test_info.keys.verkey]
+    assert conn.target.recipients == [their_test_info.keys.verkey]
 
 
 def test_give_routing_keys(my_test_info, their_test_info):
     """Test routing_keys set when specified."""
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         my_test_info.keys,
         their_vk=their_test_info.keys.verkey,
         routing_keys=[their_test_info.keys.verkey]
     )
-    assert conn.recipients == [their_test_info.keys.verkey]
-    assert conn.routing_keys == [their_test_info.keys.verkey]
+    assert conn.target.recipients == [their_test_info.keys.verkey]
+    assert conn.target.routing_keys == [their_test_info.keys.verkey]
 
 
 def test_give_routing_keys_b58(my_test_info, their_test_info):
     """Test routing_keys set when specified."""
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         my_test_info.keys,
         their_vk=their_test_info.keys.verkey,
         routing_keys=[their_test_info.keys_b58.verkey]
     )
-    assert conn.recipients == [their_test_info.keys.verkey]
-    assert conn.routing_keys == [their_test_info.keys.verkey]
+    assert conn.target.recipients == [their_test_info.keys.verkey]
+    assert conn.target.routing_keys == [their_test_info.keys.verkey]
 
 
 def test_update(my_test_info, their_test_info):
     their_new_info = generate_test_info()
-    conn = StaticConnection(
+    conn = StaticConnection.from_parts(
         my_test_info.keys,
         their_vk=their_test_info.keys.verkey,
         routing_keys=[their_test_info.keys.verkey],
@@ -165,43 +165,43 @@ def test_update(my_test_info, their_test_info):
     assert conn.verkey_b58 == my_test_info.keys_b58.verkey
     assert conn.did == my_test_info.did
 
-    assert conn.recipients == [their_test_info.keys.verkey]
-    assert conn.routing_keys == [their_test_info.keys.verkey]
-    assert conn.endpoint == 'endpoint1'
+    assert conn.target.recipients == [their_test_info.keys.verkey]
+    assert conn.target.routing_keys == [their_test_info.keys.verkey]
+    assert conn.target.endpoint == 'endpoint1'
 
     with pytest.raises(ValueError):
-        conn.update(
+        conn.target.update(
             their_vk=their_new_info.keys.verkey,
             recipients=[their_new_info.keys.verkey]
         )
 
-    conn.update(
+    conn.target.update(
         their_vk=their_new_info.keys.verkey,
         routing_keys=[their_new_info.keys.verkey],
         endpoint='endpoint2'
     )
 
-    assert conn.recipients == [their_new_info.keys.verkey]
-    assert conn.routing_keys == [their_new_info.keys.verkey]
-    assert conn.endpoint == 'endpoint2'
+    assert conn.target.recipients == [their_new_info.keys.verkey]
+    assert conn.target.routing_keys == [their_new_info.keys.verkey]
+    assert conn.target.endpoint == 'endpoint2'
 
-    conn.update(
+    conn.target.update(
         their_vk=their_test_info.keys.verkey,
         routing_keys=[their_test_info.keys.verkey],
     )
-    assert conn.recipients == [their_test_info.keys.verkey]
-    assert conn.routing_keys == [their_test_info.keys.verkey]
-    assert conn.endpoint == 'endpoint2'
+    assert conn.target.recipients == [their_test_info.keys.verkey]
+    assert conn.target.routing_keys == [their_test_info.keys.verkey]
+    assert conn.target.endpoint == 'endpoint2'
 
-    conn.update(
+    conn.target.update(
         recipients=[their_new_info.keys.verkey]
     )
-    assert conn.recipients == [their_new_info.keys.verkey]
+    assert conn.target.recipients == [their_new_info.keys.verkey]
 
-    conn.update(
+    conn.target.update(
         recipients=[their_test_info.keys_b58.verkey]
     )
-    assert conn.recipients == [their_test_info.keys.verkey]
+    assert conn.target.recipients == [their_test_info.keys.verkey]
 
 
 def test_message_delivery_error():

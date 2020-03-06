@@ -20,13 +20,13 @@ def bob_keys():
 @pytest.fixture(scope='module')
 def alice(alice_keys, bob_keys):
     """ Create Alice's StaticConnection. """
-    yield StaticConnection(alice_keys, their_vk=bob_keys.verkey)
+    yield StaticConnection.from_parts(alice_keys, their_vk=bob_keys.verkey)
 
 
 @pytest.fixture(scope='module')
 def bob(bob_keys, alice_keys):
     """ Create Bob's StaticConnection. """
-    yield StaticConnection(bob_keys, their_vk=alice_keys.verkey)
+    yield StaticConnection.from_parts(bob_keys, their_vk=alice_keys.verkey)
 
 
 def test_pack_unpack_auth(alice, bob):
@@ -79,9 +79,9 @@ def test_plaintext_and_anoncrypt_raises_error(alice):
 
 def test_pack_unpack_with_routing_keys(alice, bob):
     """Test packing for a connection with routing keys."""
-    route1 = StaticConnection(crypto.create_keypair())
-    route2 = StaticConnection(crypto.create_keypair())
-    alice.update(routing_keys=[route1.verkey, route2.verkey])
+    route1 = StaticConnection.from_parts(crypto.create_keypair())
+    route2 = StaticConnection.from_parts(crypto.create_keypair())
+    alice.target.update(routing_keys=[route1.verkey, route2.verkey])
     packed_message = alice.pack({'@type': 'doc;protocol/1.0/name'})
 
     route2_msg = route2.unpack(packed_message)

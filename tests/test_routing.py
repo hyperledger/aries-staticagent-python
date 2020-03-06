@@ -28,7 +28,7 @@ def conn(dispatcher):
     """ Function scoped static connection fixture. This connection isn't
         actually connected to anything.
     """
-    yield StaticConnection(
+    yield StaticConnection.from_parts(
         (b'', b''),
         dispatcher=dispatcher
     )

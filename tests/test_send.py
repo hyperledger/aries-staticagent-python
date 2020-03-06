@@ -37,7 +37,7 @@ def bob_keys():
 @pytest.fixture
 def alice_gen(alice_keys, bob_keys):
     def _gen(send=None, dispatcher=None):
-        return StaticConnection(
+        return StaticConnection.from_parts(
             alice_keys,
             their_vk=bob_keys.verkey,
             endpoint='asdf',
@@ -55,7 +55,7 @@ def alice(alice_gen):
 @pytest.fixture
 def bob_gen(alice_keys, bob_keys):
     def _gen(send=None, dispatcher=None):
-        return StaticConnection(
+        return StaticConnection.from_parts(
             bob_keys,
             their_vk=alice_keys.verkey,
             endpoint='asdf',
@@ -130,7 +130,7 @@ async def test_send_simple(alice_gen, bob_gen, send):
 async def test_no_endpoint_or_reply_raises_error(alice_gen, bob, send):
     """Test no return route or endpoint or reply raises error."""
     alice = alice_gen(send)
-    alice.endpoint = ''
+    alice.target.endpoint = ''
     with pytest.raises(MessageDeliveryError):
         await alice.send_async(MESSAGE)
 
