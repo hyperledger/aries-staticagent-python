@@ -2,6 +2,8 @@
 
 import argparse
 import os
+from aries_staticagent import Keys, Target
+
 
 def environ_or_required(key):
     """Pull arg from environment or require it in args."""
@@ -35,4 +37,8 @@ def config():
         default=os.environ.get('PORT', 3000)
     )
     args = parser.parse_args()
-    return args
+    return (
+        Keys(args.my_verkey, args.my_sigkey),
+        Target(endpoint=args.endpoint, their_vk=args.their_verkey),
+        args
+    )

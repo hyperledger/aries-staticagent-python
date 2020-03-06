@@ -108,6 +108,8 @@ class Session:
 
 
 class Keys:
+    Key = Union[bytes, str]
+
     """Container for keys with convenience methods."""
     class Mixin:
         """Mixin for shortcuts to keys."""
@@ -134,9 +136,9 @@ class Keys:
             """Get verkey based DID for this connection."""
             return self.keys.did
 
-    def __init__(self, verkey: bytes, sigkey: bytes):
-        self._verkey = verkey
-        self._sigkey = sigkey
+    def __init__(self, verkey: Key, sigkey: Key):
+        self._verkey = ensure_key_bytes(verkey)
+        self._sigkey = ensure_key_bytes(sigkey)
 
     @property
     def verkey(self):
@@ -157,6 +159,11 @@ class Keys:
     def did(self):
         """Get verkey based DID for this connection."""
         return crypto.bytes_to_b58(self._verkey[:16])
+
+    def __str__(self):
+        return "Keys({}, {}...)".format(
+            self.verkey_b58, crypto.bytes_to_b58(self.sigkey)[:10]
+        )
 
 
 class Target:
@@ -280,8 +287,6 @@ class StaticConnection(Keys.Mixin):
             `aries_staticagent.dispatcher.Dispatcher`.
     """
 
-    Keys = namedtuple('KeyPair', 'verkey, sigkey')
-
     def __init__(
             self,
             keys: Keys,
@@ -310,7 +315,7 @@ class StaticConnection(Keys.Mixin):
     @classmethod
     def from_parts(
             cls,
-            keys: Tuple[Union[str, bytes], Union[str, bytes]],
+            keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
             *,
             endpoint: str = None,
             their_vk: Union[bytes, str] = None,
@@ -345,7 +350,8 @@ class StaticConnection(Keys.Mixin):
                 dispatcher for this connection.  Defaults to
                 `aries_staticagent.dispatcher.Dispatcher`.
         """
-        keys = Keys(*list(map(ensure_key_bytes, keys)))
+        if not isinstance(keys, Keys):
+            keys = Keys(*keys)
         target = None
         if endpoint or their_vk or recipients or routing_keys:
             target = Target(
@@ -359,7 +365,7 @@ class StaticConnection(Keys.Mixin):
     @classmethod
     def receiver(
             cls,
-            keys: Tuple[Union[bytes, str], Union[bytes, str]],
+            keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
             **kwargs
     ):
         """Create a static connection to be used only for receiving messages.
@@ -368,7 +374,8 @@ class StaticConnection(Keys.Mixin):
 
             keys (Keys or Tuple of keys): Our public and private keys.
         """
-        keys = Keys(*list(map(ensure_key_bytes, keys)))
+        if not isinstance(keys, Keys):
+            keys = Keys(*keys)
         return cls(keys, **kwargs)
 
     @classmethod

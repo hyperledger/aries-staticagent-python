@@ -5,7 +5,7 @@ from contextlib import suppress, closing
 import socket
 import pytest
 from aiohttp import web
-from aries_staticagent import StaticConnection, crypto, utils
+from aries_staticagent import StaticConnection, Keys, crypto, utils
 
 # pylint: disable=redefined-outer-name
 
@@ -32,13 +32,13 @@ async def server_ready(host, port, retry_max=5):
 @pytest.fixture
 def example_keys():
     """Generate keys for example end of connection."""
-    yield StaticConnection.Keys(*crypto.create_keypair())
+    yield Keys(*crypto.create_keypair())
 
 
 @pytest.fixture
 def test_keys():
     """Generate keys for test end of connection."""
-    yield StaticConnection.Keys(*crypto.create_keypair())
+    yield Keys(*crypto.create_keypair())
 
 
 @pytest.fixture

@@ -10,11 +10,9 @@ from common import config
 
 def main():
     """Send message from cron job."""
-    args = config()
-    conn = StaticConnection.from_parts(
-        (args.my_verkey, args.my_sigkey),
-        their_vk=args.their_verkey,
-        endpoint=args.endpoint,
+    keys, target, _args = config()
+    conn = StaticConnection(
+        keys, target
     )
     conn.send({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
