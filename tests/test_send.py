@@ -8,7 +8,7 @@ from functools import partial
 import pytest
 
 from aries_staticagent import (
-    StaticConnection, Message, MessageDeliveryError, crypto
+    StaticConnection, Keys, Message, MessageDeliveryError, crypto
 )
 from aries_staticagent.static_connection import Session
 
@@ -25,13 +25,13 @@ RESPONSE = Message({
 @pytest.fixture(scope='module')
 def alice_keys():
     """Alice's keys."""
-    return StaticConnection.Keys(*crypto.create_keypair())
+    return Keys(*crypto.create_keypair())
 
 
 @pytest.fixture(scope='module')
 def bob_keys():
     """Bob's keys."""
-    return StaticConnection.Keys(*crypto.create_keypair())
+    return Keys(*crypto.create_keypair())
 
 
 @pytest.fixture

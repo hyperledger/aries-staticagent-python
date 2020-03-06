@@ -2,19 +2,19 @@
 
 import pytest
 
-from aries_staticagent import StaticConnection, Message, crypto, utils
+from aries_staticagent import StaticConnection, Keys, Message, crypto, utils
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture(scope='module')
 def alice_keys():
     """Generate alice's keys."""
-    yield StaticConnection.Keys(*crypto.create_keypair())
+    yield Keys(*crypto.create_keypair())
 
 
 @pytest.fixture(scope='module')
 def bob_keys():
     """Generate bob's keys."""
-    yield StaticConnection.Keys(*crypto.create_keypair())
+    yield Keys(*crypto.create_keypair())
 
 
 @pytest.fixture(scope='module')
