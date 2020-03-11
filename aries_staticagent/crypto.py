@@ -1,8 +1,8 @@
 """ Crypto neccessary for packing and unpacking a message.
 
-    Adapted from BC Gov's Indy Catalyst Agent.
+    Adapted from BC Gov's Aries VCR Agent.
     Borrowed at this point in history:
-    https://github.com/bcgov/indy-catalyst/blob/14328a3eb/agent/indy_catalyst_agent/wallet/crypto.py
+    https://github.com/hyperledger/aries-vcr/blob/14328a3eb/agent/indy_catalyst_agent/wallet/crypto.py
 """
 
 from collections import OrderedDict
