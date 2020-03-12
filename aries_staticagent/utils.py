@@ -1,12 +1,20 @@
 """ General utils """
 import datetime
-from typing import Union, Optional
+from typing import Union, Optional, Callable
+from functools import wraps
 
 import aiohttp
 
 from . import crypto
 from .message import Message
-
+from .mtc import (
+    Context as MTCContext,
+    NONE as NoMTCContext,
+    AUTHCRYPT_AFFIRMED,
+    AUTHCRYPT_DENIED,
+    ANONCRYPT_AFFIRMED,
+    ANONCRYPT_DENIED
+)
 
 def timestamp():
     """ return a timestamp. """
@@ -45,6 +53,84 @@ def forward_msg(to: Union[bytes, str], msg: dict):
         'to': ensure_key_b58(to),
         'msg': msg
     })
+
+
+def find_message_in_args(args):
+    """Helper for picking out message from handler arguments."""
+    for arg in args:
+        if isinstance(arg, Message):
+            return arg
+    return None
+
+
+class InsufficientMessageTrust(Exception):
+    """When a message does not meet the MTC requirements."""
+
+
+def mtc(
+        affirmed: MTCContext = NoMTCContext,
+        denied: MTCContext = NoMTCContext
+):
+    """
+    Validate that the message passed to this handler has the expected trust
+    context.
+    """
+    def _mtc_decorated(func):
+        @wraps(func)
+        def _wrapped(*args, **kwargs):
+            msg = find_message_in_args(args)
+            if msg.mtc.affirmed != affirmed:
+                raise InsufficientMessageTrust(
+                    f'Actual affirmed {msg.mtc.affirmed} does not match '
+                    f'expected affirmed of {affirmed}'
+                )
+            if msg.mtc.denied != denied:
+                raise InsufficientMessageTrust(
+                    f'Actual denied {msg.mtc.denied} does not match expected '
+                    f'denied of {denied}'
+                )
+            return func(*args, **kwargs)
+        return _wrapped
+    return _mtc_decorated
+
+
+def authcrypted(func):
+    """Validate that the message passed to this handler is authcrypted."""
+    return mtc(AUTHCRYPT_AFFIRMED, AUTHCRYPT_DENIED)(func)
+
+
+def anoncrypted(func):
+    """Validate that the message passed to this handler is authcrypted."""
+    return mtc(ANONCRYPT_AFFIRMED, ANONCRYPT_DENIED)(func)
+
+
+class MessageValidationError(Exception):
+    """When message validation fails."""
+
+
+def validate(validator: Callable, coerce: Callable = None):
+    """Validate the message passed to this handler against the given schema."""
+    def _validate_decorated(func):
+        @wraps(func)
+        def _wrapped(*args, **kwargs):
+            msg = find_message_in_args(args)
+            to_be_validated = msg
+            if coerce:
+                to_be_validated = coerce(msg)
+
+            try:
+                validated = validator(to_be_validated)
+            except Exception as err:
+                raise MessageValidationError(
+                    'Message failed to validate'
+                ) from err
+
+            if validated:
+                msg.update(validated)
+
+            return func(*args, **kwargs)
+        return _wrapped
+    return _validate_decorated
 
 
 async def http_send(msg: bytes, endpoint: str) -> Optional[bytes]:
