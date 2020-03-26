@@ -137,6 +137,44 @@ async def test_webserver_aiohttp(
 
 
 @pytest.mark.asyncio
+async def test_preprocessor_example(
+        example_keys, test_keys, connection, listening_endpoint,
+        unused_tcp_port_factory
+):
+    """Test the preprocessor example."""
+    example_port = unused_tcp_port_factory()
+    connection.update(endpoint='http://localhost:{}'.format(example_port))
+
+    process = await asyncio.create_subprocess_exec(
+        'env/bin/python', 'examples/preprocessors.py',
+        '--my-verkey', crypto.bytes_to_b58(example_keys.verkey),
+        '--my-sigkey', crypto.bytes_to_b58(example_keys.sigkey),
+        '--their-verkey', crypto.bytes_to_b58(test_keys.verkey),
+        '--endpoint', listening_endpoint,
+        '--port', str(example_port),
+        stdout=asyncio.subprocess.DEVNULL,
+    )
+
+    await server_ready('localhost', example_port)
+
+    with connection.next() as next_msg:
+        await connection.send_async({
+            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+                     "basicmessage/1.0/message",
+            "~l10n": {"locale": "en"},
+            "sent_time": utils.timestamp(),
+            "content": "Your hovercraft is full of eels."
+        })
+        msg = await asyncio.wait_for(next_msg, 30)
+
+    assert 'basicmessage' in msg.type
+    assert msg['content'] == \
+        'The preprocessor validated this message and added: Something!'
+    process.terminate()
+    await process.wait()
+
+
+@pytest.mark.asyncio
 async def test_webserver_with_websockets(
         example_keys, test_keys, connection_ws, listening_endpoint,
         unused_tcp_port_factory
