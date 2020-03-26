@@ -40,11 +40,29 @@ def test_validate():
     }))
 
 
+def test_validate_modify_msg():
+    """Test validation can modify the message."""
+    def validator(msg):
+        msg['modified'] = True
+        return msg
+
+    @utils.validate(validator)
+    def test_handler(msg):
+        assert msg['modified']
+
+    test_handler(Message({
+        '@type': 'doc_uri/protocol/0.1/test',
+        '@id': '12345',
+        'content': 'test'
+    }))
+
+
 def test_validate_with_other_decorators():
     """Test validation of message"""
     def validator(msg):
         assert msg.id == '12345'
         msg['validated'] = True
+        return msg
 
     def fake_route():
         """Register route decorator."""
@@ -55,12 +73,12 @@ def test_validate_with_other_decorators():
     @utils.validate(validator)
     @fake_route()
     def validate_test(msg):
-        assert msg
+        return msg
 
     @fake_route()
     @utils.validate(validator)
     def validate_test2(msg):
-        assert msg
+        return msg
 
     msg = Message({
         '@type': 'doc_uri/protocol/0.1/test',
@@ -68,11 +86,10 @@ def test_validate_with_other_decorators():
         'content': 'test'
     })
 
-    validate_test(msg)
-    assert msg['validated']
-    del msg['validated']
-    validate_test2(msg)
-    assert msg['validated']
+    handled = validate_test(msg)
+    assert handled['validated']
+    handled = validate_test2(msg)
+    assert handled['validated']
 
 
 def test_mtc_decorator():
