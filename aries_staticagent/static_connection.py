@@ -382,6 +382,11 @@ class StaticConnection(Keys.Mixin):
         """Generate connection with random keys."""
         return cls(Keys(*crypto.create_keypair()), target, **kwargs)
 
+    @classmethod
+    def from_seed(cls, seed: str, target: Target = None, **kwargs):
+        """Generate connection from seed."""
+        return cls(Keys(*crypto.create_keypair(seed=seed)), target, **kwargs)
+
     def route(self, msg_type: str) -> Callable:
         """Register route decorator."""
         def register_route_dec(func):

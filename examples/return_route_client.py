@@ -6,22 +6,21 @@ return routing.
 
 import hashlib
 import os
-from aries_staticagent import StaticConnection, crypto, utils
+from aries_staticagent import StaticConnection, Target, crypto, utils
 
 
 def main():
     """Send a message and await the reply."""
-    keys = crypto.create_keypair(
-        seed=hashlib.sha256(b'client').digest()
-    )
     their_vk, _ = crypto.create_keypair(
         seed=hashlib.sha256(b'server').digest()
     )
-    conn = StaticConnection.from_parts(
-        keys, their_vk=their_vk,
-        endpoint='http://localhost:{}'.format(os.environ.get('PORT', 3000))
+    conn = StaticConnection.from_seed(
+        hashlib.sha256(b'client').digest(),
+        Target(
+            their_vk=their_vk,
+            endpoint='http://localhost:{}'.format(os.environ.get('PORT', 3000))
+        )
     )
-
     reply = conn.send_and_await_reply({
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
                  "basicmessage/1.0/message",
