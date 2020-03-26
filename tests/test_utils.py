@@ -24,6 +24,62 @@ def test_timestamp():
     assert MATCH(timestamp)
 
 
+def test_preprocess():
+    """Test preprocessing decorator."""
+    def preprocessor(msg):
+        msg['preprocessed'] = True
+        return msg
+
+    @utils.preprocess(preprocessor)
+    def test_handler(msg):
+        return msg
+
+    handled = test_handler(Message({
+        '@type': 'doc_uri/protocol/0.1/test',
+        '@id': '12345',
+        'content': 'test'
+    }))
+    assert handled['preprocessed']
+
+
+@pytest.mark.asyncio
+async def test_preprocess_async_handler():
+    """Test preprocessing decorator."""
+    def preprocessor(msg):
+        msg['preprocessed'] = True
+        return msg
+
+    @utils.preprocess(preprocessor)
+    async def test_handler(msg):
+        return msg
+
+    handled = await test_handler(Message({
+        '@type': 'doc_uri/protocol/0.1/test',
+        '@id': '12345',
+        'content': 'test'
+    }))
+    assert handled['preprocessed']
+
+
+@pytest.mark.asyncio
+async def test_preprocess_async_handler_and_preprocessor():
+    """Test preprocessing decorator."""
+    async def preprocessor(msg):
+        msg['preprocessed'] = True
+        return msg
+
+    @utils.preprocess_async(preprocessor)
+    async def test_handler(msg):
+        return msg
+
+    handled = await test_handler(Message({
+        '@type': 'doc_uri/protocol/0.1/test',
+        '@id': '12345',
+        'content': 'test'
+    }))
+    assert handled['preprocessed']
+
+
 def test_validate():
     """Test validation of message"""
     def validator(msg):

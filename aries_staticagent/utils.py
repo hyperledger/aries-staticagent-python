@@ -17,6 +17,7 @@ from .mtc import (
     ANONCRYPT_DENIED
 )
 
+
 def timestamp():
     """ return a timestamp. """
     return datetime.datetime.utcnow().replace(
@@ -91,6 +92,27 @@ def preprocess(preprocessor: Callable):
     return _preprocess_decorated
 
 
+def preprocess_async(preprocessor: Callable):
+    """Asynchronously preprocess a message before handling.
+
+    This follows has the same semantics as `preprocess`, just with an async
+    preprocessor.
+    """
+    def _preprocess_decorated(func):
+        @wraps(func)
+        async def _wrapped(*args, **kwargs):
+            msg, index = find_message_in_args(args)
+            preprocessed = await preprocessor(copy.deepcopy(msg))
+
+            if preprocessed:
+                args = list(args)
+                args[index] = preprocessed
+
+            return await func(*args, **kwargs)
+        return _wrapped
+    return _preprocess_decorated
+
+
 class InsufficientMessageTrust(Exception):
     """When a message does not meet the MTC requirements."""
 
@@ -123,7 +145,7 @@ def authcrypted(func):
 
 
 def anoncrypted(func):
-    """Validate that the message passed to this handler is authcrypted."""
+    """Validate that the message passed to this handler is anoncrypted."""
     return mtc(ANONCRYPT_AFFIRMED, ANONCRYPT_DENIED)(func)
 
 
