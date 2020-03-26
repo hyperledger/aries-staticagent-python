@@ -1,11 +1,21 @@
 """ General utils """
+from functools import wraps
+from typing import Union, Optional, Callable
+import copy
 import datetime
-from typing import Union, Optional
 
 import aiohttp
 
 from . import crypto
 from .message import Message
+from .mtc import (
+    Context as MTCContext,
+    NONE as NoMTCContext,
+    AUTHCRYPT_AFFIRMED,
+    AUTHCRYPT_DENIED,
+    ANONCRYPT_AFFIRMED,
+    ANONCRYPT_DENIED
+)
 
 
 def timestamp():
@@ -45,6 +55,128 @@ def forward_msg(to: Union[bytes, str], msg: dict):
         'to': ensure_key_b58(to),
         'msg': msg
     })
+
+
+def find_message_in_args(args):
+    """Helper for picking out message from handler arguments."""
+    for index, arg in enumerate(args):
+        if isinstance(arg, Message):
+            return arg, index
+    return None
+
+
+def preprocess(preprocessor: Callable):
+    """Preprocess a message before handling.
+
+    This facility might be used to validate and unpack signatures/attachments,
+    validate timing or ordering, add data to the message object (i.e. append
+    protocol state information), etc.
+
+    A deep copy of the original message is given to preprocessors to prevent
+    accidental manipulation. Preprocessors must return the altered message
+    object if modification is intended. Preprocessors should raise an error if
+    preprocessing fails.
+    """
+    def _preprocess_decorated(func):
+        @wraps(func)
+        def _wrapped(*args, **kwargs):
+            msg, index = find_message_in_args(args)
+            preprocessed = preprocessor(copy.deepcopy(msg))
+
+            if preprocessed:
+                args = list(args)
+                args[index] = preprocessed
+
+            return func(*args, **kwargs)
+        return _wrapped
+    return _preprocess_decorated
+
+
+def preprocess_async(preprocessor: Callable):
+    """Asynchronously preprocess a message before handling.
+
+    This follows has the same semantics as `preprocess`, just with an async
+    preprocessor.
+    """
+    def _preprocess_decorated(func):
+        @wraps(func)
+        async def _wrapped(*args, **kwargs):
+            msg, index = find_message_in_args(args)
+            preprocessed = await preprocessor(copy.deepcopy(msg))
+
+            if preprocessed:
+                args = list(args)
+                args[index] = preprocessed
+
+            return await func(*args, **kwargs)
+        return _wrapped
+    return _preprocess_decorated
+
+
+class InsufficientMessageTrust(Exception):
+    """When a message does not meet the MTC requirements."""
+
+
+def mtc(
+        affirmed: MTCContext = NoMTCContext,
+        denied: MTCContext = NoMTCContext
+):
+    """
+    Validate that the message passed to this handler has the expected trust
+    context.
+    """
+    def _mtc_preprocessor(msg):
+        if msg.mtc.affirmed != affirmed:
+            raise InsufficientMessageTrust(
+                f'Actual affirmed {msg.mtc.affirmed} does not match '
+                f'expected affirmed of {affirmed}'
+            )
+        if msg.mtc.denied != denied:
+            raise InsufficientMessageTrust(
+                f'Actual denied {msg.mtc.denied} does not match expected '
+                f'denied of {denied}'
+            )
+    return preprocess(_mtc_preprocessor)
+
+
+def authcrypted(func):
+    """Validate that the message passed to this handler is authcrypted."""
+    return mtc(AUTHCRYPT_AFFIRMED, AUTHCRYPT_DENIED)(func)
+
+
+def anoncrypted(func):
+    """Validate that the message passed to this handler is anoncrypted."""
+    return mtc(ANONCRYPT_AFFIRMED, ANONCRYPT_DENIED)(func)
+
+
+class MessageValidationError(Exception):
+    """When message validation fails."""
+
+
+def validate(validator: Callable, *, coerce: Optional[Callable] = None):
+    """Validate the message passed to this handler using validator.
+
+    A deep copy of the original message is given to validators to prevent
+    accidental manipulation. Validators must return the altered message
+    object if modification is intended. Validators should raise an error if
+    validation fails.
+
+    Args:
+        coerce (Callable): Optionally coerce the value before validation.
+    """
+    def _validate_preprocessor(msg):
+        to_be_validated = msg
+        if coerce:
+            to_be_validated = coerce(to_be_validated)
+
+        try:
+            return validator(to_be_validated)
+        except Exception as err:
+            raise MessageValidationError(
+                'Message failed to validate'
+            ) from err
+
+    return preprocess(_validate_preprocessor)
 
 
 async def http_send(msg: bytes, endpoint: str) -> Optional[bytes]:
