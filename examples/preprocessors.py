@@ -24,12 +24,8 @@ def validate_basic_message(msg):
 
 def main():
     """Create StaticConnection and start web server."""
-    args = config()
-    conn = StaticConnection(
-        (args.my_verkey, args.my_sigkey),
-        their_vk=args.their_verkey,
-        endpoint=args.endpoint,
-    )
+    keys, target, args = config()
+    conn = StaticConnection(keys, target)
 
     @conn.route(TYPE)
     @utils.validate(validate_basic_message)
