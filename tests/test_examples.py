@@ -143,7 +143,9 @@ async def test_preprocessor_example(
 ):
     """Test the preprocessor example."""
     example_port = unused_tcp_port_factory()
-    connection.update(endpoint='http://localhost:{}'.format(example_port))
+    connection.target.update(
+        endpoint='http://localhost:{}'.format(example_port)
+    )
 
     process = await asyncio.create_subprocess_exec(
         'env/bin/python', 'examples/preprocessors.py',
@@ -181,7 +183,9 @@ async def test_webserver_with_websockets(
 ):
     """Test the webserver with websockets example."""
     example_port = unused_tcp_port_factory()
-    connection_ws.target.update(endpoint='http://localhost:{}'.format(example_port))
+    connection_ws.target.update(
+        endpoint='http://localhost:{}'.format(example_port)
+    )
 
     process = await asyncio.create_subprocess_exec(
         'env/bin/python', 'examples/webserver_with_websockets.py',
@@ -218,7 +222,9 @@ async def test_webserver_with_module(
 ):
     """Test the webserver plus module example."""
     example_port = unused_tcp_port_factory()
-    connection.target.update(endpoint='http://localhost:{}'.format(example_port))
+    connection.target.update(
+        endpoint='http://localhost:{}'.format(example_port)
+    )
     process = await asyncio.create_subprocess_exec(
         'env/bin/python', 'examples/webserver_with_module.py',
         '--my-verkey', crypto.bytes_to_b58(example_keys.verkey),
