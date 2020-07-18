@@ -1,7 +1,9 @@
 """ Aries Static Agent Library.
 """
 
-from .static_connection import StaticConnection, MessageDeliveryError
+from .static_connection import (
+    StaticConnection, Keys, Target, MessageDeliveryError
+)
 from .module import Module, route
 from .message import Message
 

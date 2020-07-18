@@ -7,12 +7,8 @@ from common import config
 
 def main():
     """Create StaticConnection and start web server."""
-    args = config()
-    conn = StaticConnection(
-        (args.my_verkey, args.my_sigkey),
-        their_vk=args.their_verkey,
-        endpoint=args.endpoint,
-    )
+    keys, target, args = config()
+    conn = StaticConnection(keys, target)
 
     @conn.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
     async def basic_message(msg, conn):

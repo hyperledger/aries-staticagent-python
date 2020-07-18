@@ -5,7 +5,7 @@ from contextlib import suppress, closing
 import socket
 import pytest
 from aiohttp import web
-from aries_staticagent import StaticConnection, crypto, utils
+from aries_staticagent import StaticConnection, Keys, crypto, utils
 
 # pylint: disable=redefined-outer-name
 
@@ -32,25 +32,25 @@ async def server_ready(host, port, retry_max=5):
 @pytest.fixture
 def example_keys():
     """Generate keys for example end of connection."""
-    yield StaticConnection.Keys(*crypto.create_keypair())
+    yield Keys(*crypto.create_keypair())
 
 
 @pytest.fixture
 def test_keys():
     """Generate keys for test end of connection."""
-    yield StaticConnection.Keys(*crypto.create_keypair())
+    yield Keys(*crypto.create_keypair())
 
 
 @pytest.fixture
 def connection(example_keys, test_keys):
     """Connection fixture."""
-    return StaticConnection(test_keys, their_vk=example_keys.verkey)
+    return StaticConnection.from_parts(test_keys, their_vk=example_keys.verkey)
 
 
 @pytest.fixture
 def connection_ws(example_keys, test_keys):
     """Connection fixture with ws send."""
-    return StaticConnection(
+    return StaticConnection.from_parts(
         test_keys,
         their_vk=example_keys.verkey,
         send=utils.ws_send
@@ -106,7 +106,7 @@ async def test_webserver_aiohttp(
 ):
     """Test the webserver aiohttp example."""
     example_port = unused_tcp_port_factory()
-    connection.update(endpoint='http://localhost:{}'.format(example_port))
+    connection.target.update(endpoint='http://localhost:{}'.format(example_port))
 
     process = await asyncio.create_subprocess_exec(
         'env/bin/python', 'examples/webserver_aiohttp.py',
@@ -143,7 +143,9 @@ async def test_preprocessor_example(
 ):
     """Test the preprocessor example."""
     example_port = unused_tcp_port_factory()
-    connection.update(endpoint='http://localhost:{}'.format(example_port))
+    connection.target.update(
+        endpoint='http://localhost:{}'.format(example_port)
+    )
 
     process = await asyncio.create_subprocess_exec(
         'env/bin/python', 'examples/preprocessors.py',
@@ -181,7 +183,9 @@ async def test_webserver_with_websockets(
 ):
     """Test the webserver with websockets example."""
     example_port = unused_tcp_port_factory()
-    connection_ws.update(endpoint='http://localhost:{}'.format(example_port))
+    connection_ws.target.update(
+        endpoint='http://localhost:{}'.format(example_port)
+    )
 
     process = await asyncio.create_subprocess_exec(
         'env/bin/python', 'examples/webserver_with_websockets.py',
@@ -218,7 +222,9 @@ async def test_webserver_with_module(
 ):
     """Test the webserver plus module example."""
     example_port = unused_tcp_port_factory()
-    connection.update(endpoint='http://localhost:{}'.format(example_port))
+    connection.target.update(
+        endpoint='http://localhost:{}'.format(example_port)
+    )
     process = await asyncio.create_subprocess_exec(
         'env/bin/python', 'examples/webserver_with_module.py',
         '--my-verkey', crypto.bytes_to_b58(example_keys.verkey),
