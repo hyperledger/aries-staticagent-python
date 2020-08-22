@@ -122,7 +122,7 @@ async def test_webserver_aiohttp(
 
     with connection.next() as next_msg:
         await connection.send_async({
-            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+            "@type": "https://didcomm.org/"
                      "basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),
@@ -161,7 +161,7 @@ async def test_preprocessor_example(
 
     with connection.next() as next_msg:
         await connection.send_async({
-            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+            "@type": "https://didcomm.org/"
                      "basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),
@@ -201,7 +201,7 @@ async def test_webserver_with_websockets(
 
     with connection_ws.next() as next_msg:
         await connection_ws.send_async({
-            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+            "@type": "https://didcomm.org/"
                      "basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),
@@ -239,7 +239,7 @@ async def test_webserver_with_module(
 
     with connection.next() as next_msg:
         await connection.send_async({
-            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+            "@type": "https://didcomm.org/"
                      "basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),
@@ -252,7 +252,7 @@ async def test_webserver_with_module(
 
     with connection.next() as next_msg:
         await connection.send_async({
-            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+            "@type": "https://didcomm.org/"
                      "basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),

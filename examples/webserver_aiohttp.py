@@ -10,11 +10,11 @@ def main():
     keys, target, args = config()
     conn = StaticConnection(keys, target)
 
-    @conn.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
+    @conn.route("https://didcomm.org/basicmessage/1.0/message")
     async def basic_message(msg, conn):
         """Respond to a basic message."""
         await conn.send_async({
-            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+            "@type": "https://didcomm.org/"
                      "basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),

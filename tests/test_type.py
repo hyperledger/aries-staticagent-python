@@ -45,9 +45,9 @@ def test_bad_version_raises_error(version_arg):
             ]
         ),
         (
-            'did:sov:12345678987654321;spec/test_protocol/2.0/test_type',
+            'https://didcomm.org/test_protocol/2.0/test_type',
             [
-                'did:sov:12345678987654321;spec/',
+                'https://didcomm.org/',
                 'test_protocol',
                 '2.0',
                 'test_type'
