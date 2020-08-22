@@ -120,7 +120,7 @@ With the static agent connection `a`, to send messages to the full agent:
 
 ```python
 conn.send({
-    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
+    "@type": "https://didcomm.org/basicmessage/1.0/message",
     "~l10n": {"locale": "en"},
     "sent_time": utils.timestamp(),
     "content": "The Cron Script has been executed."
@@ -130,7 +130,7 @@ conn.send({
 An asynchronous method is also provided:
 ```python
 await conn.send_async({
-    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
+    "@type": "https://didcomm.org/basicmessage/1.0/message",
     "~l10n": {"locale": "en"},
     "sent_time": utils.timestamp(),
     "content": "The Cron Script has been executed."
@@ -154,11 +154,11 @@ from aries_staticagent import StaticConnection, utils
 conn = StaticConnection.from_parts((args.mypublickey, args.myprivatekey), their_vk=args.endpointkey, endpoint=args.endpoint)
 
 # Register a handler for the basicmessage/1.0/message message type
-@conn.route("did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message")
+@conn.route("https://didcomm.org/basicmessage/1.0/message")
 async def basic_message(msg, conn):
     # Respond to the received basic message by sending another basic message back
     await conn.send_async({
-        "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
+        "@type": "https://didcomm.org/basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
         "sent_time": utils.timestamp(),
         "content": "You said: {}".format(msg['content'])
