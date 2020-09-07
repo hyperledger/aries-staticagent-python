@@ -35,7 +35,9 @@ class Session:
 
     THREAD_ALL = 'all'
 
-    def __init__(self, send: SessionSend, thread: str = None):
+    def __init__(
+        self, conn: "StaticConnection", send: SessionSend, thread: str = None
+    ):
         if send is None:
             raise TypeError('Must supply send method to Session')
 
@@ -46,6 +48,7 @@ class Session:
             )
 
         self._id = str(uuid.uuid4())
+        self._conn = conn
         self._send = send
         self._thread = thread
         self._status = None
@@ -78,7 +81,7 @@ class Session:
             self._thread = None
             return
 
-    def returning(self) -> bool:
+    def should_return_route(self) -> bool:
         """Session set to return route?"""
         return bool(self._thread)
 
@@ -88,7 +91,7 @@ class Session:
 
     async def send(self, message: bytes):
         """Send a packed message to this session."""
-        if not self.returning():
+        if not self.should_return_route():
             raise RuntimeError('Session is not set to return route')
 
         ret = self._send(message)
@@ -96,6 +99,14 @@ class Session:
             return await ret
 
         return ret
+
+    async def handle(self, message: bytes):
+        """
+        Handle a message received over this session.
+
+        Delegates to connection's handle.
+        """
+        return await self._conn.handle(message, self)
 
     def __hash__(self):
         return hash(self.session_id)
@@ -531,7 +542,7 @@ class StaticConnection(Keys.Mixin):
     def session(self, send: SessionSend):
         """Open a new session for this connection."""
 
-        session = Session(send)
+        session = Session(self, send)
         self._sessions.add(session)
         yield session
         self._sessions.remove(session)
@@ -553,7 +564,7 @@ class StaticConnection(Keys.Mixin):
 
         sent = False
         for session in self._sessions:
-            if not session.returning():
+            if not session.should_return_route():
                 continue
 
             if session.thread == thread or session.thread_all():
