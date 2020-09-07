@@ -22,7 +22,7 @@ def main():
         )
     )
     reply = conn.send_and_await_reply({
-        "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+        "@type": "https://didcomm.org/"
                  "basicmessage/1.0/message",
         "~l10n": {"locale": "en"},
         "sent_time": utils.timestamp(),

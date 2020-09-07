@@ -11,7 +11,7 @@ class BasicMessageCounter(Module):
 
     Responds with the number of messages received.
     """
-    DOC_URI = 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/'
+    DOC_URI = 'https://didcomm.org/'
     PROTOCOL = 'basicmessage'
     VERSION = '1.0'
 

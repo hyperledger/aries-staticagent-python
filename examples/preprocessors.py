@@ -5,7 +5,7 @@ from aries_staticagent import StaticConnection, utils
 
 from common import config
 
-TYPE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message"
+TYPE = "https://didcomm.org/basicmessage/1.0/message"
 
 
 def validate_basic_message(msg):
@@ -32,7 +32,7 @@ def main():
     async def basic_message(msg, conn):
         """Respond to a basic message."""
         await conn.send_async({
-            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/"
+            "@type": "https://didcomm.org/"
                      "basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),

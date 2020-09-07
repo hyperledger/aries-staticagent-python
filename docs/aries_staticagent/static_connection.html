@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.2" />
+<meta name="generator" content="pdoc 0.8.4" />
 <title>aries_staticagent.static_connection API documentation</title>
 <meta name="description" content="Static Agent Connection." />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -31,9 +33,10 @@ import json
 from contextlib import contextmanager
 from typing import (
     Union, Callable, Awaitable, Dict,
-    Tuple, Sequence, Optional, List
+    Tuple, Sequence, Optional, List,
+    Set
 )
-from collections import namedtuple
+import uuid
 
 from . import crypto
 from .dispatcher import Dispatcher, Handler
@@ -45,7 +48,7 @@ from .utils import ensure_key_bytes, forward_msg, http_send
 
 
 Send = Callable[[bytes, str], Awaitable[Optional[bytes]]]
-Reply = Callable[[bytes], Awaitable[None]]
+SessionSend = Callable[[bytes], Awaitable[None]]
 ConditionFutureMap = Dict[Callable[[Message], bool], asyncio.Future]
 
 
@@ -56,7 +59,194 @@ class MessageDeliveryError(Exception):
         self.status = status
 
 
-class StaticConnection:
+class Session:
+    &#34;&#34;&#34;An active transport-layer connection/socket providing a send method.&#34;&#34;&#34;
+
+    THREAD_ALL = &#39;all&#39;
+
+    def __init__(self, send: SessionSend, thread: str = None):
+        if send is None:
+            raise TypeError(&#39;Must supply send method to Session&#39;)
+
+        if not callable(send) and not asyncio.iscoroutine(send):
+            raise TypeError(
+                &#39;Invalid send method; expected coroutine or function, got {}&#39;
+                .format(type(send).__name__)
+            )
+
+        self._id = str(uuid.uuid4())
+        self._send = send
+        self._thread = thread
+        self._status = None
+
+    @property
+    def session_id(self):
+        &#34;&#34;&#34;Unique Identifier for this session.&#34;&#34;&#34;
+        return self._id
+
+    @property
+    def thread(self):
+        &#34;&#34;&#34;Get this session&#39;s assigned thread.&#34;&#34;&#34;
+        return self._thread
+
+    def update_thread_from_msg(self, msg: Message):
+        &#34;&#34;&#34;Update a thread with info from the ~transport decorator.&#34;&#34;&#34;
+        if &#39;~transport&#39; not in msg and self._thread is None:
+            return
+
+        transport = msg[&#39;~transport&#39;]
+        if transport[&#39;return_route&#39;] == &#39;all&#39;:
+            self._thread = self.THREAD_ALL
+            return
+
+        if transport[&#39;return_route&#39;] == &#39;thread&#39;:
+            self._thread = transport[&#39;return_route_thread&#39;]
+            return
+
+        if transport[&#39;return_route&#39;] == &#39;none&#39;:
+            self._thread = None
+            return
+
+    def returning(self) -&gt; bool:
+        &#34;&#34;&#34;Session set to return route?&#34;&#34;&#34;
+        return bool(self._thread)
+
+    def thread_all(self) -&gt; bool:
+        &#34;&#34;&#34;Session is set to return all messages.&#34;&#34;&#34;
+        return self.thread == self.THREAD_ALL
+
+    async def send(self, message: bytes):
+        &#34;&#34;&#34;Send a packed message to this session.&#34;&#34;&#34;
+        if not self.returning():
+            raise RuntimeError(&#39;Session is not set to return route&#39;)
+
+        ret = self._send(message)
+        if asyncio.iscoroutine(ret):
+            return await ret
+
+        return ret
+
+    def __hash__(self):
+        return hash(self.session_id)
+
+    def __eq__(self, other):
+        if not isinstance(other, Session):
+            return False
+        return self.session_id == other.session_id
+
+
+class Keys:
+    Key = Union[bytes, str]
+
+    &#34;&#34;&#34;Container for keys with convenience methods.&#34;&#34;&#34;
+    class Mixin:
+        &#34;&#34;&#34;Mixin for shortcuts to keys.&#34;&#34;&#34;
+        def __init__(self, keys: &#39;Keys&#39;):
+            self.keys = keys
+
+        @property
+        def verkey(self):
+            &#34;&#34;&#34;Get verkey.&#34;&#34;&#34;
+            return self.keys.verkey
+
+        @property
+        def verkey_b58(self):
+            &#34;&#34;&#34;Get Base58 encoded verkey.&#34;&#34;&#34;
+            return self.keys.verkey_b58
+
+        @property
+        def sigkey(self):
+            &#34;&#34;&#34;Get sigkey.&#34;&#34;&#34;
+            return self.keys.sigkey
+
+        @property
+        def did(self):
+            &#34;&#34;&#34;Get verkey based DID for this connection.&#34;&#34;&#34;
+            return self.keys.did
+
+    def __init__(self, verkey: Key, sigkey: Key):
+        self._verkey = ensure_key_bytes(verkey)
+        self._sigkey = ensure_key_bytes(sigkey)
+
+    @property
+    def verkey(self):
+        &#34;&#34;&#34;Get verkey.&#34;&#34;&#34;
+        return self._verkey
+
+    @property
+    def verkey_b58(self):
+        &#34;&#34;&#34;Get Base58 encoded verkey.&#34;&#34;&#34;
+        return crypto.bytes_to_b58(self.verkey)
+
+    @property
+    def sigkey(self):
+        &#34;&#34;&#34;Get sigkey.&#34;&#34;&#34;
+        return self._sigkey
+
+    @property
+    def did(self):
+        &#34;&#34;&#34;Get verkey based DID for this connection.&#34;&#34;&#34;
+        return crypto.bytes_to_b58(self._verkey[:16])
+
+    def __str__(self):
+        return &#34;Keys({}, {}...)&#34;.format(
+            self.verkey_b58, crypto.bytes_to_b58(self.sigkey)[:10]
+        )
+
+
+class Target:
+    &#34;&#34;&#34;Container for information about our message destination.&#34;&#34;&#34;
+    def __init__(
+            self,
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: Sequence[Union[bytes, str]] = None,
+            routing_keys: Sequence[Union[bytes, str]] = None
+    ):
+        if their_vk and recipients:
+            raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
+
+        self.endpoint: Optional[str] = endpoint
+        self.recipients: Optional[List[bytes]] = None
+        self.routing_keys: Optional[List[bytes]] = None
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+
+    def update(
+            self,
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: Sequence[Union[bytes, str]] = None,
+            routing_keys: Sequence[Union[bytes, str]] = None,
+            **_kwargs
+    ):
+        &#34;&#34;&#34;Update their information.&#34;&#34;&#34;
+        if their_vk and recipients:
+            raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
+
+        if endpoint:
+            self.endpoint = endpoint
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+
+
+class StaticConnection(Keys.Mixin):
     &#34;&#34;&#34;Create a Static Agent Connection to another agent.
 
     The following will create a Static Connection with just the receiving end
@@ -64,28 +254,26 @@ class StaticConnection:
     without yet knowing where messages will be sent.
 
     &gt;&gt;&gt; my_keys = crypto.create_keypair()
-    &gt;&gt;&gt; connection = StaticConnection(my_keys)
+    &gt;&gt;&gt; connection = StaticConnection.receiver(my_keys)
 
     To create a Static Agent Connection with both ends configured:
     &gt;&gt;&gt; their_pretend_verkey = crypto.create_keypair()[0]
-    &gt;&gt;&gt; connection = StaticConnection(my_keys, their_vk=their_pretend_verkey)
-    &gt;&gt;&gt; connection.recipients == [their_pretend_verkey]
-    True
+    &gt;&gt;&gt; connection = StaticConnection.from_parts(
+    ...     my_keys, their_vk=their_pretend_verkey
+    ... )
 
     Or, when there are multiple recipients:
     &gt;&gt;&gt; pretend_recips = [ crypto.create_keypair()[0] for i in range(5) ]
-    &gt;&gt;&gt; connection = StaticConnection(my_keys, recipients=pretend_recips)
-    &gt;&gt;&gt; connection.recipients == pretend_recips
-    True
+    &gt;&gt;&gt; connection = StaticConnection.from_parts(
+    ...     my_keys, recipients=pretend_recips
+    ... )
 
     To specify mediators responsible for forwarding messages to the recipient:
     &gt;&gt;&gt; pretend_mediators = [ crypto.create_keypair()[0] for i in range(5) ]
-    &gt;&gt;&gt; connection = StaticConnection(
+    &gt;&gt;&gt; connection = StaticConnection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey,
     ...     routing_keys=pretend_mediators
     ... )
-    &gt;&gt;&gt; connection.routing_keys == pretend_mediators
-    True
 
     By default, `StaticConnection` will POST messages to the endpoint given
     over HTTP. You can, however, specify an alternative `Send` method for
@@ -94,7 +282,7 @@ class StaticConnection:
     ...     print(&#39;pretending to send message to&#39;, endpoint)
     ...     response = None
     ...     return response
-    &gt;&gt;&gt; connection = StaticConnection(
+    &gt;&gt;&gt; connection = StaticConnection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey,
     ...     endpoint=&#39;example.com&#39;, send=my_send
     ... )
@@ -127,84 +315,106 @@ class StaticConnection:
             `aries_staticagent.dispatcher.Dispatcher`.
     &#34;&#34;&#34;
 
-    Keys = namedtuple(&#39;KeyPair&#39;, &#39;verkey, sigkey&#39;)
-
     def __init__(
             self,
-            keys: Tuple[Union[bytes, str], Union[bytes, str]],
+            keys: Keys,
+            target: Target = None,
             *,
-            endpoint: str = None,
-            their_vk: Union[bytes, str] = None,
-            recipients: Sequence[Union[bytes, str]] = None,
-            routing_keys: Sequence[Union[bytes, str]] = None,
+            modules: Sequence[Union[Module, type]] = None,
             send: Send = None,
-            dispatcher: Dispatcher = None):
+            dispatcher: Dispatcher = None
+    ):
 
-        if their_vk and recipients:
-            raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
+        Keys.Mixin.__init__(self, keys)
+        self.target = target
 
-        self.keys = StaticConnection.Keys(*map(ensure_key_bytes, keys))
-        self.endpoint: Optional[str] = endpoint
-        self.recipients: Optional[List[bytes]] = None
-        self.routing_keys: Optional[List[bytes]] = None
+        if modules:
+            for mod in modules:
+                if isinstance(mod, type):  # attempt to instantiate module
+                    mod = mod()
+                self.route_module(mod)
 
-        if their_vk:
-            self.recipients = [ensure_key_bytes(their_vk)]
-
-        if recipients:
-            self.recipients = list(map(ensure_key_bytes, recipients))
-
-        if routing_keys:
-            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
-
-        self._dispatcher = dispatcher if dispatcher else Dispatcher()
-        self._next: ConditionFutureMap = {}
-        self._reply: Optional[Reply] = None
         self._send: Send = send if send else http_send
+        self._dispatcher = dispatcher if dispatcher else Dispatcher()
 
-    def update(
-            self,
+        self._next: ConditionFutureMap = {}
+        self._sessions: Set[Session] = set()
+
+    @classmethod
+    def from_parts(
+            cls,
+            keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
             *,
             endpoint: str = None,
             their_vk: Union[bytes, str] = None,
             recipients: Sequence[Union[bytes, str]] = None,
             routing_keys: Sequence[Union[bytes, str]] = None,
-            **_kwargs):
-        &#34;&#34;&#34;Update their information.&#34;&#34;&#34;
-        if their_vk and recipients:
-            raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
+            **kwargs
+    ):
+        &#34;&#34;&#34;Construct a static connection from its parts.
 
-        if endpoint:
-            self.endpoint = endpoint
+        Arguments:
 
-        if their_vk:
-            self.recipients = [ensure_key_bytes(their_vk)]
+            keys (tuple of bytes or str): A tuple of our public and private
+            key.
 
-        if recipients:
-            self.recipients = list(map(ensure_key_bytes, recipients))
+        NamedArguments:
 
-        if routing_keys:
-            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+            their_vk (bytes or str): Specify &#34;their&#34; verification key for this
+                connection. Specifies only one recipient. Mutually exclusive
+                with recipients.
 
-    @property
-    def verkey(self):
-        &#34;&#34;&#34;My verification key for this connection.&#34;&#34;&#34;
-        return self.keys.verkey
+            recipients ([bytes or str]): Specify one or more recipients for
+                this connection. Mutually exclusive with their_vk.
 
-    @property
-    def verkey_b58(self):
-        &#34;&#34;&#34;Get Base58 encoded my_vk.&#34;&#34;&#34;
-        return crypto.bytes_to_b58(self.keys.verkey)
+            routing_keys ([bytes or str]): Specify one or more mediators for
+                this connection.
 
-    @property
-    def sigkey(self):
-        &#34;&#34;&#34;My signing key for this connection.&#34;&#34;&#34;
-        return self.keys.sigkey
+            send (Send): Specify the send method for this connection. See notes
+                above for function signature.  Defaults to
+                `aries_staticagent.utils.http_send`.
 
-    @property
-    def did(self):
-        &#34;&#34;&#34;Get verkey based DID for this connection.&#34;&#34;&#34;
-        return crypto.bytes_to_b58(self.keys.verkey[:16])
+            dispatcher (aries_staticagent.dispatcher.Dispatcher): Specify a
+                dispatcher for this connection.  Defaults to
+                `aries_staticagent.dispatcher.Dispatcher`.
+        &#34;&#34;&#34;
+        if not isinstance(keys, Keys):
+            keys = Keys(*keys)
+        target = None
+        if endpoint or their_vk or recipients or routing_keys:
+            target = Target(
+                endpoint=endpoint,
+                their_vk=their_vk,
+                recipients=recipients,
+                routing_keys=routing_keys
+            )
+        return cls(keys, target, **kwargs)
+
+    @classmethod
+    def receiver(
+            cls,
+            keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
+            **kwargs
+    ):
+        &#34;&#34;&#34;Create a static connection to be used only for receiving messages.
+
+        Arguments:
+
+            keys (Keys or Tuple of keys): Our public and private keys.
+        &#34;&#34;&#34;
+        if not isinstance(keys, Keys):
+            keys = Keys(*keys)
+        return cls(keys, **kwargs)
+
+    @classmethod
+    def random(cls, target: Target = None, **kwargs):
+        &#34;&#34;&#34;Generate connection with random keys.&#34;&#34;&#34;
+        return cls(Keys(*crypto.create_keypair()), target, **kwargs)
+
+    @classmethod
+    def from_seed(cls, seed: str, target: Target = None, **kwargs):
+        &#34;&#34;&#34;Generate connection from seed.&#34;&#34;&#34;
+        return cls(Keys(*crypto.create_keypair(seed=seed)), target, **kwargs)
 
     def route(self, msg_type: str) -&gt; Callable:
         &#34;&#34;&#34;Register route decorator.&#34;&#34;&#34;
@@ -319,62 +529,72 @@ class StaticConnection:
         if plaintext:
             return json.dumps(msg).encode(&#39;ascii&#39;)
 
-        if not self.recipients:
+        if not self.target or not self.target.recipients:
             raise RuntimeError(&#39;No recipients for whom to pack this message&#39;)
 
         if anoncrypt:
             packed_message = crypto.pack_message(
                 msg.serialize(),
-                self.recipients,
+                self.target.recipients,
             )
         else:
             packed_message = crypto.pack_message(
                 msg.serialize(),
-                self.recipients,
+                self.target.recipients,
                 self.verkey,
                 self.sigkey,
             )
 
-        if self.routing_keys:
-            to = self.recipients[0]
-            for routing_key in self.routing_keys:
+        if self.target.routing_keys:
+            forward_to = self.target.recipients[0]
+            for routing_key in self.target.routing_keys:
                 packed_message = crypto.pack_message(
-                    forward_msg(to=to, msg=packed_message).serialize(),
+                    forward_msg(to=forward_to, msg=packed_message).serialize(),
                     [routing_key],
                 )
-                to = routing_key
+                forward_to = routing_key
 
         return json.dumps(packed_message).encode(&#39;ascii&#39;)
 
     @contextmanager
-    def reply_handler(
+    def session(self, send: SessionSend):
+        &#34;&#34;&#34;Open a new session for this connection.&#34;&#34;&#34;
+
+        session = Session(send)
+        self._sessions.add(session)
+        yield session
+        self._sessions.remove(session)
+
+    def session_open(self) -&gt; bool:
+        &#34;&#34;&#34;Check whether connection has sessions open.&#34;&#34;&#34;
+        return bool(self._sessions)
+
+    async def send_to_session(
             self,
-            reply: Reply):
-        &#34;&#34;&#34;
-        Set a reply handler to be used in sending messages rather than opening
-        a new connection.
-        &#34;&#34;&#34;
-        self._reply = reply
-        yield
-        self._reply = None
+            message: bytes,
+            thread: str = None
+    ) -&gt; bool:
+        &#34;&#34;&#34;Send a message to all sessions with a matching thread.&#34;&#34;&#34;
+        if not self._sessions:
+            raise RuntimeError(
+                &#39;Cannot send message to session; no open sessions&#39;
+            )
 
-    def can_reply(self) -&gt; bool:
-        &#34;&#34;&#34;Check whether connection can reply.&#34;&#34;&#34;
-        return self._reply is not None
+        sent = False
+        for session in self._sessions:
+            if not session.returning():
+                continue
 
-    async def reply(self, message: bytes):
-        &#34;&#34;&#34;Call reply method.&#34;&#34;&#34;
-        if self._reply is None:
-            raise RuntimeError(&#39;Cannot reply; no reply handler is set&#39;)
-        await self._reply(message)
+            if session.thread == thread or session.thread_all():
+                await session.send(message)
+                sent = True
+        return sent
 
-    async def handle(self, packed_message: bytes):
+    async def handle(self, packed_message: bytes, session: Session = None):
         &#34;&#34;&#34;Unpack and dispatch message to handler.&#34;&#34;&#34;
         msg = self.unpack(packed_message)
-        if (&#39;~transport&#39; not in msg or
-                &#39;return_route&#39; not in msg[&#39;~transport&#39;] or
-                msg[&#39;~transport&#39;][&#39;return_route&#39;] == &#39;none&#39;):
-            self._reply = None
+        if session:
+            session.update_thread_from_msg(msg)
 
         for condition, next_message_future in self._next.items():
             if condition(msg) and not next_message_future.done():
@@ -393,8 +613,14 @@ class StaticConnection:
         &#34;&#34;&#34;
         Send a message to the agent connected through this StaticConnection.
         &#34;&#34;&#34;
-        # not can_reply indicates this is an outbound message
-        if return_route and not self.can_reply():
+        if not isinstance(msg, Message):
+            if isinstance(msg, dict):
+                msg = Message(msg)
+            else:
+                raise TypeError(&#39;msg must be type Message or dict&#39;)
+
+        # TODO: Don&#39;t specify return route on messages sent to sessions?
+        if return_route:
             if &#39;~transport&#39; not in msg:
                 msg[&#39;~transport&#39;] = {}
             msg[&#39;~transport&#39;][&#39;return_route&#39;] = return_route
@@ -403,11 +629,11 @@ class StaticConnection:
             msg, anoncrypt=anoncrypt, plaintext=plaintext
         )
 
-        if self.can_reply():
-            await self.reply(packed_message)
-            return
+        if self.session_open():
+            if await self.send_to_session(packed_message, msg.thread[&#39;thid&#39;]):
+                return
 
-        if not self.endpoint:
+        if not self.target or not self.target.endpoint:
             raise MessageDeliveryError(
                 msg=&#39;Cannot send message; no endpoint and no return route.&#39;
             )
@@ -415,7 +641,7 @@ class StaticConnection:
         try:
             response = await self._send(
                 packed_message,
-                self.endpoint
+                self.target.endpoint
             )
         except Exception as err:
             raise MessageDeliveryError(msg=str(err)) from err
@@ -436,7 +662,8 @@ class StaticConnection:
             return_route: str = &#34;all&#34;,
             plaintext: bool = False,
             anoncrypt: bool = False,
-            timeout: int = None) -&gt; Message:
+            timeout: int = None
+    ) -&gt; Message:
         &#34;&#34;&#34;Send a message and wait for a reply.&#34;&#34;&#34;
 
         with self.next(type_=type_, condition=condition) as next_message:
@@ -453,7 +680,8 @@ class StaticConnection:
             *,
             type_: str = None,
             condition: Callable[[Message], bool] = None,
-            timeout: int = None):
+            timeout: int = None
+    ):
         &#34;&#34;&#34;
         Wait for a message.
 
@@ -487,12 +715,147 @@ class StaticConnection:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="aries_staticagent.static_connection.MessageDeliveryError"><code class="flex name class">
-<span>class <span class="ident">MessageDeliveryError</span></span>
-<span>(</span><span>*, status=None, msg=None)</span>
+<dt id="aries_staticagent.static_connection.Keys"><code class="flex name class">
+<span>class <span class="ident">Keys</span></span>
+<span>(</span><span>verkey: Union[bytes, str], sigkey: Union[bytes, str])</span>
 </code></dt>
 <dd>
-<section class="desc"><p>When a message cannot be delivered.</p></section>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Keys:
+    Key = Union[bytes, str]
+
+    &#34;&#34;&#34;Container for keys with convenience methods.&#34;&#34;&#34;
+    class Mixin:
+        &#34;&#34;&#34;Mixin for shortcuts to keys.&#34;&#34;&#34;
+        def __init__(self, keys: &#39;Keys&#39;):
+            self.keys = keys
+
+        @property
+        def verkey(self):
+            &#34;&#34;&#34;Get verkey.&#34;&#34;&#34;
+            return self.keys.verkey
+
+        @property
+        def verkey_b58(self):
+            &#34;&#34;&#34;Get Base58 encoded verkey.&#34;&#34;&#34;
+            return self.keys.verkey_b58
+
+        @property
+        def sigkey(self):
+            &#34;&#34;&#34;Get sigkey.&#34;&#34;&#34;
+            return self.keys.sigkey
+
+        @property
+        def did(self):
+            &#34;&#34;&#34;Get verkey based DID for this connection.&#34;&#34;&#34;
+            return self.keys.did
+
+    def __init__(self, verkey: Key, sigkey: Key):
+        self._verkey = ensure_key_bytes(verkey)
+        self._sigkey = ensure_key_bytes(sigkey)
+
+    @property
+    def verkey(self):
+        &#34;&#34;&#34;Get verkey.&#34;&#34;&#34;
+        return self._verkey
+
+    @property
+    def verkey_b58(self):
+        &#34;&#34;&#34;Get Base58 encoded verkey.&#34;&#34;&#34;
+        return crypto.bytes_to_b58(self.verkey)
+
+    @property
+    def sigkey(self):
+        &#34;&#34;&#34;Get sigkey.&#34;&#34;&#34;
+        return self._sigkey
+
+    @property
+    def did(self):
+        &#34;&#34;&#34;Get verkey based DID for this connection.&#34;&#34;&#34;
+        return crypto.bytes_to_b58(self._verkey[:16])
+
+    def __str__(self):
+        return &#34;Keys({}, {}...)&#34;.format(
+            self.verkey_b58, crypto.bytes_to_b58(self.sigkey)[:10]
+        )</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="aries_staticagent.static_connection.Keys.Key"><code class="name">var <span class="ident">Key</span></code></dt>
+<dd>
+<div class="desc"><p>Container for keys with convenience methods.</p></div>
+</dd>
+<dt id="aries_staticagent.static_connection.Keys.Mixin"><code class="name">var <span class="ident">Mixin</span></code></dt>
+<dd>
+<div class="desc"><p>Mixin for shortcuts to keys.</p></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="aries_staticagent.static_connection.Keys.did"><code class="name">var <span class="ident">did</span></code></dt>
+<dd>
+<div class="desc"><p>Get verkey based DID for this connection.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def did(self):
+    &#34;&#34;&#34;Get verkey based DID for this connection.&#34;&#34;&#34;
+    return crypto.bytes_to_b58(self._verkey[:16])</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.Keys.sigkey"><code class="name">var <span class="ident">sigkey</span></code></dt>
+<dd>
+<div class="desc"><p>Get sigkey.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sigkey(self):
+    &#34;&#34;&#34;Get sigkey.&#34;&#34;&#34;
+    return self._sigkey</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.Keys.verkey"><code class="name">var <span class="ident">verkey</span></code></dt>
+<dd>
+<div class="desc"><p>Get verkey.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def verkey(self):
+    &#34;&#34;&#34;Get verkey.&#34;&#34;&#34;
+    return self._verkey</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.Keys.verkey_b58"><code class="name">var <span class="ident">verkey_b58</span></code></dt>
+<dd>
+<div class="desc"><p>Get Base58 encoded verkey.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def verkey_b58(self):
+    &#34;&#34;&#34;Get Base58 encoded verkey.&#34;&#34;&#34;
+    return crypto.bytes_to_b58(self.verkey)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.static_connection.MessageDeliveryError"><code class="flex name class">
+<span>class <span class="ident">MessageDeliveryError</span></span>
+<span>(</span><span>*, status: int = None, msg: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>When a message cannot be delivered.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -509,47 +872,247 @@ class StaticConnection:
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="aries_staticagent.static_connection.StaticConnection"><code class="flex name class">
-<span>class <span class="ident">StaticConnection</span></span>
-<span>(</span><span>keys, *, endpoint=None, their_vk=None, recipients=None, routing_keys=None, send=None, dispatcher=None)</span>
+<dt id="aries_staticagent.static_connection.Session"><code class="flex name class">
+<span>class <span class="ident">Session</span></span>
+<span>(</span><span>send: Callable[[bytes], Awaitable[NoneType]], thread: str = None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Create a Static Agent Connection to another agent.</p>
+<div class="desc"><p>An active transport-layer connection/socket providing a send method.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Session:
+    &#34;&#34;&#34;An active transport-layer connection/socket providing a send method.&#34;&#34;&#34;
+
+    THREAD_ALL = &#39;all&#39;
+
+    def __init__(self, send: SessionSend, thread: str = None):
+        if send is None:
+            raise TypeError(&#39;Must supply send method to Session&#39;)
+
+        if not callable(send) and not asyncio.iscoroutine(send):
+            raise TypeError(
+                &#39;Invalid send method; expected coroutine or function, got {}&#39;
+                .format(type(send).__name__)
+            )
+
+        self._id = str(uuid.uuid4())
+        self._send = send
+        self._thread = thread
+        self._status = None
+
+    @property
+    def session_id(self):
+        &#34;&#34;&#34;Unique Identifier for this session.&#34;&#34;&#34;
+        return self._id
+
+    @property
+    def thread(self):
+        &#34;&#34;&#34;Get this session&#39;s assigned thread.&#34;&#34;&#34;
+        return self._thread
+
+    def update_thread_from_msg(self, msg: Message):
+        &#34;&#34;&#34;Update a thread with info from the ~transport decorator.&#34;&#34;&#34;
+        if &#39;~transport&#39; not in msg and self._thread is None:
+            return
+
+        transport = msg[&#39;~transport&#39;]
+        if transport[&#39;return_route&#39;] == &#39;all&#39;:
+            self._thread = self.THREAD_ALL
+            return
+
+        if transport[&#39;return_route&#39;] == &#39;thread&#39;:
+            self._thread = transport[&#39;return_route_thread&#39;]
+            return
+
+        if transport[&#39;return_route&#39;] == &#39;none&#39;:
+            self._thread = None
+            return
+
+    def returning(self) -&gt; bool:
+        &#34;&#34;&#34;Session set to return route?&#34;&#34;&#34;
+        return bool(self._thread)
+
+    def thread_all(self) -&gt; bool:
+        &#34;&#34;&#34;Session is set to return all messages.&#34;&#34;&#34;
+        return self.thread == self.THREAD_ALL
+
+    async def send(self, message: bytes):
+        &#34;&#34;&#34;Send a packed message to this session.&#34;&#34;&#34;
+        if not self.returning():
+            raise RuntimeError(&#39;Session is not set to return route&#39;)
+
+        ret = self._send(message)
+        if asyncio.iscoroutine(ret):
+            return await ret
+
+        return ret
+
+    def __hash__(self):
+        return hash(self.session_id)
+
+    def __eq__(self, other):
+        if not isinstance(other, Session):
+            return False
+        return self.session_id == other.session_id</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="aries_staticagent.static_connection.Session.THREAD_ALL"><code class="name">var <span class="ident">THREAD_ALL</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="aries_staticagent.static_connection.Session.session_id"><code class="name">var <span class="ident">session_id</span></code></dt>
+<dd>
+<div class="desc"><p>Unique Identifier for this session.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def session_id(self):
+    &#34;&#34;&#34;Unique Identifier for this session.&#34;&#34;&#34;
+    return self._id</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.Session.thread"><code class="name">var <span class="ident">thread</span></code></dt>
+<dd>
+<div class="desc"><p>Get this session's assigned thread.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def thread(self):
+    &#34;&#34;&#34;Get this session&#39;s assigned thread.&#34;&#34;&#34;
+    return self._thread</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="aries_staticagent.static_connection.Session.returning"><code class="name flex">
+<span>def <span class="ident">returning</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Session set to return route?</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def returning(self) -&gt; bool:
+    &#34;&#34;&#34;Session set to return route?&#34;&#34;&#34;
+    return bool(self._thread)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.Session.send"><code class="name flex">
+<span>async def <span class="ident">send</span></span>(<span>self, message: bytes)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send a packed message to this session.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send(self, message: bytes):
+    &#34;&#34;&#34;Send a packed message to this session.&#34;&#34;&#34;
+    if not self.returning():
+        raise RuntimeError(&#39;Session is not set to return route&#39;)
+
+    ret = self._send(message)
+    if asyncio.iscoroutine(ret):
+        return await ret
+
+    return ret</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.Session.thread_all"><code class="name flex">
+<span>def <span class="ident">thread_all</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Session is set to return all messages.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def thread_all(self) -&gt; bool:
+    &#34;&#34;&#34;Session is set to return all messages.&#34;&#34;&#34;
+    return self.thread == self.THREAD_ALL</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.Session.update_thread_from_msg"><code class="name flex">
+<span>def <span class="ident">update_thread_from_msg</span></span>(<span>self, msg: <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update a thread with info from the ~transport decorator.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_thread_from_msg(self, msg: Message):
+    &#34;&#34;&#34;Update a thread with info from the ~transport decorator.&#34;&#34;&#34;
+    if &#39;~transport&#39; not in msg and self._thread is None:
+        return
+
+    transport = msg[&#39;~transport&#39;]
+    if transport[&#39;return_route&#39;] == &#39;all&#39;:
+        self._thread = self.THREAD_ALL
+        return
+
+    if transport[&#39;return_route&#39;] == &#39;thread&#39;:
+        self._thread = transport[&#39;return_route_thread&#39;]
+        return
+
+    if transport[&#39;return_route&#39;] == &#39;none&#39;:
+        self._thread = None
+        return</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.static_connection.StaticConnection"><code class="flex name class">
+<span>class <span class="ident">StaticConnection</span></span>
+<span>(</span><span>keys: <a title="aries_staticagent.static_connection.Keys" href="#aries_staticagent.static_connection.Keys">Keys</a>, target: <a title="aries_staticagent.static_connection.Target" href="#aries_staticagent.static_connection.Target">Target</a> = None, *, modules: Sequence[Union[<a title="aries_staticagent.module.Module" href="module.html#aries_staticagent.module.Module">Module</a>, type]] = None, send: Callable[[bytes, str], Awaitable[Union[bytes, NoneType]]] = None, dispatcher: <a title="aries_staticagent.dispatcher.Dispatcher" href="dispatcher.html#aries_staticagent.dispatcher.Dispatcher">Dispatcher</a> = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a Static Agent Connection to another agent.</p>
 <p>The following will create a Static Connection with just the receiving end
 in place. This makes it possible to receive a message over this connection
 without yet knowing where messages will be sent.</p>
-<pre><code>&gt;&gt;&gt; my_keys = crypto.create_keypair()
-&gt;&gt;&gt; connection = StaticConnection(my_keys)
+<pre><code class="python">&gt;&gt;&gt; my_keys = crypto.create_keypair()
+&gt;&gt;&gt; connection = StaticConnection.receiver(my_keys)
 </code></pre>
 <p>To create a Static Agent Connection with both ends configured:</p>
-<pre><code>&gt;&gt;&gt; their_pretend_verkey = crypto.create_keypair()[0]
-&gt;&gt;&gt; connection = StaticConnection(my_keys, their_vk=their_pretend_verkey)
-&gt;&gt;&gt; connection.recipients == [their_pretend_verkey]
-True
+<pre><code class="python">&gt;&gt;&gt; their_pretend_verkey = crypto.create_keypair()[0]
+&gt;&gt;&gt; connection = StaticConnection.from_parts(
+...     my_keys, their_vk=their_pretend_verkey
+... )
 </code></pre>
 <p>Or, when there are multiple recipients:</p>
-<pre><code>&gt;&gt;&gt; pretend_recips = [ crypto.create_keypair()[0] for i in range(5) ]
-&gt;&gt;&gt; connection = StaticConnection(my_keys, recipients=pretend_recips)
-&gt;&gt;&gt; connection.recipients == pretend_recips
-True
+<pre><code class="python">&gt;&gt;&gt; pretend_recips = [ crypto.create_keypair()[0] for i in range(5) ]
+&gt;&gt;&gt; connection = StaticConnection.from_parts(
+...     my_keys, recipients=pretend_recips
+... )
 </code></pre>
 <p>To specify mediators responsible for forwarding messages to the recipient:</p>
-<pre><code>&gt;&gt;&gt; pretend_mediators = [ crypto.create_keypair()[0] for i in range(5) ]
-&gt;&gt;&gt; connection = StaticConnection(
+<pre><code class="python">&gt;&gt;&gt; pretend_mediators = [ crypto.create_keypair()[0] for i in range(5) ]
+&gt;&gt;&gt; connection = StaticConnection.from_parts(
 ...     my_keys, their_vk=their_pretend_verkey,
 ...     routing_keys=pretend_mediators
 ... )
-&gt;&gt;&gt; connection.routing_keys == pretend_mediators
-True
 </code></pre>
-<p>By default, <a title="aries_staticagent.static_connection.StaticConnection" href="#aries_staticagent.static_connection.StaticConnection"><code>StaticConnection</code></a> will POST messages to the endpoint given
+<p>By default, <code><a title="aries_staticagent.static_connection.StaticConnection" href="#aries_staticagent.static_connection.StaticConnection">StaticConnection</a></code> will POST messages to the endpoint given
 over HTTP. You can, however, specify an alternative <code>Send</code> method for
-<a title="aries_staticagent.static_connection.StaticConnection" href="#aries_staticagent.static_connection.StaticConnection"><code>StaticConnection</code></a> as in the example below:</p>
-<pre><code>&gt;&gt;&gt; async def my_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
+<code><a title="aries_staticagent.static_connection.StaticConnection" href="#aries_staticagent.static_connection.StaticConnection">StaticConnection</a></code> as in the example below:</p>
+<pre><code class="python">&gt;&gt;&gt; async def my_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
 ...     print('pretending to send message to', endpoint)
 ...     response = None
 ...     return response
-&gt;&gt;&gt; connection = StaticConnection(
+&gt;&gt;&gt; connection = StaticConnection.from_parts(
 ...     my_keys, their_vk=their_pretend_verkey,
 ...     endpoint='example.com', send=my_send
 ... )
@@ -557,38 +1120,28 @@ over HTTP. You can, however, specify an alternative <code>Send</code> method for
 pretending to send message to example.com
 </code></pre>
 <h2 id="arguments">Arguments</h2>
-<dl>
-<dt><strong><code>keys</code></strong> :&ensp;<code>tuple</code> of <code>bytes</code> or <code>str</code></dt>
-<dd>A tuple of our public and private key.</dd>
-</dl>
-<h2 id="namedarguments">NamedArguments</h2>
-<dl>
-<dt><strong><code>their_vk</code></strong> :&ensp;<code>bytes</code> or <code>str</code></dt>
-<dd>Specify "their" verification key for this
+<p>keys (tuple of bytes or str): A tuple of our public and private key.</p>
+<h2 id="namedarguments">Namedarguments</h2>
+<p>their_vk (bytes or str): Specify "their" verification key for this
 connection. Specifies only one recipient. Mutually exclusive with
-recipients.</dd>
-<dt><strong><code>recipients</code></strong> :&ensp;[<code>bytes</code> or <code>str</code>]</dt>
-<dd>Specify one or more recipients for this
-connection. Mutually exclusive with their_vk.</dd>
-<dt><strong><code>routing_keys</code></strong> :&ensp;[<code>bytes</code> or <code>str</code>]</dt>
-<dd>Specify one or more mediators for this
-connection.</dd>
-<dt><strong><code>send</code></strong> :&ensp;<code>Send</code></dt>
-<dd>Specify the send method for this connection. See notes
+recipients.</p>
+<p>recipients ([bytes or str]): Specify one or more recipients for this
+connection. Mutually exclusive with their_vk.</p>
+<p>routing_keys ([bytes or str]): Specify one or more mediators for this
+connection.</p>
+<p>send (Send): Specify the send method for this connection. See notes
 above for function signature.
 Defaults to
-<a title="aries_staticagent.utils.http_send" href="utils.html#aries_staticagent.utils.http_send"><code>http_send()</code></a>.</dd>
-<dt><strong><code>dispatcher</code></strong> :&ensp;<a title="aries_staticagent.dispatcher.Dispatcher" href="dispatcher.html#aries_staticagent.dispatcher.Dispatcher"><code>Dispatcher</code></a></dt>
-<dd>Specify a
+<code><a title="aries_staticagent.utils.http_send" href="utils.html#aries_staticagent.utils.http_send">http_send()</a></code>.</p>
+<p>dispatcher (aries_staticagent.dispatcher.Dispatcher): Specify a
 dispatcher for this connection.
 Defaults to
-<a title="aries_staticagent.dispatcher.Dispatcher" href="dispatcher.html#aries_staticagent.dispatcher.Dispatcher"><code>Dispatcher</code></a>.</dd>
-</dl></section>
+<code><a title="aries_staticagent.dispatcher.Dispatcher" href="dispatcher.html#aries_staticagent.dispatcher.Dispatcher">Dispatcher</a></code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class StaticConnection:
+<pre><code class="python">class StaticConnection(Keys.Mixin):
     &#34;&#34;&#34;Create a Static Agent Connection to another agent.
 
     The following will create a Static Connection with just the receiving end
@@ -596,28 +1149,26 @@ Defaults to
     without yet knowing where messages will be sent.
 
     &gt;&gt;&gt; my_keys = crypto.create_keypair()
-    &gt;&gt;&gt; connection = StaticConnection(my_keys)
+    &gt;&gt;&gt; connection = StaticConnection.receiver(my_keys)
 
     To create a Static Agent Connection with both ends configured:
     &gt;&gt;&gt; their_pretend_verkey = crypto.create_keypair()[0]
-    &gt;&gt;&gt; connection = StaticConnection(my_keys, their_vk=their_pretend_verkey)
-    &gt;&gt;&gt; connection.recipients == [their_pretend_verkey]
-    True
+    &gt;&gt;&gt; connection = StaticConnection.from_parts(
+    ...     my_keys, their_vk=their_pretend_verkey
+    ... )
 
     Or, when there are multiple recipients:
     &gt;&gt;&gt; pretend_recips = [ crypto.create_keypair()[0] for i in range(5) ]
-    &gt;&gt;&gt; connection = StaticConnection(my_keys, recipients=pretend_recips)
-    &gt;&gt;&gt; connection.recipients == pretend_recips
-    True
+    &gt;&gt;&gt; connection = StaticConnection.from_parts(
+    ...     my_keys, recipients=pretend_recips
+    ... )
 
     To specify mediators responsible for forwarding messages to the recipient:
     &gt;&gt;&gt; pretend_mediators = [ crypto.create_keypair()[0] for i in range(5) ]
-    &gt;&gt;&gt; connection = StaticConnection(
+    &gt;&gt;&gt; connection = StaticConnection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey,
     ...     routing_keys=pretend_mediators
     ... )
-    &gt;&gt;&gt; connection.routing_keys == pretend_mediators
-    True
 
     By default, `StaticConnection` will POST messages to the endpoint given
     over HTTP. You can, however, specify an alternative `Send` method for
@@ -626,7 +1177,7 @@ Defaults to
     ...     print(&#39;pretending to send message to&#39;, endpoint)
     ...     response = None
     ...     return response
-    &gt;&gt;&gt; connection = StaticConnection(
+    &gt;&gt;&gt; connection = StaticConnection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey,
     ...     endpoint=&#39;example.com&#39;, send=my_send
     ... )
@@ -659,84 +1210,106 @@ Defaults to
             `aries_staticagent.dispatcher.Dispatcher`.
     &#34;&#34;&#34;
 
-    Keys = namedtuple(&#39;KeyPair&#39;, &#39;verkey, sigkey&#39;)
-
     def __init__(
             self,
-            keys: Tuple[Union[bytes, str], Union[bytes, str]],
+            keys: Keys,
+            target: Target = None,
             *,
-            endpoint: str = None,
-            their_vk: Union[bytes, str] = None,
-            recipients: Sequence[Union[bytes, str]] = None,
-            routing_keys: Sequence[Union[bytes, str]] = None,
+            modules: Sequence[Union[Module, type]] = None,
             send: Send = None,
-            dispatcher: Dispatcher = None):
+            dispatcher: Dispatcher = None
+    ):
 
-        if their_vk and recipients:
-            raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
+        Keys.Mixin.__init__(self, keys)
+        self.target = target
 
-        self.keys = StaticConnection.Keys(*map(ensure_key_bytes, keys))
-        self.endpoint: Optional[str] = endpoint
-        self.recipients: Optional[List[bytes]] = None
-        self.routing_keys: Optional[List[bytes]] = None
+        if modules:
+            for mod in modules:
+                if isinstance(mod, type):  # attempt to instantiate module
+                    mod = mod()
+                self.route_module(mod)
 
-        if their_vk:
-            self.recipients = [ensure_key_bytes(their_vk)]
-
-        if recipients:
-            self.recipients = list(map(ensure_key_bytes, recipients))
-
-        if routing_keys:
-            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
-
-        self._dispatcher = dispatcher if dispatcher else Dispatcher()
-        self._next: ConditionFutureMap = {}
-        self._reply: Optional[Reply] = None
         self._send: Send = send if send else http_send
+        self._dispatcher = dispatcher if dispatcher else Dispatcher()
 
-    def update(
-            self,
+        self._next: ConditionFutureMap = {}
+        self._sessions: Set[Session] = set()
+
+    @classmethod
+    def from_parts(
+            cls,
+            keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
             *,
             endpoint: str = None,
             their_vk: Union[bytes, str] = None,
             recipients: Sequence[Union[bytes, str]] = None,
             routing_keys: Sequence[Union[bytes, str]] = None,
-            **_kwargs):
-        &#34;&#34;&#34;Update their information.&#34;&#34;&#34;
-        if their_vk and recipients:
-            raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
+            **kwargs
+    ):
+        &#34;&#34;&#34;Construct a static connection from its parts.
 
-        if endpoint:
-            self.endpoint = endpoint
+        Arguments:
 
-        if their_vk:
-            self.recipients = [ensure_key_bytes(their_vk)]
+            keys (tuple of bytes or str): A tuple of our public and private
+            key.
 
-        if recipients:
-            self.recipients = list(map(ensure_key_bytes, recipients))
+        NamedArguments:
 
-        if routing_keys:
-            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+            their_vk (bytes or str): Specify &#34;their&#34; verification key for this
+                connection. Specifies only one recipient. Mutually exclusive
+                with recipients.
 
-    @property
-    def verkey(self):
-        &#34;&#34;&#34;My verification key for this connection.&#34;&#34;&#34;
-        return self.keys.verkey
+            recipients ([bytes or str]): Specify one or more recipients for
+                this connection. Mutually exclusive with their_vk.
 
-    @property
-    def verkey_b58(self):
-        &#34;&#34;&#34;Get Base58 encoded my_vk.&#34;&#34;&#34;
-        return crypto.bytes_to_b58(self.keys.verkey)
+            routing_keys ([bytes or str]): Specify one or more mediators for
+                this connection.
 
-    @property
-    def sigkey(self):
-        &#34;&#34;&#34;My signing key for this connection.&#34;&#34;&#34;
-        return self.keys.sigkey
+            send (Send): Specify the send method for this connection. See notes
+                above for function signature.  Defaults to
+                `aries_staticagent.utils.http_send`.
 
-    @property
-    def did(self):
-        &#34;&#34;&#34;Get verkey based DID for this connection.&#34;&#34;&#34;
-        return crypto.bytes_to_b58(self.keys.verkey[:16])
+            dispatcher (aries_staticagent.dispatcher.Dispatcher): Specify a
+                dispatcher for this connection.  Defaults to
+                `aries_staticagent.dispatcher.Dispatcher`.
+        &#34;&#34;&#34;
+        if not isinstance(keys, Keys):
+            keys = Keys(*keys)
+        target = None
+        if endpoint or their_vk or recipients or routing_keys:
+            target = Target(
+                endpoint=endpoint,
+                their_vk=their_vk,
+                recipients=recipients,
+                routing_keys=routing_keys
+            )
+        return cls(keys, target, **kwargs)
+
+    @classmethod
+    def receiver(
+            cls,
+            keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
+            **kwargs
+    ):
+        &#34;&#34;&#34;Create a static connection to be used only for receiving messages.
+
+        Arguments:
+
+            keys (Keys or Tuple of keys): Our public and private keys.
+        &#34;&#34;&#34;
+        if not isinstance(keys, Keys):
+            keys = Keys(*keys)
+        return cls(keys, **kwargs)
+
+    @classmethod
+    def random(cls, target: Target = None, **kwargs):
+        &#34;&#34;&#34;Generate connection with random keys.&#34;&#34;&#34;
+        return cls(Keys(*crypto.create_keypair()), target, **kwargs)
+
+    @classmethod
+    def from_seed(cls, seed: str, target: Target = None, **kwargs):
+        &#34;&#34;&#34;Generate connection from seed.&#34;&#34;&#34;
+        return cls(Keys(*crypto.create_keypair(seed=seed)), target, **kwargs)
 
     def route(self, msg_type: str) -&gt; Callable:
         &#34;&#34;&#34;Register route decorator.&#34;&#34;&#34;
@@ -851,62 +1424,72 @@ Defaults to
         if plaintext:
             return json.dumps(msg).encode(&#39;ascii&#39;)
 
-        if not self.recipients:
+        if not self.target or not self.target.recipients:
             raise RuntimeError(&#39;No recipients for whom to pack this message&#39;)
 
         if anoncrypt:
             packed_message = crypto.pack_message(
                 msg.serialize(),
-                self.recipients,
+                self.target.recipients,
             )
         else:
             packed_message = crypto.pack_message(
                 msg.serialize(),
-                self.recipients,
+                self.target.recipients,
                 self.verkey,
                 self.sigkey,
             )
 
-        if self.routing_keys:
-            to = self.recipients[0]
-            for routing_key in self.routing_keys:
+        if self.target.routing_keys:
+            forward_to = self.target.recipients[0]
+            for routing_key in self.target.routing_keys:
                 packed_message = crypto.pack_message(
-                    forward_msg(to=to, msg=packed_message).serialize(),
+                    forward_msg(to=forward_to, msg=packed_message).serialize(),
                     [routing_key],
                 )
-                to = routing_key
+                forward_to = routing_key
 
         return json.dumps(packed_message).encode(&#39;ascii&#39;)
 
     @contextmanager
-    def reply_handler(
+    def session(self, send: SessionSend):
+        &#34;&#34;&#34;Open a new session for this connection.&#34;&#34;&#34;
+
+        session = Session(send)
+        self._sessions.add(session)
+        yield session
+        self._sessions.remove(session)
+
+    def session_open(self) -&gt; bool:
+        &#34;&#34;&#34;Check whether connection has sessions open.&#34;&#34;&#34;
+        return bool(self._sessions)
+
+    async def send_to_session(
             self,
-            reply: Reply):
-        &#34;&#34;&#34;
-        Set a reply handler to be used in sending messages rather than opening
-        a new connection.
-        &#34;&#34;&#34;
-        self._reply = reply
-        yield
-        self._reply = None
+            message: bytes,
+            thread: str = None
+    ) -&gt; bool:
+        &#34;&#34;&#34;Send a message to all sessions with a matching thread.&#34;&#34;&#34;
+        if not self._sessions:
+            raise RuntimeError(
+                &#39;Cannot send message to session; no open sessions&#39;
+            )
 
-    def can_reply(self) -&gt; bool:
-        &#34;&#34;&#34;Check whether connection can reply.&#34;&#34;&#34;
-        return self._reply is not None
+        sent = False
+        for session in self._sessions:
+            if not session.returning():
+                continue
 
-    async def reply(self, message: bytes):
-        &#34;&#34;&#34;Call reply method.&#34;&#34;&#34;
-        if self._reply is None:
-            raise RuntimeError(&#39;Cannot reply; no reply handler is set&#39;)
-        await self._reply(message)
+            if session.thread == thread or session.thread_all():
+                await session.send(message)
+                sent = True
+        return sent
 
-    async def handle(self, packed_message: bytes):
+    async def handle(self, packed_message: bytes, session: Session = None):
         &#34;&#34;&#34;Unpack and dispatch message to handler.&#34;&#34;&#34;
         msg = self.unpack(packed_message)
-        if (&#39;~transport&#39; not in msg or
-                &#39;return_route&#39; not in msg[&#39;~transport&#39;] or
-                msg[&#39;~transport&#39;][&#39;return_route&#39;] == &#39;none&#39;):
-            self._reply = None
+        if session:
+            session.update_thread_from_msg(msg)
 
         for condition, next_message_future in self._next.items():
             if condition(msg) and not next_message_future.done():
@@ -925,8 +1508,14 @@ Defaults to
         &#34;&#34;&#34;
         Send a message to the agent connected through this StaticConnection.
         &#34;&#34;&#34;
-        # not can_reply indicates this is an outbound message
-        if return_route and not self.can_reply():
+        if not isinstance(msg, Message):
+            if isinstance(msg, dict):
+                msg = Message(msg)
+            else:
+                raise TypeError(&#39;msg must be type Message or dict&#39;)
+
+        # TODO: Don&#39;t specify return route on messages sent to sessions?
+        if return_route:
             if &#39;~transport&#39; not in msg:
                 msg[&#39;~transport&#39;] = {}
             msg[&#39;~transport&#39;][&#39;return_route&#39;] = return_route
@@ -935,11 +1524,11 @@ Defaults to
             msg, anoncrypt=anoncrypt, plaintext=plaintext
         )
 
-        if self.can_reply():
-            await self.reply(packed_message)
-            return
+        if self.session_open():
+            if await self.send_to_session(packed_message, msg.thread[&#39;thid&#39;]):
+                return
 
-        if not self.endpoint:
+        if not self.target or not self.target.endpoint:
             raise MessageDeliveryError(
                 msg=&#39;Cannot send message; no endpoint and no return route.&#39;
             )
@@ -947,7 +1536,7 @@ Defaults to
         try:
             response = await self._send(
                 packed_message,
-                self.endpoint
+                self.target.endpoint
             )
         except Exception as err:
             raise MessageDeliveryError(msg=str(err)) from err
@@ -968,7 +1557,8 @@ Defaults to
             return_route: str = &#34;all&#34;,
             plaintext: bool = False,
             anoncrypt: bool = False,
-            timeout: int = None) -&gt; Message:
+            timeout: int = None
+    ) -&gt; Message:
         &#34;&#34;&#34;Send a message and wait for a reply.&#34;&#34;&#34;
 
         with self.next(type_=type_, condition=condition) as next_message:
@@ -985,7 +1575,8 @@ Defaults to
             *,
             type_: str = None,
             condition: Callable[[Message], bool] = None,
-            timeout: int = None):
+            timeout: int = None
+    ):
         &#34;&#34;&#34;
         Wait for a message.
 
@@ -1009,79 +1600,161 @@ Defaults to
             self.send_and_await_reply_async(*args, **kwargs)
         )</code></pre>
 </details>
-<h3>Class variables</h3>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aries_staticagent.static_connection.Keys.Mixin" href="#aries_staticagent.static_connection.Keys.Mixin">Keys.Mixin</a></li>
+</ul>
+<h3>Static methods</h3>
 <dl>
-<dt id="aries_staticagent.static_connection.StaticConnection.Keys"><code class="name">var <span class="ident">Keys</span></code></dt>
+<dt id="aries_staticagent.static_connection.StaticConnection.from_parts"><code class="name flex">
+<span>def <span class="ident">from_parts</span></span>(<span>keys: Union[<a title="aries_staticagent.static_connection.Keys" href="#aries_staticagent.static_connection.Keys">Keys</a>, Tuple[Union[bytes, str], Union[bytes, str]]], *, endpoint: str = None, their_vk: Union[bytes, str] = None, recipients: Sequence[Union[bytes, str]] = None, routing_keys: Sequence[Union[bytes, str]] = None, **kwargs)</span>
+</code></dt>
 <dd>
-<section class="desc"><p>KeyPair(verkey, sigkey)</p></section>
-</dd>
-</dl>
-<h3>Instance variables</h3>
-<dl>
-<dt id="aries_staticagent.static_connection.StaticConnection.did"><code class="name">var <span class="ident">did</span></code></dt>
-<dd>
-<section class="desc"><p>Get verkey based DID for this connection.</p></section>
+<div class="desc"><p>Construct a static connection from its parts.</p>
+<h2 id="arguments">Arguments</h2>
+<p>keys (tuple of bytes or str): A tuple of our public and private
+key.</p>
+<h2 id="namedarguments">Namedarguments</h2>
+<p>their_vk (bytes or str): Specify "their" verification key for this
+connection. Specifies only one recipient. Mutually exclusive
+with recipients.</p>
+<p>recipients ([bytes or str]): Specify one or more recipients for
+this connection. Mutually exclusive with their_vk.</p>
+<p>routing_keys ([bytes or str]): Specify one or more mediators for
+this connection.</p>
+<p>send (Send): Specify the send method for this connection. See notes
+above for function signature.
+Defaults to
+<code><a title="aries_staticagent.utils.http_send" href="utils.html#aries_staticagent.utils.http_send">http_send()</a></code>.</p>
+<p>dispatcher (aries_staticagent.dispatcher.Dispatcher): Specify a
+dispatcher for this connection.
+Defaults to
+<code><a title="aries_staticagent.dispatcher.Dispatcher" href="dispatcher.html#aries_staticagent.dispatcher.Dispatcher">Dispatcher</a></code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@property
-def did(self):
-    &#34;&#34;&#34;Get verkey based DID for this connection.&#34;&#34;&#34;
-    return crypto.bytes_to_b58(self.keys.verkey[:16])</code></pre>
+<pre><code class="python">@classmethod
+def from_parts(
+        cls,
+        keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
+        *,
+        endpoint: str = None,
+        their_vk: Union[bytes, str] = None,
+        recipients: Sequence[Union[bytes, str]] = None,
+        routing_keys: Sequence[Union[bytes, str]] = None,
+        **kwargs
+):
+    &#34;&#34;&#34;Construct a static connection from its parts.
+
+    Arguments:
+
+        keys (tuple of bytes or str): A tuple of our public and private
+        key.
+
+    NamedArguments:
+
+        their_vk (bytes or str): Specify &#34;their&#34; verification key for this
+            connection. Specifies only one recipient. Mutually exclusive
+            with recipients.
+
+        recipients ([bytes or str]): Specify one or more recipients for
+            this connection. Mutually exclusive with their_vk.
+
+        routing_keys ([bytes or str]): Specify one or more mediators for
+            this connection.
+
+        send (Send): Specify the send method for this connection. See notes
+            above for function signature.  Defaults to
+            `aries_staticagent.utils.http_send`.
+
+        dispatcher (aries_staticagent.dispatcher.Dispatcher): Specify a
+            dispatcher for this connection.  Defaults to
+            `aries_staticagent.dispatcher.Dispatcher`.
+    &#34;&#34;&#34;
+    if not isinstance(keys, Keys):
+        keys = Keys(*keys)
+    target = None
+    if endpoint or their_vk or recipients or routing_keys:
+        target = Target(
+            endpoint=endpoint,
+            their_vk=their_vk,
+            recipients=recipients,
+            routing_keys=routing_keys
+        )
+    return cls(keys, target, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="aries_staticagent.static_connection.StaticConnection.sigkey"><code class="name">var <span class="ident">sigkey</span></code></dt>
+<dt id="aries_staticagent.static_connection.StaticConnection.from_seed"><code class="name flex">
+<span>def <span class="ident">from_seed</span></span>(<span>seed: str, target: <a title="aries_staticagent.static_connection.Target" href="#aries_staticagent.static_connection.Target">Target</a> = None, **kwargs)</span>
+</code></dt>
 <dd>
-<section class="desc"><p>My signing key for this connection.</p></section>
+<div class="desc"><p>Generate connection from seed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@property
-def sigkey(self):
-    &#34;&#34;&#34;My signing key for this connection.&#34;&#34;&#34;
-    return self.keys.sigkey</code></pre>
+<pre><code class="python">@classmethod
+def from_seed(cls, seed: str, target: Target = None, **kwargs):
+    &#34;&#34;&#34;Generate connection from seed.&#34;&#34;&#34;
+    return cls(Keys(*crypto.create_keypair(seed=seed)), target, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="aries_staticagent.static_connection.StaticConnection.verkey"><code class="name">var <span class="ident">verkey</span></code></dt>
+<dt id="aries_staticagent.static_connection.StaticConnection.random"><code class="name flex">
+<span>def <span class="ident">random</span></span>(<span>target: <a title="aries_staticagent.static_connection.Target" href="#aries_staticagent.static_connection.Target">Target</a> = None, **kwargs)</span>
+</code></dt>
 <dd>
-<section class="desc"><p>My verification key for this connection.</p></section>
+<div class="desc"><p>Generate connection with random keys.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@property
-def verkey(self):
-    &#34;&#34;&#34;My verification key for this connection.&#34;&#34;&#34;
-    return self.keys.verkey</code></pre>
+<pre><code class="python">@classmethod
+def random(cls, target: Target = None, **kwargs):
+    &#34;&#34;&#34;Generate connection with random keys.&#34;&#34;&#34;
+    return cls(Keys(*crypto.create_keypair()), target, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="aries_staticagent.static_connection.StaticConnection.verkey_b58"><code class="name">var <span class="ident">verkey_b58</span></code></dt>
+<dt id="aries_staticagent.static_connection.StaticConnection.receiver"><code class="name flex">
+<span>def <span class="ident">receiver</span></span>(<span>keys: Union[<a title="aries_staticagent.static_connection.Keys" href="#aries_staticagent.static_connection.Keys">Keys</a>, Tuple[Union[bytes, str], Union[bytes, str]]], **kwargs)</span>
+</code></dt>
 <dd>
-<section class="desc"><p>Get Base58 encoded my_vk.</p></section>
+<div class="desc"><p>Create a static connection to be used only for receiving messages.</p>
+<h2 id="arguments">Arguments</h2>
+<p>keys (Keys or Tuple of keys): Our public and private keys.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@property
-def verkey_b58(self):
-    &#34;&#34;&#34;Get Base58 encoded my_vk.&#34;&#34;&#34;
-    return crypto.bytes_to_b58(self.keys.verkey)</code></pre>
+<pre><code class="python">@classmethod
+def receiver(
+        cls,
+        keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
+        **kwargs
+):
+    &#34;&#34;&#34;Create a static connection to be used only for receiving messages.
+
+    Arguments:
+
+        keys (Keys or Tuple of keys): Our public and private keys.
+    &#34;&#34;&#34;
+    if not isinstance(keys, Keys):
+        keys = Keys(*keys)
+    return cls(keys, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
 <dt id="aries_staticagent.static_connection.StaticConnection.await_message"><code class="name flex">
-<span>async def <span class="ident">await_message</span></span>(<span>self, *, type_=None, condition=None, timeout=None)</span>
+<span>async def <span class="ident">await_message</span></span>(<span>self, *, type_: str = None, condition: Callable[[<a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>], bool] = None, timeout: int = None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Wait for a message.</p>
+<div class="desc"><p>Wait for a message.</p>
 <p>Note that it's possible for a message to arrive just before or during
 the setup of this function. If it's likely that a message will arrive
 as a result of an action taken prior to calling await_message, use the
-<code>next</code> context manager instead.</p></section>
+<code>next</code> context manager instead.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1091,7 +1764,8 @@ as a result of an action taken prior to calling await_message, use the
         *,
         type_: str = None,
         condition: Callable[[Message], bool] = None,
-        timeout: int = None):
+        timeout: int = None
+):
     &#34;&#34;&#34;
     Wait for a message.
 
@@ -1104,25 +1778,11 @@ as a result of an action taken prior to calling await_message, use the
         return await asyncio.wait_for(next_message, timeout)</code></pre>
 </details>
 </dd>
-<dt id="aries_staticagent.static_connection.StaticConnection.can_reply"><code class="name flex">
-<span>def <span class="ident">can_reply</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Check whether connection can reply.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def can_reply(self) -&gt; bool:
-    &#34;&#34;&#34;Check whether connection can reply.&#34;&#34;&#34;
-    return self._reply is not None</code></pre>
-</details>
-</dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.clear_routes"><code class="name flex">
 <span>def <span class="ident">clear_routes</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Clear registered routes.</p></section>
+<div class="desc"><p>Clear registered routes.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1136,7 +1796,7 @@ as a result of an action taken prior to calling await_message, use the
 <span>async def <span class="ident">dispatch</span></span>(<span>self, message)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Dispatch message to handler.</p></section>
+<div class="desc"><p>Dispatch message to handler.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1149,21 +1809,19 @@ as a result of an action taken prior to calling await_message, use the
 </details>
 </dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.handle"><code class="name flex">
-<span>async def <span class="ident">handle</span></span>(<span>self, packed_message)</span>
+<span>async def <span class="ident">handle</span></span>(<span>self, packed_message: bytes, session: <a title="aries_staticagent.static_connection.Session" href="#aries_staticagent.static_connection.Session">Session</a> = None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Unpack and dispatch message to handler.</p></section>
+<div class="desc"><p>Unpack and dispatch message to handler.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def handle(self, packed_message: bytes):
+<pre><code class="python">async def handle(self, packed_message: bytes, session: Session = None):
     &#34;&#34;&#34;Unpack and dispatch message to handler.&#34;&#34;&#34;
     msg = self.unpack(packed_message)
-    if (&#39;~transport&#39; not in msg or
-            &#39;return_route&#39; not in msg[&#39;~transport&#39;] or
-            msg[&#39;~transport&#39;][&#39;return_route&#39;] == &#39;none&#39;):
-        self._reply = None
+    if session:
+        session.update_thread_from_msg(msg)
 
     for condition, next_message_future in self._next.items():
         if condition(msg) and not next_message_future.done():
@@ -1174,14 +1832,14 @@ as a result of an action taken prior to calling await_message, use the
 </details>
 </dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.next"><code class="name flex">
-<span>def <span class="ident">next</span></span>(<span>self, type_=None, condition=None)</span>
+<span>def <span class="ident">next</span></span>(<span>self, type_: str = None, condition: Callable[[<a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>], bool] = None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Context manager to claim the next message matching condtion, allowing
+<div class="desc"><p>Context manager to claim the next message matching condtion, allowing
 temporary bypass of regular dispatch.</p>
 <p>This will consume only the next message matching condition. If you need
 to consume more than one or two, consider using a standard message
-handler or overriding the default dispatching mechanism.</p></section>
+handler or overriding the default dispatching mechanism.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1227,10 +1885,10 @@ def next(
 </details>
 </dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.pack"><code class="name flex">
-<span>def <span class="ident">pack</span></span>(<span>self, msg, anoncrypt=False, plaintext=False)</span>
+<span>def <span class="ident">pack</span></span>(<span>self, msg: Union[dict, <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>], anoncrypt=False, plaintext=False) ‑> bytes</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Pack a message for sending over the wire.</p></section>
+<div class="desc"><p>Pack a message for sending over the wire.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1255,78 +1913,39 @@ def next(
     if plaintext:
         return json.dumps(msg).encode(&#39;ascii&#39;)
 
-    if not self.recipients:
+    if not self.target or not self.target.recipients:
         raise RuntimeError(&#39;No recipients for whom to pack this message&#39;)
 
     if anoncrypt:
         packed_message = crypto.pack_message(
             msg.serialize(),
-            self.recipients,
+            self.target.recipients,
         )
     else:
         packed_message = crypto.pack_message(
             msg.serialize(),
-            self.recipients,
+            self.target.recipients,
             self.verkey,
             self.sigkey,
         )
 
-    if self.routing_keys:
-        to = self.recipients[0]
-        for routing_key in self.routing_keys:
+    if self.target.routing_keys:
+        forward_to = self.target.recipients[0]
+        for routing_key in self.target.routing_keys:
             packed_message = crypto.pack_message(
-                forward_msg(to=to, msg=packed_message).serialize(),
+                forward_msg(to=forward_to, msg=packed_message).serialize(),
                 [routing_key],
             )
-            to = routing_key
+            forward_to = routing_key
 
     return json.dumps(packed_message).encode(&#39;ascii&#39;)</code></pre>
 </details>
 </dd>
-<dt id="aries_staticagent.static_connection.StaticConnection.reply"><code class="name flex">
-<span>async def <span class="ident">reply</span></span>(<span>self, message)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Call reply method.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def reply(self, message: bytes):
-    &#34;&#34;&#34;Call reply method.&#34;&#34;&#34;
-    if self._reply is None:
-        raise RuntimeError(&#39;Cannot reply; no reply handler is set&#39;)
-    await self._reply(message)</code></pre>
-</details>
-</dd>
-<dt id="aries_staticagent.static_connection.StaticConnection.reply_handler"><code class="name flex">
-<span>def <span class="ident">reply_handler</span></span>(<span>self, reply)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Set a reply handler to be used in sending messages rather than opening
-a new connection.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@contextmanager
-def reply_handler(
-        self,
-        reply: Reply):
-    &#34;&#34;&#34;
-    Set a reply handler to be used in sending messages rather than opening
-    a new connection.
-    &#34;&#34;&#34;
-    self._reply = reply
-    yield
-    self._reply = None</code></pre>
-</details>
-</dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.route"><code class="name flex">
-<span>def <span class="ident">route</span></span>(<span>self, msg_type)</span>
+<span>def <span class="ident">route</span></span>(<span>self, msg_type: str) ‑> Callable</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Register route decorator.</p></section>
+<div class="desc"><p>Register route decorator.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1343,10 +1962,10 @@ def reply_handler(
 </details>
 </dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.route_module"><code class="name flex">
-<span>def <span class="ident">route_module</span></span>(<span>self, module)</span>
+<span>def <span class="ident">route_module</span></span>(<span>self, module: <a title="aries_staticagent.module.Module" href="module.html#aries_staticagent.module.Module">Module</a>)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Register a module for routing.</p></section>
+<div class="desc"><p>Register a module for routing.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1364,7 +1983,7 @@ def reply_handler(
 <span>def <span class="ident">send</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Blocking wrapper around send_async.</p></section>
+<div class="desc"><p>Blocking wrapper around send_async.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1376,10 +1995,10 @@ def reply_handler(
 </details>
 </dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.send_and_await_reply"><code class="name flex">
-<span>def <span class="ident">send_and_await_reply</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">send_and_await_reply</span></span>(<span>self, *args, **kwargs) ‑> <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Blocking wrapper around send_and_await_reply_async.</p></section>
+<div class="desc"><p>Blocking wrapper around send_and_await_reply_async.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1393,10 +2012,10 @@ def reply_handler(
 </details>
 </dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.send_and_await_reply_async"><code class="name flex">
-<span>async def <span class="ident">send_and_await_reply_async</span></span>(<span>self, msg, *, type_=None, condition=None, return_route='all', plaintext=False, anoncrypt=False, timeout=None)</span>
+<span>async def <span class="ident">send_and_await_reply_async</span></span>(<span>self, msg: Union[dict, <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>], *, type_: str = None, condition: Callable[[<a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>], bool] = None, return_route: str = 'all', plaintext: bool = False, anoncrypt: bool = False, timeout: int = None) ‑> <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Send a message and wait for a reply.</p></section>
+<div class="desc"><p>Send a message and wait for a reply.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1410,7 +2029,8 @@ def reply_handler(
         return_route: str = &#34;all&#34;,
         plaintext: bool = False,
         anoncrypt: bool = False,
-        timeout: int = None) -&gt; Message:
+        timeout: int = None
+) -&gt; Message:
     &#34;&#34;&#34;Send a message and wait for a reply.&#34;&#34;&#34;
 
     with self.next(type_=type_, condition=condition) as next_message:
@@ -1424,10 +2044,10 @@ def reply_handler(
 </details>
 </dd>
 <dt id="aries_staticagent.static_connection.StaticConnection.send_async"><code class="name flex">
-<span>async def <span class="ident">send_async</span></span>(<span>self, msg, *, return_route=None, plaintext=False, anoncrypt=False)</span>
+<span>async def <span class="ident">send_async</span></span>(<span>self, msg: Union[dict, <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a>], *, return_route: str = None, plaintext: bool = False, anoncrypt: bool = False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Send a message to the agent connected through this StaticConnection.</p></section>
+<div class="desc"><p>Send a message to the agent connected through this StaticConnection.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1442,8 +2062,14 @@ def reply_handler(
     &#34;&#34;&#34;
     Send a message to the agent connected through this StaticConnection.
     &#34;&#34;&#34;
-    # not can_reply indicates this is an outbound message
-    if return_route and not self.can_reply():
+    if not isinstance(msg, Message):
+        if isinstance(msg, dict):
+            msg = Message(msg)
+        else:
+            raise TypeError(&#39;msg must be type Message or dict&#39;)
+
+    # TODO: Don&#39;t specify return route on messages sent to sessions?
+    if return_route:
         if &#39;~transport&#39; not in msg:
             msg[&#39;~transport&#39;] = {}
         msg[&#39;~transport&#39;][&#39;return_route&#39;] = return_route
@@ -1452,11 +2078,11 @@ def reply_handler(
         msg, anoncrypt=anoncrypt, plaintext=plaintext
     )
 
-    if self.can_reply():
-        await self.reply(packed_message)
-        return
+    if self.session_open():
+        if await self.send_to_session(packed_message, msg.thread[&#39;thid&#39;]):
+            return
 
-    if not self.endpoint:
+    if not self.target or not self.target.endpoint:
         raise MessageDeliveryError(
             msg=&#39;Cannot send message; no endpoint and no return route.&#39;
         )
@@ -1464,7 +2090,7 @@ def reply_handler(
     try:
         response = await self._send(
             packed_message,
-            self.endpoint
+            self.target.endpoint
         )
     except Exception as err:
         raise MessageDeliveryError(msg=str(err)) from err
@@ -1477,11 +2103,75 @@ def reply_handler(
         await self.handle(response)</code></pre>
 </details>
 </dd>
-<dt id="aries_staticagent.static_connection.StaticConnection.unpack"><code class="name flex">
-<span>def <span class="ident">unpack</span></span>(<span>self, packed_message)</span>
+<dt id="aries_staticagent.static_connection.StaticConnection.send_to_session"><code class="name flex">
+<span>async def <span class="ident">send_to_session</span></span>(<span>self, message: bytes, thread: str = None) ‑> bool</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Unpack a message, filling out metadata in the MTC.</p></section>
+<div class="desc"><p>Send a message to all sessions with a matching thread.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send_to_session(
+        self,
+        message: bytes,
+        thread: str = None
+) -&gt; bool:
+    &#34;&#34;&#34;Send a message to all sessions with a matching thread.&#34;&#34;&#34;
+    if not self._sessions:
+        raise RuntimeError(
+            &#39;Cannot send message to session; no open sessions&#39;
+        )
+
+    sent = False
+    for session in self._sessions:
+        if not session.returning():
+            continue
+
+        if session.thread == thread or session.thread_all():
+            await session.send(message)
+            sent = True
+    return sent</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.StaticConnection.session"><code class="name flex">
+<span>def <span class="ident">session</span></span>(<span>self, send: Callable[[bytes], Awaitable[NoneType]])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Open a new session for this connection.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@contextmanager
+def session(self, send: SessionSend):
+    &#34;&#34;&#34;Open a new session for this connection.&#34;&#34;&#34;
+
+    session = Session(send)
+    self._sessions.add(session)
+    yield session
+    self._sessions.remove(session)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.StaticConnection.session_open"><code class="name flex">
+<span>def <span class="ident">session_open</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check whether connection has sessions open.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def session_open(self) -&gt; bool:
+    &#34;&#34;&#34;Check whether connection has sessions open.&#34;&#34;&#34;
+    return bool(self._sessions)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.static_connection.StaticConnection.unpack"><code class="name flex">
+<span>def <span class="ident">unpack</span></span>(<span>self, packed_message: Union[bytes, dict]) ‑> <a title="aries_staticagent.message.Message" href="message.html#aries_staticagent.message.Message">Message</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Unpack a message, filling out metadata in the MTC.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1513,11 +2203,76 @@ def reply_handler(
     return msg</code></pre>
 </details>
 </dd>
-<dt id="aries_staticagent.static_connection.StaticConnection.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self, *, endpoint=None, their_vk=None, recipients=None, routing_keys=None, **_kwargs)</span>
+</dl>
+</dd>
+<dt id="aries_staticagent.static_connection.Target"><code class="flex name class">
+<span>class <span class="ident">Target</span></span>
+<span>(</span><span>*, endpoint: str = None, their_vk: Union[bytes, str] = None, recipients: Sequence[Union[bytes, str]] = None, routing_keys: Sequence[Union[bytes, str]] = None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Update their information.</p></section>
+<div class="desc"><p>Container for information about our message destination.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Target:
+    &#34;&#34;&#34;Container for information about our message destination.&#34;&#34;&#34;
+    def __init__(
+            self,
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: Sequence[Union[bytes, str]] = None,
+            routing_keys: Sequence[Union[bytes, str]] = None
+    ):
+        if their_vk and recipients:
+            raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
+
+        self.endpoint: Optional[str] = endpoint
+        self.recipients: Optional[List[bytes]] = None
+        self.routing_keys: Optional[List[bytes]] = None
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))
+
+    def update(
+            self,
+            *,
+            endpoint: str = None,
+            their_vk: Union[bytes, str] = None,
+            recipients: Sequence[Union[bytes, str]] = None,
+            routing_keys: Sequence[Union[bytes, str]] = None,
+            **_kwargs
+    ):
+        &#34;&#34;&#34;Update their information.&#34;&#34;&#34;
+        if their_vk and recipients:
+            raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
+
+        if endpoint:
+            self.endpoint = endpoint
+
+        if their_vk:
+            self.recipients = [ensure_key_bytes(their_vk)]
+
+        if recipients:
+            self.recipients = list(map(ensure_key_bytes, recipients))
+
+        if routing_keys:
+            self.routing_keys = list(map(ensure_key_bytes, routing_keys))</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="aries_staticagent.static_connection.Target.update"><code class="name flex">
+<span>def <span class="ident">update</span></span>(<span>self, *, endpoint: str = None, their_vk: Union[bytes, str] = None, recipients: Sequence[Union[bytes, str]] = None, routing_keys: Sequence[Union[bytes, str]] = None, **_kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update their information.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1529,7 +2284,8 @@ def reply_handler(
         their_vk: Union[bytes, str] = None,
         recipients: Sequence[Union[bytes, str]] = None,
         routing_keys: Sequence[Union[bytes, str]] = None,
-        **_kwargs):
+        **_kwargs
+):
     &#34;&#34;&#34;Update their information.&#34;&#34;&#34;
     if their_vk and recipients:
         raise ValueError(&#39;their_vk and recipients are mutually exclusive.&#39;)
@@ -1566,33 +2322,60 @@ def reply_handler(
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="aries_staticagent.static_connection.Keys" href="#aries_staticagent.static_connection.Keys">Keys</a></code></h4>
+<ul class="two-column">
+<li><code><a title="aries_staticagent.static_connection.Keys.Key" href="#aries_staticagent.static_connection.Keys.Key">Key</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Keys.Mixin" href="#aries_staticagent.static_connection.Keys.Mixin">Mixin</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Keys.did" href="#aries_staticagent.static_connection.Keys.did">did</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Keys.sigkey" href="#aries_staticagent.static_connection.Keys.sigkey">sigkey</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Keys.verkey" href="#aries_staticagent.static_connection.Keys.verkey">verkey</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Keys.verkey_b58" href="#aries_staticagent.static_connection.Keys.verkey_b58">verkey_b58</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="aries_staticagent.static_connection.MessageDeliveryError" href="#aries_staticagent.static_connection.MessageDeliveryError">MessageDeliveryError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.static_connection.Session" href="#aries_staticagent.static_connection.Session">Session</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.static_connection.Session.THREAD_ALL" href="#aries_staticagent.static_connection.Session.THREAD_ALL">THREAD_ALL</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Session.returning" href="#aries_staticagent.static_connection.Session.returning">returning</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Session.send" href="#aries_staticagent.static_connection.Session.send">send</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Session.session_id" href="#aries_staticagent.static_connection.Session.session_id">session_id</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Session.thread" href="#aries_staticagent.static_connection.Session.thread">thread</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Session.thread_all" href="#aries_staticagent.static_connection.Session.thread_all">thread_all</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.Session.update_thread_from_msg" href="#aries_staticagent.static_connection.Session.update_thread_from_msg">update_thread_from_msg</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="aries_staticagent.static_connection.StaticConnection" href="#aries_staticagent.static_connection.StaticConnection">StaticConnection</a></code></h4>
 <ul class="">
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.Keys" href="#aries_staticagent.static_connection.StaticConnection.Keys">Keys</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.await_message" href="#aries_staticagent.static_connection.StaticConnection.await_message">await_message</a></code></li>
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.can_reply" href="#aries_staticagent.static_connection.StaticConnection.can_reply">can_reply</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.clear_routes" href="#aries_staticagent.static_connection.StaticConnection.clear_routes">clear_routes</a></code></li>
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.did" href="#aries_staticagent.static_connection.StaticConnection.did">did</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.dispatch" href="#aries_staticagent.static_connection.StaticConnection.dispatch">dispatch</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.StaticConnection.from_parts" href="#aries_staticagent.static_connection.StaticConnection.from_parts">from_parts</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.StaticConnection.from_seed" href="#aries_staticagent.static_connection.StaticConnection.from_seed">from_seed</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.handle" href="#aries_staticagent.static_connection.StaticConnection.handle">handle</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.next" href="#aries_staticagent.static_connection.StaticConnection.next">next</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.pack" href="#aries_staticagent.static_connection.StaticConnection.pack">pack</a></code></li>
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.reply" href="#aries_staticagent.static_connection.StaticConnection.reply">reply</a></code></li>
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.reply_handler" href="#aries_staticagent.static_connection.StaticConnection.reply_handler">reply_handler</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.StaticConnection.random" href="#aries_staticagent.static_connection.StaticConnection.random">random</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.StaticConnection.receiver" href="#aries_staticagent.static_connection.StaticConnection.receiver">receiver</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.route" href="#aries_staticagent.static_connection.StaticConnection.route">route</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.route_module" href="#aries_staticagent.static_connection.StaticConnection.route_module">route_module</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.send" href="#aries_staticagent.static_connection.StaticConnection.send">send</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.send_and_await_reply" href="#aries_staticagent.static_connection.StaticConnection.send_and_await_reply">send_and_await_reply</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.send_and_await_reply_async" href="#aries_staticagent.static_connection.StaticConnection.send_and_await_reply_async">send_and_await_reply_async</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.send_async" href="#aries_staticagent.static_connection.StaticConnection.send_async">send_async</a></code></li>
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.sigkey" href="#aries_staticagent.static_connection.StaticConnection.sigkey">sigkey</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.StaticConnection.send_to_session" href="#aries_staticagent.static_connection.StaticConnection.send_to_session">send_to_session</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.StaticConnection.session" href="#aries_staticagent.static_connection.StaticConnection.session">session</a></code></li>
+<li><code><a title="aries_staticagent.static_connection.StaticConnection.session_open" href="#aries_staticagent.static_connection.StaticConnection.session_open">session_open</a></code></li>
 <li><code><a title="aries_staticagent.static_connection.StaticConnection.unpack" href="#aries_staticagent.static_connection.StaticConnection.unpack">unpack</a></code></li>
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.update" href="#aries_staticagent.static_connection.StaticConnection.update">update</a></code></li>
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.verkey" href="#aries_staticagent.static_connection.StaticConnection.verkey">verkey</a></code></li>
-<li><code><a title="aries_staticagent.static_connection.StaticConnection.verkey_b58" href="#aries_staticagent.static_connection.StaticConnection.verkey_b58">verkey_b58</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.static_connection.Target" href="#aries_staticagent.static_connection.Target">Target</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.static_connection.Target.update" href="#aries_staticagent.static_connection.Target.update">update</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1601,9 +2384,7 @@ def reply_handler(
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>
