@@ -1,3 +1,17 @@
+Version 0.8.0 (2020-09-21)
+==========================
+
+- Various doc and improvements as a result of static analysis and other code
+  quality checkers
+- Streamlined examples to more clearly demonstrate library
+- Rework "replies" concept into "sessions".
+- Add Keys and Target for encapsulating connection information. Simplifies
+  `StaticConnection` by delegating connection info tracking to these classes.
+- Add `preprocess` decorator and specializations for validation and MTC
+  decorators.
+- Update types in examples to use didcomm.org message types.
+- Use didcomm.org forward message type.
+
 Version 0.7.1 (2020-01-23)
 ==========================
 
