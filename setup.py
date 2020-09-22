@@ -1,6 +1,7 @@
 """ package aries_staticagent """
 
 from setuptools import setup, find_packages
+from version import VERSION
 
 
 def parse_requirements(filename):
@@ -15,7 +16,7 @@ if __name__ == '__main__':
 
     setup(
         name='aries-staticagent',
-        version='0.7.1',
+        version=VERSION,
         author='Daniel Bluhm <daniel.bluhm@sovrin.org>, '
                'Sam Curren <sam@sovrin.org>',
         description='Python Static Agent Library and Examples for Aries',
