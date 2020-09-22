@@ -32,14 +32,14 @@ def main():
         with conn.session(sock.send_bytes) as session:
             async for msg in sock:
                 if msg.type == aiohttp.WSMsgType.BINARY:
-                    await conn.handle(msg.data, session)
+                    await session.handle(msg.data)
                 elif msg.type == aiohttp.WSMsgType.ERROR:
                     print(
                         'ws connection closed with exception %s' %
                         sock.exception()
                     )
 
-                if not session.returning():
+                if not session.should_return_route():
                     await sock.close()
 
         return sock
@@ -48,7 +48,7 @@ def main():
         """Handle posted messages."""
         response = []
         with conn.session(response.append) as session:
-            await conn.handle(await request.read(), session)
+            await session.handle(await request.read())
 
         if response:
             return web.Response(text=response.pop())
