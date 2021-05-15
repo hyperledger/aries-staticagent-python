@@ -188,3 +188,7 @@ Static agents can only unpack messages sent by the full agent.
 ### Unresolved Questions
 * Are we allowing Agent routing between a static agent and it's full agent?
   * We're starting with no and will revisit in the future.
+
+## License
+
+[Apache License Version 2.0](https://github.com/hyperledger/aries-staticagent-python/blob/main/LICENSE)
