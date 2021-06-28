@@ -23,17 +23,17 @@ import nacl.utils
 
 
 class CryptoError(Exception):
-    """ CryptoError raised on failed crypto call. """
+    """CryptoError raised on failed crypto call."""
 
 
 def b64_to_bytes(val: Union[str, bytes], urlsafe=False) -> bytes:
     """Convert a base 64 string to bytes."""
     if isinstance(val, str):
-        val = val.encode('ascii')
+        val = val.encode("ascii")
     if urlsafe:
         missing_padding = len(val) % 4
         if missing_padding:
-            val += b'=' * (4 - missing_padding)
+            val += b"=" * (4 - missing_padding)
         return base64.urlsafe_b64decode(val)
     return base64.b64decode(val)
 
@@ -159,38 +159,35 @@ def verify_signed_message(signed: bytes, verkey: bytes) -> bool:
 
 
 def sign_message_field(field_value: Dict, signer: str, secret: bytes) -> Dict:
-    """ Sign a field of a message and return the value of a signature decorator.
-    """
+    """Sign a field of a message and return the value of a signature decorator."""
     timestamp_bytes = struct.pack(">Q", int(time.time()))
-    sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode('ascii')
+    sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode("ascii")
     sig_data = bytes_to_b64(sig_data_bytes, urlsafe=True)
 
-    signature_bytes = nacl.bindings.crypto_sign(
-        sig_data_bytes,
-        secret
-    )[:nacl.bindings.crypto_sign_BYTES]
+    signature_bytes = nacl.bindings.crypto_sign(sig_data_bytes, secret)[
+        : nacl.bindings.crypto_sign_BYTES
+    ]
     signature = bytes_to_b64(signature_bytes, urlsafe=True)
 
     return {
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec"
-                 "/signature/1.0/ed25519Sha512_single",
+        "/signature/1.0/ed25519Sha512_single",
         "signer": signer,
         "sig_data": sig_data,
-        "signature": signature
+        "signature": signature,
     }
 
 
 def verify_signed_message_field(signed_field: Dict) -> Tuple[str, Dict]:
-    """ Verify a signed message field """
-    data_bytes = b64_to_bytes(signed_field['sig_data'], urlsafe=True)
-    signature_bytes = b64_to_bytes(signed_field['signature'], urlsafe=True)
+    """Verify a signed message field"""
+    data_bytes = b64_to_bytes(signed_field["sig_data"], urlsafe=True)
+    signature_bytes = b64_to_bytes(signed_field["signature"], urlsafe=True)
     nacl.bindings.crypto_sign_open(
-        signature_bytes + data_bytes,
-        b58_to_bytes(signed_field['signer'])
+        signature_bytes + data_bytes, b58_to_bytes(signed_field["signer"])
     )
 
     fieldjson = data_bytes[8:]
-    return signed_field['signer'], json.loads(fieldjson)
+    return signed_field["signer"], json.loads(fieldjson)
 
 
 def anon_crypt_message(message: bytes, to_verkey: bytes) -> bytes:
@@ -231,10 +228,7 @@ def anon_decrypt_message(enc_message: bytes, secret: bytes) -> bytes:
 
 
 def auth_crypt_message(
-        message: bytes,
-        to_verkey: bytes,
-        from_verkey: bytes,
-        from_sigkey: bytes
+    message: bytes, to_verkey: bytes, from_verkey: bytes, from_sigkey: bytes
 ) -> bytes:
     """
     Apply auth_crypt to a binary message.
@@ -266,9 +260,7 @@ def auth_crypt_message(
 
 
 def auth_decrypt_message(
-        enc_message: bytes,
-        my_verkey: bytes,
-        my_sigkey: bytes
+    enc_message: bytes, my_verkey: bytes, my_sigkey: bytes
 ) -> Tuple[bytes, str]:
     """
     Apply auth_decrypt to a binary message.
@@ -297,9 +289,7 @@ def auth_decrypt_message(
 
 
 def prepare_pack_recipient_keys(
-        to_verkeys: Sequence[bytes],
-        from_verkey: bytes = None,
-        from_sigkey: bytes = None
+    to_verkeys: Sequence[bytes], from_verkey: bytes = None, from_sigkey: bytes = None
 ) -> Tuple[str, bytes]:
     """
     Assemble the recipients block of a packed message.
@@ -313,25 +303,25 @@ def prepare_pack_recipient_keys(
         A tuple of (json result, key)
 
     """
-    if from_verkey is not None and from_sigkey is None or \
-            from_sigkey is not None and from_verkey is None:
+    if (
+        from_verkey is not None
+        and from_sigkey is None
+        or from_sigkey is not None
+        and from_verkey is None
+    ):
         raise CryptoError(
-            'Both verkey and sigkey needed to authenticated encrypt message'
+            "Both verkey and sigkey needed to authenticated encrypt message"
         )
 
     cek = nacl.bindings.crypto_secretstream_xchacha20poly1305_keygen()
     recips = []
 
     for target_vk in to_verkeys:
-        target_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
-            target_vk
-        )
+        target_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(target_vk)
         if from_verkey:
             sender_vk = bytes_to_b58(from_verkey).encode("ascii")
             enc_sender = nacl.bindings.crypto_box_seal(sender_vk, target_pk)
-            sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(
-                from_sigkey
-            )
+            sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(from_sigkey)
 
             nonce = nacl.utils.random(nacl.bindings.crypto_box_NONCEBYTES)
             enc_cek = nacl.bindings.crypto_box(cek, nonce, target_pk, sk)
@@ -380,9 +370,7 @@ def prepare_pack_recipient_keys(
 
 
 def locate_pack_recipient_key(
-        recipients: Sequence[dict],
-        my_verkey: bytes,
-        my_sigkey: bytes
+    recipients: Sequence[dict], my_verkey: bytes, my_sigkey: bytes
 ) -> Tuple[bytes, str, str]:
     """
     Locate pack recipient key.
@@ -417,15 +405,15 @@ def locate_pack_recipient_key(
 
         encrypted_key = b64_to_bytes(recip["encrypted_key"], urlsafe=True)
 
-        if "iv" in recip["header"] and recip["header"]["iv"] and \
-                "sender" in recip["header"] and recip["header"]["sender"]:
-            nonce: Optional[bytes] = b64_to_bytes(
-                recip["header"]["iv"],
-                urlsafe=True
-            )
+        if (
+            "iv" in recip["header"]
+            and recip["header"]["iv"]
+            and "sender" in recip["header"]
+            and recip["header"]["sender"]
+        ):
+            nonce: Optional[bytes] = b64_to_bytes(recip["header"]["iv"], urlsafe=True)
             enc_sender: Optional[bytes] = b64_to_bytes(
-                recip["header"]["sender"],
-                urlsafe=True
+                recip["header"]["sender"], urlsafe=True
             )
 
         else:
@@ -433,20 +421,13 @@ def locate_pack_recipient_key(
             enc_sender = None
 
         if nonce and enc_sender:
-            sender_vk = nacl.bindings.crypto_box_seal_open(
-                enc_sender,
-                pk,
-                sk
-            ).decode("ascii")
+            sender_vk = nacl.bindings.crypto_box_seal_open(enc_sender, pk, sk).decode(
+                "ascii"
+            )
             sender_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(
                 b58_to_bytes(sender_vk)
             )
-            cek = nacl.bindings.crypto_box_open(
-                encrypted_key,
-                nonce,
-                sender_pk,
-                sk
-            )
+            cek = nacl.bindings.crypto_box_open(encrypted_key, nonce, sender_pk, sk)
         else:
             sender_vk = None
             cek = nacl.bindings.crypto_box_seal_open(encrypted_key, pk, sk)
@@ -457,7 +438,7 @@ def locate_pack_recipient_key(
 
 
 def encrypt_plaintext(
-        message: str, add_data: bytes, key: bytes
+    message: str, add_data: bytes, key: bytes
 ) -> Tuple[bytes, bytes, bytes]:
     """
     Encrypt the payload of a packed message.
@@ -471,9 +452,7 @@ def encrypt_plaintext(
         A tuple of (ciphertext, nonce, tag)
 
     """
-    nonce = nacl.utils.random(
-        nacl.bindings.crypto_aead_chacha20poly1305_ietf_NPUBBYTES
-    )
+    nonce = nacl.utils.random(nacl.bindings.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
     message_bin = message.encode("ascii")
     output = nacl.bindings.crypto_aead_chacha20poly1305_ietf_encrypt(
         message_bin, add_data, nonce, key
@@ -485,7 +464,7 @@ def encrypt_plaintext(
 
 
 def decrypt_plaintext(
-        ciphertext: bytes, recips_bin: bytes, nonce: bytes, key: bytes
+    ciphertext: bytes, recips_bin: bytes, nonce: bytes, key: bytes
 ) -> str:
     """
     Decrypt the payload of a packed message.
@@ -507,10 +486,10 @@ def decrypt_plaintext(
 
 
 def pack_message(
-        message: str,
-        to_verkeys: Sequence[bytes],
-        from_verkey: bytes = None,
-        from_sigkey: bytes = None,
+    message: str,
+    to_verkeys: Sequence[bytes],
+    from_verkey: bytes = None,
+    from_sigkey: bytes = None,
 ) -> OrderedDict:
     """
     Assemble a packed message for a set of recipients, optionally including
@@ -526,18 +505,10 @@ def pack_message(
         The encoded message
 
     """
-    recips_json, cek = prepare_pack_recipient_keys(
-        to_verkeys,
-        from_verkey,
-        from_sigkey
-    )
+    recips_json, cek = prepare_pack_recipient_keys(to_verkeys, from_verkey, from_sigkey)
     recips_b64 = bytes_to_b64(recips_json.encode("ascii"), urlsafe=True)
 
-    ciphertext, nonce, tag = encrypt_plaintext(
-        message,
-        recips_b64.encode("ascii"),
-        cek
-    )
+    ciphertext, nonce, tag = encrypt_plaintext(message, recips_b64.encode("ascii"), cek)
 
     data = OrderedDict(
         [
@@ -551,7 +522,7 @@ def pack_message(
 
 
 def unpack_message(
-        enc_message: Union[Dict, bytes], my_verkey: bytes, my_sigkey: bytes
+    enc_message: Union[Dict, bytes], my_verkey: bytes, my_sigkey: bytes
 ) -> Tuple[str, Optional[str], str]:
     """
     Decode a packed message.
@@ -580,14 +551,10 @@ def unpack_message(
         except Exception as err:
             raise ValueError("Invalid packed message") from err
     if not isinstance(enc_message, dict):
-        raise TypeError(
-            'Expected bytes or dict, got {}'.format(type(enc_message))
-        )
+        raise TypeError("Expected bytes or dict, got {}".format(type(enc_message)))
 
     protected_bin = enc_message["protected"].encode("ascii")
-    recips_json = b64_to_bytes(
-        enc_message["protected"], urlsafe=True
-    ).decode("ascii")
+    recips_json = b64_to_bytes(enc_message["protected"], urlsafe=True).decode("ascii")
     try:
         recips_outer = json.loads(recips_json)
     except Exception as err:
@@ -601,9 +568,7 @@ def unpack_message(
         recips_outer["recipients"], my_verkey, my_sigkey
     )
     if not sender_vk and is_authcrypt:
-        raise ValueError(
-            "Sender public key not provided for Authcrypt message"
-        )
+        raise ValueError("Sender public key not provided for Authcrypt message")
 
     ciphertext = b64_to_bytes(enc_message["ciphertext"], urlsafe=True)
     nonce = b64_to_bytes(enc_message["iv"], urlsafe=True)

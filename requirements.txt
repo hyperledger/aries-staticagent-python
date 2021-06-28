@@ -1,6 +1,0 @@
-aiohttp
-base58
-msgpack
-pynacl
-semver
-sortedcontainers

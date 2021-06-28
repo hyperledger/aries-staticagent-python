@@ -7,21 +7,46 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python
-      uses: actions/setup-python@v1
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-        pip install -e .
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: "__token__"
-        TWINE_PASSWORD: ${{ secrets.pypi_upload }}
-      run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: Cache python environment
+        id: cache-env
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-testing-${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
+      - name: Install poetry
+        if: steps.cache-env.outputs.cache-hit != 'true'
+        run: |
+          pip install poetry==1.1.5
+      - name: Setup poetry environment
+        id: setup-poetry-env
+        run: |
+          poetry env use $(which python)
+          echo "::set-output name=poetry-env::$(poetry env info --path)"
+      - name: Cache poetry environment
+        id: cache-poetry
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.setup-poetry-env.outputs.poetry-env }}
+          key: ${{ runner.os }}-poetry-${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: |
+          poetry install
+      - name: Sanity check (run tests)
+        run: |
+          poetry run pytest
+      - name: Build package
+        run: |
+          poetry build
+      - name: Publish package
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{secrets.pypi_upload}}
+        run: |
+          poetry publish

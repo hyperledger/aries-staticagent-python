@@ -3,9 +3,15 @@ import asyncio
 import json
 from contextlib import contextmanager
 from typing import (
-    Union, Callable, Awaitable, Dict,
-    Tuple, Sequence, Optional, List,
-    Set
+    Union,
+    Callable,
+    Awaitable,
+    Dict,
+    Tuple,
+    Sequence,
+    Optional,
+    List,
+    Set,
 )
 import uuid
 
@@ -25,6 +31,7 @@ ConditionFutureMap = Dict[Callable[[Message], bool], asyncio.Future]
 
 class MessageDeliveryError(Exception):
     """When a message cannot be delivered."""
+
     def __init__(self, *, status: int = None, msg: str = None):
         super().__init__(msg)
         self.status = status
@@ -33,18 +40,17 @@ class MessageDeliveryError(Exception):
 class Session:
     """An active transport-layer connection/socket providing a send method."""
 
-    THREAD_ALL = 'all'
+    THREAD_ALL = "all"
 
-    def __init__(
-        self, conn: "StaticConnection", send: SessionSend, thread: str = None
-    ):
+    def __init__(self, conn: "StaticConnection", send: SessionSend, thread: str = None):
         if send is None:
-            raise TypeError('Must supply send method to Session')
+            raise TypeError("Must supply send method to Session")
 
         if not callable(send) and not asyncio.iscoroutine(send):
             raise TypeError(
-                'Invalid send method; expected coroutine or function, got {}'
-                .format(type(send).__name__)
+                "Invalid send method; expected coroutine or function, got {}".format(
+                    type(send).__name__
+                )
             )
 
         self._id = str(uuid.uuid4())
@@ -65,19 +71,19 @@ class Session:
 
     def update_thread_from_msg(self, msg: Message):
         """Update a thread with info from the ~transport decorator."""
-        if '~transport' not in msg and self._thread is None:
+        if "~transport" not in msg and self._thread is None:
             return
 
-        transport = msg['~transport']
-        if transport['return_route'] == 'all':
+        transport = msg["~transport"]
+        if transport["return_route"] == "all":
             self._thread = self.THREAD_ALL
             return
 
-        if transport['return_route'] == 'thread':
-            self._thread = transport['return_route_thread']
+        if transport["return_route"] == "thread":
+            self._thread = transport["return_route_thread"]
             return
 
-        if transport['return_route'] == 'none':
+        if transport["return_route"] == "none":
             self._thread = None
             return
 
@@ -92,7 +98,7 @@ class Session:
     async def send(self, message: bytes):
         """Send a packed message to this session."""
         if not self.should_return_route():
-            raise RuntimeError('Session is not set to return route')
+            raise RuntimeError("Session is not set to return route")
 
         ret = self._send(message)
         if asyncio.iscoroutine(ret):
@@ -121,9 +127,11 @@ class Keys:
     Key = Union[bytes, str]
 
     """Container for keys with convenience methods."""
+
     class Mixin:
         """Mixin for shortcuts to keys."""
-        def __init__(self, keys: 'Keys'):
+
+        def __init__(self, keys: "Keys"):
             self.keys = keys
 
         @property
@@ -178,16 +186,17 @@ class Keys:
 
 class Target:
     """Container for information about our message destination."""
+
     def __init__(
-            self,
-            *,
-            endpoint: str = None,
-            their_vk: Union[bytes, str] = None,
-            recipients: Sequence[Union[bytes, str]] = None,
-            routing_keys: Sequence[Union[bytes, str]] = None
+        self,
+        *,
+        endpoint: str = None,
+        their_vk: Union[bytes, str] = None,
+        recipients: Sequence[Union[bytes, str]] = None,
+        routing_keys: Sequence[Union[bytes, str]] = None
     ):
         if their_vk and recipients:
-            raise ValueError('their_vk and recipients are mutually exclusive.')
+            raise ValueError("their_vk and recipients are mutually exclusive.")
 
         self.endpoint: Optional[str] = endpoint
         self.recipients: Optional[List[bytes]] = None
@@ -203,17 +212,17 @@ class Target:
             self.routing_keys = list(map(ensure_key_bytes, routing_keys))
 
     def update(
-            self,
-            *,
-            endpoint: str = None,
-            their_vk: Union[bytes, str] = None,
-            recipients: Sequence[Union[bytes, str]] = None,
-            routing_keys: Sequence[Union[bytes, str]] = None,
-            **_kwargs
+        self,
+        *,
+        endpoint: str = None,
+        their_vk: Union[bytes, str] = None,
+        recipients: Sequence[Union[bytes, str]] = None,
+        routing_keys: Sequence[Union[bytes, str]] = None,
+        **_kwargs
     ):
         """Update their information."""
         if their_vk and recipients:
-            raise ValueError('their_vk and recipients are mutually exclusive.')
+            raise ValueError("their_vk and recipients are mutually exclusive.")
 
         if endpoint:
             self.endpoint = endpoint
@@ -298,13 +307,13 @@ class StaticConnection(Keys.Mixin):
     """
 
     def __init__(
-            self,
-            keys: Keys,
-            target: Target = None,
-            *,
-            modules: Sequence[Union[Module, type]] = None,
-            send: Send = None,
-            dispatcher: Dispatcher = None
+        self,
+        keys: Keys,
+        target: Target = None,
+        *,
+        modules: Sequence[Union[Module, type]] = None,
+        send: Send = None,
+        dispatcher: Dispatcher = None
     ):
 
         Keys.Mixin.__init__(self, keys)
@@ -324,14 +333,14 @@ class StaticConnection(Keys.Mixin):
 
     @classmethod
     def from_parts(
-            cls,
-            keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
-            *,
-            endpoint: str = None,
-            their_vk: Union[bytes, str] = None,
-            recipients: Sequence[Union[bytes, str]] = None,
-            routing_keys: Sequence[Union[bytes, str]] = None,
-            **kwargs
+        cls,
+        keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
+        *,
+        endpoint: str = None,
+        their_vk: Union[bytes, str] = None,
+        recipients: Sequence[Union[bytes, str]] = None,
+        routing_keys: Sequence[Union[bytes, str]] = None,
+        **kwargs
     ):
         """Construct a static connection from its parts.
 
@@ -368,16 +377,12 @@ class StaticConnection(Keys.Mixin):
                 endpoint=endpoint,
                 their_vk=their_vk,
                 recipients=recipients,
-                routing_keys=routing_keys
+                routing_keys=routing_keys,
             )
         return cls(keys, target, **kwargs)
 
     @classmethod
-    def receiver(
-            cls,
-            keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
-            **kwargs
-    ):
+    def receiver(cls, keys: Union[Keys, Tuple[Keys.Key, Keys.Key]], **kwargs):
         """Create a static connection to be used only for receiving messages.
 
         Arguments:
@@ -400,20 +405,16 @@ class StaticConnection(Keys.Mixin):
 
     def route(self, msg_type: str) -> Callable:
         """Register route decorator."""
+
         def register_route_dec(func):
-            self._dispatcher.add_handler(
-                Handler(Type.from_str(msg_type), func)
-            )
+            self._dispatcher.add_handler(Handler(Type.from_str(msg_type), func))
             return func
 
         return register_route_dec
 
     def route_module(self, module: Module):
         """Register a module for routing."""
-        handlers = [
-            Handler(msg_type, func)
-            for msg_type, func in module.routes.items()
-        ]
+        handlers = [Handler(msg_type, func) for msg_type, func in module.routes.items()]
         return self._dispatcher.add_handlers(handlers)
 
     def clear_routes(self):
@@ -427,10 +428,7 @@ class StaticConnection(Keys.Mixin):
         await self._dispatcher.dispatch(message, self)
 
     @contextmanager
-    def next(
-            self,
-            type_: str = None,
-            condition: Callable[[Message], bool] = None):
+    def next(self, type_: str = None, condition: Callable[[Message], bool] = None):
         """
         Context manager to claim the next message matching condtion, allowing
         temporary bypass of regular dispatch.
@@ -440,19 +438,22 @@ class StaticConnection(Keys.Mixin):
         handler or overriding the default dispatching mechanism.
         """
         if condition and type_:
-            raise ValueError('Expected type or condtion, not both.')
+            raise ValueError("Expected type or condtion, not both.")
         if condition and not callable(condition):
-            raise TypeError('condition must be Callable[[Message], bool]')
+            raise TypeError("condition must be Callable[[Message], bool]")
 
         if not condition and not type_:
             # Collect everything
             def _default(_msg):
                 return True
+
             selected_condition = _default
 
         if type_:
+
             def _matches_type(msg):
                 return msg.type == type_
+
             selected_condition = _matches_type
 
         if condition:
@@ -469,9 +470,7 @@ class StaticConnection(Keys.Mixin):
         """Unpack a message, filling out metadata in the MTC."""
         try:
             (unpacked_msg, sender_vk, recip_vk) = crypto.unpack_message(
-                packed_message,
-                self.verkey,
-                self.sigkey
+                packed_message, self.verkey, self.sigkey
             )
             msg = Message.deserialize(unpacked_msg)
             msg.mtc = MessageTrustContext()
@@ -482,9 +481,7 @@ class StaticConnection(Keys.Mixin):
 
         except (ValueError, KeyError):
             if not isinstance(packed_message, bytes):
-                raise TypeError(
-                    'Expected bytes, got {}'.format(type(msg).__name__)
-                )
+                raise TypeError("Expected bytes, got {}".format(type(msg).__name__))
             msg = Message.deserialize(packed_message)
             msg.mtc = MessageTrustContext()
             msg.mtc.set_plaintext()
@@ -492,27 +489,23 @@ class StaticConnection(Keys.Mixin):
         return msg
 
     def pack(
-            self,
-            msg: Union[dict, Message],
-            anoncrypt=False,
-            plaintext=False) -> bytes:
+        self, msg: Union[dict, Message], anoncrypt=False, plaintext=False
+    ) -> bytes:
         """Pack a message for sending over the wire."""
         if plaintext and anoncrypt:
-            raise ValueError(
-                'plaintext and anoncrypt flags are mutually exclusive.'
-            )
+            raise ValueError("plaintext and anoncrypt flags are mutually exclusive.")
 
         if not isinstance(msg, Message):
             if isinstance(msg, dict):
                 msg = Message(msg)
             else:
-                raise TypeError('msg must be type Message or dict')
+                raise TypeError("msg must be type Message or dict")
 
         if plaintext:
-            return json.dumps(msg).encode('ascii')
+            return json.dumps(msg).encode("ascii")
 
         if not self.target or not self.target.recipients:
-            raise RuntimeError('No recipients for whom to pack this message')
+            raise RuntimeError("No recipients for whom to pack this message")
 
         if anoncrypt:
             packed_message = crypto.pack_message(
@@ -536,7 +529,7 @@ class StaticConnection(Keys.Mixin):
                 )
                 forward_to = routing_key
 
-        return json.dumps(packed_message).encode('ascii')
+        return json.dumps(packed_message).encode("ascii")
 
     @contextmanager
     def session(self, send: SessionSend):
@@ -551,16 +544,10 @@ class StaticConnection(Keys.Mixin):
         """Check whether connection has sessions open."""
         return bool(self._sessions)
 
-    async def send_to_session(
-            self,
-            message: bytes,
-            thread: str = None
-    ) -> bool:
+    async def send_to_session(self, message: bytes, thread: str = None) -> bool:
         """Send a message to all sessions with a matching thread."""
         if not self._sessions:
-            raise RuntimeError(
-                'Cannot send message to session; no open sessions'
-            )
+            raise RuntimeError("Cannot send message to session; no open sessions")
 
         sent = False
         for session in self._sessions:
@@ -586,12 +573,13 @@ class StaticConnection(Keys.Mixin):
         await self.dispatch(msg)
 
     async def send_async(
-            self,
-            msg: Union[dict, Message],
-            *,
-            return_route: str = None,
-            plaintext: bool = False,
-            anoncrypt: bool = False):
+        self,
+        msg: Union[dict, Message],
+        *,
+        return_route: str = None,
+        plaintext: bool = False,
+        anoncrypt: bool = False
+    ):
         """
         Send a message to the agent connected through this StaticConnection.
         """
@@ -599,52 +587,45 @@ class StaticConnection(Keys.Mixin):
             if isinstance(msg, dict):
                 msg = Message(msg)
             else:
-                raise TypeError('msg must be type Message or dict')
+                raise TypeError("msg must be type Message or dict")
 
         # TODO: Don't specify return route on messages sent to sessions?
         if return_route:
-            if '~transport' not in msg:
-                msg['~transport'] = {}
-            msg['~transport']['return_route'] = return_route
+            if "~transport" not in msg:
+                msg["~transport"] = {}
+            msg["~transport"]["return_route"] = return_route
 
-        packed_message = self.pack(
-            msg, anoncrypt=anoncrypt, plaintext=plaintext
-        )
+        packed_message = self.pack(msg, anoncrypt=anoncrypt, plaintext=plaintext)
 
         if self.session_open():
-            if await self.send_to_session(packed_message, msg.thread['thid']):
+            if await self.send_to_session(packed_message, msg.thread["thid"]):
                 return
 
         if not self.target or not self.target.endpoint:
             raise MessageDeliveryError(
-                msg='Cannot send message; no endpoint and no return route.'
+                msg="Cannot send message; no endpoint and no return route."
             )
 
         try:
-            response = await self._send(
-                packed_message,
-                self.target.endpoint
-            )
+            response = await self._send(packed_message, self.target.endpoint)
         except Exception as err:
             raise MessageDeliveryError(msg=str(err)) from err
 
         if response:
-            if return_route is None or return_route == 'none':
-                raise RuntimeError(
-                    'Response received when no response was expected'
-                )
+            if return_route is None or return_route == "none":
+                raise RuntimeError("Response received when no response was expected")
             await self.handle(response)
 
     async def send_and_await_reply_async(
-            self,
-            msg: Union[dict, Message],
-            *,
-            type_: str = None,
-            condition: Callable[[Message], bool] = None,
-            return_route: str = "all",
-            plaintext: bool = False,
-            anoncrypt: bool = False,
-            timeout: int = None
+        self,
+        msg: Union[dict, Message],
+        *,
+        type_: str = None,
+        condition: Callable[[Message], bool] = None,
+        return_route: str = "all",
+        plaintext: bool = False,
+        anoncrypt: bool = False,
+        timeout: int = None
     ) -> Message:
         """Send a message and wait for a reply."""
 
@@ -658,11 +639,11 @@ class StaticConnection(Keys.Mixin):
             return await asyncio.wait_for(next_message, timeout)
 
     async def await_message(
-            self,
-            *,
-            type_: str = None,
-            condition: Callable[[Message], bool] = None,
-            timeout: int = None
+        self,
+        *,
+        type_: str = None,
+        condition: Callable[[Message], bool] = None,
+        timeout: int = None
     ):
         """
         Wait for a message.
@@ -683,6 +664,4 @@ class StaticConnection(Keys.Mixin):
     def send_and_await_reply(self, *args, **kwargs) -> Message:
         """Blocking wrapper around send_and_await_reply_async."""
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
-            self.send_and_await_reply_async(*args, **kwargs)
-        )
+        return loop.run_until_complete(self.send_and_await_reply_async(*args, **kwargs))
