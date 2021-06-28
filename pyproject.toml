@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "aries-staticagent"
+version = "0.8.0"
+description = "Aries Static Agent library for Python"
+authors = ["Daniel Bluhm <dbluhm@pm.me>", "Sam Curren <telegramsam@gmail.com>"]
+maintainers = ["Daniel Bluhm <dbluhm@pm.me>"]
+readme = "README.md"
+license = "Apache-2.0"
+homepage = "https://github.com/hyperledger/aries-staticagent-python"
+repository = "https://github.com/hyperledger/aries-staticagent-python"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent"
+]
+
+[tool.poetry.dependencies]
+python = "^3.6.9"
+aiohttp = "^3.7.4"
+base58 = "^2.1.0"
+msgpack = "^1.0.2"
+PyNaCl = "^1.4.0"
+semver = "^2.13.0"
+sortedcontainers = "^2.4.0"
+
+[tool.poetry.dev-dependencies]
+coverage = "^5.5"
+flake8 = "^3.9.2"
+pytest = "^6.2.4"
+pytest-asyncio = "^0.15.1"
+pre-commit = "^2.13.0"
+black = "^21.6b0"
+
+[build-system]
+requires = ["setuptools", "poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+log_cli_level = 10
+log_cli_format = "%(asctime)s %(name)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
