@@ -293,11 +293,22 @@ async def test_next_with_type_and_cond_raises_error(alice):
 
 
 @pytest.mark.asyncio
-async def test_send_and_await_reply(alice_gen, bob, send):
+async def test_send_and_await_returned(alice_gen, bob, send):
     """Test holding and awaiting messages."""
     alice = alice_gen(partial(send.return_response, bob.pack(RESPONSE)))
-    response = await alice.send_and_await_reply_async(MESSAGE)
+    response = await alice.send_and_await_returned_async(MESSAGE)
     assert response == RESPONSE
+
+
+@pytest.mark.asyncio
+async def test_send_and_await_reply(alice_gen, bob, send):
+    """Test holding and awaiting messages."""
+    msg_with_id = copy.deepcopy(MESSAGE)
+    response_with_thid = copy.deepcopy(RESPONSE)
+    response_with_thid["~thread"] = {"thid": msg_with_id.id}
+    alice = alice_gen(partial(send.return_response, bob.pack(response_with_thid)))
+    response = await alice.send_and_await_reply_async(msg_with_id)
+    assert response == response_with_thid
 
 
 @pytest.mark.asyncio
@@ -317,8 +328,18 @@ def test_blocking_send(alice_gen, bob, send):
     assert bob.unpack(send.sent_message) == MESSAGE
 
 
-def test_blocking_send_and_await_reply(alice_gen, bob, send):
+def test_blocking_send_and_await_returned(alice_gen, bob, send):
     """Test blocking send and await reply"""
     alice = alice_gen(send=partial(send.return_response, bob.pack(RESPONSE)))
-    response = alice.send_and_await_reply(MESSAGE)
+    response = alice.send_and_await_returned(MESSAGE)
     assert response == RESPONSE
+
+
+def test_blocking_send_and_await_reply(alice_gen, bob, send):
+    """Test holding and awaiting messages."""
+    msg_with_id = copy.deepcopy(MESSAGE)
+    response_with_thid = copy.deepcopy(RESPONSE)
+    response_with_thid["~thread"] = {"thid": msg_with_id.id}
+    alice = alice_gen(partial(send.return_response, bob.pack(response_with_thid)))
+    response = alice.send_and_await_reply(msg_with_id)
+    assert response == response_with_thid
