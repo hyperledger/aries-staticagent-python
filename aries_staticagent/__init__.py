@@ -1,18 +1,27 @@
 """ Aries Static Agent Library.
 """
 
-from .static_connection import (
-    StaticConnection, Keys, Target, MessageDeliveryError
-)
+from .static_connection import StaticConnection, Keys, Target, MessageDeliveryError
 from .module import Module, route
 from .message import Message
 
 from . import crypto
 
+__all__ = [
+    "StaticConnection",
+    "Keys",
+    "Target",
+    "MessageDeliveryError",
+    "Module",
+    "route",
+    "Message",
+    "keygen",
+]
+
 
 def keygen():
-    """ Convenience method for generating and printing a keypair and DID.
-        DID is generated from the first 16 bytes of the VerKey.
+    """Convenience method for generating and printing a keypair and DID.
+    DID is generated from the first 16 bytes of the VerKey.
     """
     vk_bytes, sk_bytes = crypto.create_keypair()
 
@@ -24,7 +33,13 @@ def keygen():
     my_sk = crypto.bytes_to_b58(sk_bytes)
     did = crypto.bytes_to_b58(did_bytes)
 
-    print('Static Agent Connection info for full agent:\n\tDID: {}\n\tVK: {}\n'
-          .format(did, my_vk))
-    print('Static Agent Connection info for static agent:\n\tVK: {}\n\tSK: {}'
-          .format(my_vk, my_sk))
+    print(
+        "Static Agent Connection info for full agent:\n\tDID: {}\n\tVK: {}\n".format(
+            did, my_vk
+        )
+    )
+    print(
+        "Static Agent Connection info for static agent:\n\tVK: {}\n\tSK: {}".format(
+            my_vk, my_sk
+        )
+    )

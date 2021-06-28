@@ -5,26 +5,28 @@ from .type import Type
 
 
 class InvalidModule(Exception):
-    """ Thrown when module is malformed. """
+    """Thrown when module is malformed."""
 
 
 class MetaModule(type):
-    """ MetaModule:
-        Ensures Module classes are well formed and provides convenience methods
+    """MetaModule:
+    Ensures Module classes are well formed and provides convenience methods
     """
+
     def __new__(cls, name, bases, dct):
-        if 'DOC_URI' not in dct:
-            raise InvalidModule('DOC_URI missing from module definition')
-        if 'PROTOCOL' not in dct:
+        if "DOC_URI" not in dct:
+            raise InvalidModule("DOC_URI missing from module definition")
+        if "PROTOCOL" not in dct:
             raise InvalidModule("PROTOCOL missing from module definition")
-        if 'VERSION' not in dct:
-            raise InvalidModule('VERSION missing from module definition')
+        if "VERSION" not in dct:
+            raise InvalidModule("VERSION missing from module definition")
 
         return type.__new__(cls, name, bases, dct)
 
 
 class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
-    """ Base Module class """
+    """Base Module class"""
+
     DOC_URI = None
     PROTOCOL = None
     VERSION = None
@@ -33,31 +35,27 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
         self._routes = None
 
     def type(
-            self,
-            name: str,
-            doc_uri: str = None,
-            protocol: str = None,
-            version: str = None
-                ):
-        """ Build a type string for this module. """
+        self, name: str, doc_uri: str = None, protocol: str = None, version: str = None
+    ):
+        """Build a type string for this module."""
         doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
         protocol = protocol if protocol is not None else self.PROTOCOL
         version = version if version is not None else self.VERSION
         if doc_uri is None:
-            raise TypeError('doc_uri must be str')
+            raise TypeError("doc_uri must be str")
         if protocol is None:
-            raise TypeError('protocol must be str')
+            raise TypeError("protocol must be str")
         if version is None:
-            raise TypeError('version must be str')
+            raise TypeError("version must be str")
         return Type(doc_uri, protocol, version, name)
 
     def _find_routes(self):
         found = {}
         for key in dir(self):
-            if key == 'routes' or key.startswith('__'):
+            if key == "routes" or key.startswith("__"):
                 continue
             val = getattr(self, key)
-            if hasattr(val, 'handler_for'):
+            if hasattr(val, "handler_for"):
                 msg_type = val.handler_for
                 if isinstance(msg_type, PartialType):
                     msg_type = msg_type.complete(self)
@@ -68,56 +66,48 @@ class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
 
     @property
     def routes(self):
-        """ Get the routes statically defined for this module and
-            save in instance.
+        """Get the routes statically defined for this module and
+        save in instance.
         """
         if self._routes is None:
             self._routes = self._find_routes()
         return self._routes
 
 
-class PartialType():
-    """ Class containing the type information of a route before having the
-        context of the module as is the case when statically defining routes in
-        a module definition.
+class PartialType:
+    """Class containing the type information of a route before having the
+    context of the module as is the case when statically defining routes in
+    a module definition.
     """
-    __slots__ = (
-        'doc_uri',
-        'protocol',
-        'version',
-        'name'
-    )
+
+    __slots__ = ("doc_uri", "protocol", "version", "name")
 
     def __init__(
-            self,
-            name: str,
-            doc_uri: str = None,
-            protocol: str = None,
-            version: str = None
-                ):
+        self, name: str, doc_uri: str = None, protocol: str = None, version: str = None
+    ):
         self.name = name
         self.version = version
         self.protocol = protocol
         self.doc_uri = doc_uri
 
     def complete(self, mod: Module) -> Type:
-        """ Return a complete type given the module context. """
+        """Return a complete type given the module context."""
         doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
         protocol = self.protocol if self.protocol else type(mod).PROTOCOL
         version = self.version if self.version else type(mod).VERSION
         if doc_uri is None:
-            raise TypeError('doc_uri must be str')
+            raise TypeError("doc_uri must be str")
         if protocol is None:
-            raise TypeError('protocol must be str')
+            raise TypeError("protocol must be str")
         if version is None:
-            raise TypeError('version must be str')
+            raise TypeError("version must be str")
         return Type(doc_uri, protocol, version, self.name)
 
 
 def route(*args, **kwargs):
-    """ Route definition decorator
-        if just @route is used, type_or_func is the decorated function
-        if @route(type) is used, type_or_func is the type string.
+    """Route definition decorator
+    if just @route is used, type_or_func is the decorated function
+    if @route(type) is used, type_or_func is the type string.
     """
     if args:
         type_or_func: Union[Callable, str, Type] = args[0]
@@ -145,15 +135,15 @@ def route(*args, **kwargs):
             return _route
 
     if kwargs:
+
         def _route(func):
-            name = kwargs.get('name', func.__name__)
-            del kwargs['name']
+            name = kwargs.get("name", func.__name__)
+            del kwargs["name"]
             func.handler_for = PartialType(name, **kwargs)
             return func
 
         return _route
 
     raise ValueError(
-        'Expecting @route before a function or @route(msg_type) '
-        'before a function!'
+        "Expecting @route before a function or @route(msg_type) " "before a function!"
     )

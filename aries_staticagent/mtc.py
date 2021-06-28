@@ -8,11 +8,12 @@ from typing import Optional
 
 
 class ContextsConflict(Exception):
-    """ Thrown when the passed contexts overlap """
+    """Thrown when the passed contexts overlap"""
 
 
 class Context(Flag):
-    """ Flags for MTC """
+    """Flags for MTC"""
+
     NONE = 0
     SIZE_OK = auto()
     DESERIALIZE_OK = auto()
@@ -28,17 +29,17 @@ class Context(Flag):
 
 
 LABELS = {
-    Context.SIZE_OK: 'size_ok',
-    Context.DESERIALIZE_OK: 'deserialize_ok',
-    Context.KEYS_OK: 'keys_ok',
-    Context.VALUES_OK: 'values_ok',
-    Context.CONFIDENTIALITY: 'confidentiality',
-    Context.INTEGRITY: 'integrity',
-    Context.AUTHENTICATED_ORIGIN: 'authenticated_origin',
-    Context.NONREPUDIATION: 'nonrepudiation',
-    Context.PFS: 'pfs',
-    Context.UNIQUENESS: 'uniqueness',
-    Context.LIMITED_SCOPE: 'limited_scope'
+    Context.SIZE_OK: "size_ok",
+    Context.DESERIALIZE_OK: "deserialize_ok",
+    Context.KEYS_OK: "keys_ok",
+    Context.VALUES_OK: "values_ok",
+    Context.CONFIDENTIALITY: "confidentiality",
+    Context.INTEGRITY: "integrity",
+    Context.AUTHENTICATED_ORIGIN: "authenticated_origin",
+    Context.NONREPUDIATION: "nonrepudiation",
+    Context.PFS: "pfs",
+    Context.UNIQUENESS: "uniqueness",
+    Context.LIMITED_SCOPE: "limited_scope",
 }
 
 
@@ -57,9 +58,7 @@ UNIQUENESS = Context.UNIQUENESS
 LIMITED_SCOPE = Context.LIMITED_SCOPE
 
 # Typical MTCs
-AUTHCRYPT_AFFIRMED = (
-    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN
-)
+AUTHCRYPT_AFFIRMED = CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN
 AUTHCRYPT_DENIED = NONREPUDIATION
 
 ANONCRYPT_AFFIRMED = CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK
@@ -74,7 +73,8 @@ class AdditionalData:
     """
     Container for data relevant to Message Trust.
     """
-    __slots__ = ('sender', 'recipient')
+
+    __slots__ = ("sender", "recipient")
 
     def __init__(self, sender: str = None, recipient: str = None):
         self.sender = sender
@@ -82,28 +82,28 @@ class AdditionalData:
 
 
 class MessageTrustContext:
-    """ Message Trust Context
+    """Message Trust Context
 
-        Holds the contexts as well as data associated with message trust
-        contexts such as the keys used to encrypt the message and allowing us
-        to know that the origin is authenticated, etc.
+    Holds the contexts as well as data associated with message trust
+    contexts such as the keys used to encrypt the message and allowing us
+    to know that the origin is authenticated, etc.
     """
-    __slots__ = '_affirmed', '_denied', 'additional_data'
+
+    __slots__ = "_affirmed", "_denied", "additional_data"
 
     def __init__(
-            self,
-            affirmed: Context = Context.NONE,
-            denied: Context = Context.NONE,
-            additional_data: AdditionalData = None
-                ):
+        self,
+        affirmed: Context = Context.NONE,
+        denied: Context = Context.NONE,
+        additional_data: AdditionalData = None,
+    ):
 
         if affirmed & denied != Context.NONE:
             raise ContextsConflict()
 
         self._affirmed = affirmed
         self._denied = denied
-        self.additional_data = additional_data \
-            if additional_data else AdditionalData()
+        self.additional_data = additional_data if additional_data else AdditionalData()
 
     @property
     def sender(self):
@@ -117,12 +117,12 @@ class MessageTrustContext:
 
     @property
     def affirmed(self):
-        """ Access affirmed contexts """
+        """Access affirmed contexts"""
         return self._affirmed
 
     @property
     def denied(self):
-        """ Access denied contexts """
+        """Access denied contexts"""
         return self._denied
 
     def __getitem__(self, context: Context):
@@ -134,7 +134,7 @@ class MessageTrustContext:
 
     def __setitem__(self, context: Context, value: Optional[bool]):
         if not isinstance(context, Context):
-            raise TypeError('index must be of type Context')
+            raise TypeError("index must be of type Context")
 
         if value is None:
             # Set undefined
@@ -147,22 +147,20 @@ class MessageTrustContext:
             self._affirmed &= ~context
         else:
             raise TypeError(
-                'Value of type bool or None was expected, got {}'.format(
-                    type(value)
-                )
+                "Value of type bool or None was expected, got {}".format(type(value))
             )
 
     def __str__(self):
-        str_repr = 'mtc:'
+        str_repr = "mtc:"
         plus = []
         minus = []
         for context, label in LABELS.items():
             if self[context] is True:
-                plus.append('+{}'.format(label))
+                plus.append("+{}".format(label))
             elif self[context] is False:
-                minus.append('-{}'.format(label))
+                minus.append("-{}".format(label))
 
-        str_repr = ' '.join([str_repr] + plus + minus)
+        str_repr = " ".join([str_repr] + plus + minus)
         return str_repr
 
     # Convenience methods
@@ -189,15 +187,12 @@ class MessageTrustContext:
 
     def is_authcrypted(self):
         """MTC matches expected authcrypt."""
-        return self[AUTHCRYPT_AFFIRMED] is True and \
-            self[AUTHCRYPT_DENIED] is False
+        return self[AUTHCRYPT_AFFIRMED] is True and self[AUTHCRYPT_DENIED] is False
 
     def is_anoncrypted(self):
         """MTC matches expected anoncrypt."""
-        return self[ANONCRYPT_AFFIRMED] is True and \
-            self[ANONCRYPT_DENIED] is False
+        return self[ANONCRYPT_AFFIRMED] is True and self[ANONCRYPT_DENIED] is False
 
     def is_plaintext(self):
         """MTC matches expected plaintext."""
-        return self[PLAINTEXT_AFFIRMED] is True and \
-            self[PLAINTEXT_DENIED] is False
+        return self[PLAINTEXT_AFFIRMED] is True and self[PLAINTEXT_DENIED] is False
