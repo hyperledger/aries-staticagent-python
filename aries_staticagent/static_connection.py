@@ -1,17 +1,17 @@
 """Static Agent Connection."""
 import asyncio
-import json
 from contextlib import contextmanager
+import json
 from typing import (
-    Union,
-    Callable,
     Awaitable,
+    Callable,
     Dict,
-    Tuple,
-    Sequence,
-    Optional,
     List,
+    Optional,
+    Sequence,
     Set,
+    Tuple,
+    Union,
 )
 import uuid
 
@@ -621,13 +621,39 @@ class StaticConnection(Keys.Mixin):
         msg: Union[dict, Message],
         *,
         type_: str = None,
+        return_route: str = "all",
+        plaintext: bool = False,
+        anoncrypt: bool = False,
+        timeout: int = None
+    ) -> Message:
+        """Send a message and wait for a reply to that message."""
+        hydrated = Message(msg) if not isinstance(msg, Message) else msg
+
+        def _reply_match(returned: Message):
+            return hydrated.id == returned.thread["thid"]
+
+        return await self.send_and_await_returned_async(
+            msg,
+            type_=type_,
+            condition=_reply_match,
+            return_route=return_route,
+            plaintext=plaintext,
+            anoncrypt=anoncrypt,
+            timeout=timeout,
+        )
+
+    async def send_and_await_returned_async(
+        self,
+        msg: Union[dict, Message],
+        *,
+        type_: str = None,
         condition: Callable[[Message], bool] = None,
         return_route: str = "all",
         plaintext: bool = False,
         anoncrypt: bool = False,
         timeout: int = None
     ) -> Message:
-        """Send a message and wait for a reply."""
+        """Send a message and wait for a message to be returned."""
 
         with self.next(type_=type_, condition=condition) as next_message:
             await self.send_async(
@@ -665,3 +691,10 @@ class StaticConnection(Keys.Mixin):
         """Blocking wrapper around send_and_await_reply_async."""
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self.send_and_await_reply_async(*args, **kwargs))
+
+    def send_and_await_returned(self, *args, **kwargs) -> Message:
+        """Blocking wrapper around send_and_await_reply_async."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self.send_and_await_returned_async(*args, **kwargs)
+        )
