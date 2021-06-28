@@ -75,12 +75,13 @@ async def listening_endpoint(connection, unused_tcp_port):
     await runner.cleanup()
 
 
+@pytest.mark.int
 @pytest.mark.asyncio
 async def test_cron_example(example_keys, test_keys, connection, listening_endpoint):
     """Test the cron example."""
     with connection.next() as next_msg:
         process = await asyncio.create_subprocess_exec(
-            "env/bin/python",
+            "poetry run python",
             "examples/cron.py",
             "--my-verkey",
             crypto.bytes_to_b58(example_keys.verkey),
@@ -98,6 +99,7 @@ async def test_cron_example(example_keys, test_keys, connection, listening_endpo
     assert msg["content"] == "The Cron script was executed."
 
 
+@pytest.mark.int
 @pytest.mark.asyncio
 async def test_webserver_aiohttp(
     example_keys, test_keys, connection, listening_endpoint, unused_tcp_port_factory
@@ -107,7 +109,7 @@ async def test_webserver_aiohttp(
     connection.target.update(endpoint="http://localhost:{}".format(example_port))
 
     process = await asyncio.create_subprocess_exec(
-        "env/bin/python",
+        "poetry run python",
         "examples/webserver_aiohttp.py",
         "--my-verkey",
         crypto.bytes_to_b58(example_keys.verkey),
@@ -141,6 +143,7 @@ async def test_webserver_aiohttp(
     await process.wait()
 
 
+@pytest.mark.int
 @pytest.mark.asyncio
 async def test_preprocessor_example(
     example_keys, test_keys, connection, listening_endpoint, unused_tcp_port_factory
@@ -150,7 +153,7 @@ async def test_preprocessor_example(
     connection.target.update(endpoint="http://localhost:{}".format(example_port))
 
     process = await asyncio.create_subprocess_exec(
-        "env/bin/python",
+        "poetry run python",
         "examples/preprocessors.py",
         "--my-verkey",
         crypto.bytes_to_b58(example_keys.verkey),
@@ -187,6 +190,7 @@ async def test_preprocessor_example(
     await process.wait()
 
 
+@pytest.mark.int
 @pytest.mark.asyncio
 async def test_webserver_with_websockets(
     example_keys, test_keys, connection_ws, listening_endpoint, unused_tcp_port_factory
@@ -196,7 +200,7 @@ async def test_webserver_with_websockets(
     connection_ws.target.update(endpoint="http://localhost:{}".format(example_port))
 
     process = await asyncio.create_subprocess_exec(
-        "env/bin/python",
+        "poetry run python",
         "examples/webserver_with_websockets.py",
         "--my-verkey",
         crypto.bytes_to_b58(example_keys.verkey),
@@ -231,6 +235,7 @@ async def test_webserver_with_websockets(
     await process.wait()
 
 
+@pytest.mark.int
 @pytest.mark.asyncio
 async def test_webserver_with_module(
     example_keys, test_keys, connection, listening_endpoint, unused_tcp_port_factory
@@ -239,7 +244,7 @@ async def test_webserver_with_module(
     example_port = unused_tcp_port_factory()
     connection.target.update(endpoint="http://localhost:{}".format(example_port))
     process = await asyncio.create_subprocess_exec(
-        "env/bin/python",
+        "poetry run python",
         "examples/webserver_with_module.py",
         "--my-verkey",
         crypto.bytes_to_b58(example_keys.verkey),
@@ -288,12 +293,13 @@ async def test_webserver_with_module(
     await process.wait()
 
 
+@pytest.mark.int
 @pytest.mark.asyncio
 async def test_return_route_examples(unused_tcp_port_factory):
     """Test the return route client-server exapmles."""
     example_port = unused_tcp_port_factory()
     server_process = await asyncio.create_subprocess_exec(
-        "env/bin/python",
+        "poetry run python",
         "examples/return_route_server.py",
         stdout=asyncio.subprocess.DEVNULL,
         env={"PORT": str(example_port)},
@@ -302,7 +308,7 @@ async def test_return_route_examples(unused_tcp_port_factory):
     await server_ready("localhost", example_port)
 
     client_process = await asyncio.create_subprocess_exec(
-        "env/bin/python",
+        "poetry run python",
         "examples/return_route_client.py",
         stdout=asyncio.subprocess.PIPE,
         env={"PORT": str(example_port)},

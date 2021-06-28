@@ -36,6 +36,7 @@ requires = ["setuptools", "poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules"
+addopts = "--doctest-modules -m 'not int'"
+markers = ["int"]
 log_cli_level = 10
 log_cli_format = "%(asctime)s %(name)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
