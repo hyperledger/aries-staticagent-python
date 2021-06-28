@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aries-staticagent"
-version = "0.8.0"
+version = "0.9.0-pre0"
 description = "Aries Static Agent library for Python"
 authors = ["Daniel Bluhm <dbluhm@pm.me>", "Sam Curren <telegramsam@gmail.com>"]
 maintainers = ["Daniel Bluhm <dbluhm@pm.me>"]
