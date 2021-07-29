@@ -21,13 +21,15 @@ def main():
             endpoint='http://localhost:{}'.format(os.environ.get('PORT', 3000))
         )
     )
-    reply = conn.send_and_await_reply({
-        "@type": "https://didcomm.org/"
-                 "basicmessage/1.0/message",
-        "~l10n": {"locale": "en"},
-        "sent_time": utils.timestamp(),
-        "content": "The Cron script has been executed."
-    }, return_route='all')
+    reply = conn.send_and_await_reply(
+        {
+            "@type": "https://didcomm.org/basicmessage/1.0/message",
+            "~l10n": {"locale": "en"},
+            "sent_time": utils.timestamp(),
+            "content": "The Cron script has been executed."
+        },
+        return_route='all'
+    )
     print('Msg from conn:', reply and reply.pretty_print())
 
 
