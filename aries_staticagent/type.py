@@ -3,7 +3,7 @@ from functools import partial
 from operator import is_not
 from typing import Union
 import re
-from semver import VersionInfo, parse
+from semver import VersionInfo
 
 MTURI_RE = re.compile(r"(.*?)([a-z0-9._-]+)/(\d[^/]*)/([a-z0-9._-]+)$")
 
@@ -27,14 +27,14 @@ class Semver(VersionInfo):  # pylint: disable=too-few-public-methods
                 args.append("0")
             return Semver(*map(int, filter(partial(is_not, None), args)))
 
-        parts = parse(version_str)
+        parts = VersionInfo.parse(version_str)
 
         return cls(
-            parts["major"],
-            parts["minor"],
-            parts["patch"],
-            parts["prerelease"],
-            parts["build"],
+            parts.major,
+            parts.minor,
+            parts.patch,
+            parts.prerelease,
+            parts.build,
         )
 
 
