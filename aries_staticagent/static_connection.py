@@ -399,7 +399,7 @@ class StaticConnection(Keys.Mixin):
         return cls(Keys(*crypto.create_keypair()), target, **kwargs)
 
     @classmethod
-    def from_seed(cls, seed: str, target: Target = None, **kwargs):
+    def from_seed(cls, seed: bytes, target: Target = None, **kwargs):
         """Generate connection from seed."""
         return cls(Keys(*crypto.create_keypair(seed=seed)), target, **kwargs)
 
