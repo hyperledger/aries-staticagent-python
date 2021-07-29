@@ -633,7 +633,7 @@ class StaticConnection(Keys.Mixin):
             return hydrated.id == returned.thread["thid"]
 
         return await self.send_and_await_returned_async(
-            msg,
+            hydrated,
             type_=type_,
             condition=_reply_match,
             return_route=return_route,
