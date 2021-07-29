@@ -620,7 +620,6 @@ class StaticConnection(Keys.Mixin):
         self,
         msg: Union[dict, Message],
         *,
-        type_: str = None,
         return_route: str = "all",
         plaintext: bool = False,
         anoncrypt: bool = False,
@@ -634,7 +633,6 @@ class StaticConnection(Keys.Mixin):
 
         return await self.send_and_await_returned_async(
             hydrated,
-            type_=type_,
             condition=_reply_match,
             return_route=return_route,
             plaintext=plaintext,
