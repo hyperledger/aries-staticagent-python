@@ -654,6 +654,7 @@ class StaticConnection(Keys.Mixin):
         timeout: int = None
     ) -> Message:
         """Send a message and wait for a message to be returned."""
+
         async def _time_boxed():
             with self.next(type_=type_, condition=condition) as next_message:
                 await self.send_async(
@@ -663,6 +664,7 @@ class StaticConnection(Keys.Mixin):
                     anoncrypt=anoncrypt,
                 )
                 return await next_message
+
         return await asyncio.wait_for(_time_boxed(), timeout)
 
     async def await_message(
