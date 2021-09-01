@@ -21,7 +21,7 @@ def main():
             endpoint='http://localhost:{}'.format(os.environ.get('PORT', 3000))
         )
     )
-    reply = conn.send_and_await_reply(
+    reply = conn.send_and_await_returned(
         {
             "@type": "https://didcomm.org/basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
