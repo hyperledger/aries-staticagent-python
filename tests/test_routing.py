@@ -1,8 +1,9 @@
 """ Test routing functions of StaticConnection. """
 
+from aries_staticagent.module import ModuleRouter
 import asyncio
 import pytest
-from aries_staticagent import StaticConnection, Message, Module, route
+from aries_staticagent import StaticConnection, Message, Module
 from aries_staticagent.dispatcher import Dispatcher, NoRegisteredHandlerException
 from aries_staticagent.type import Type
 
@@ -94,9 +95,10 @@ async def test_routing_module_explicit_def(
     class TestModule(Module):
         """Simple module for testing"""
 
-        DOC_URI = ""
-        PROTOCOL = "test_protocol"
-        VERSION = "1.0"
+        doc_uri = ""
+        protocol = "test_protocol"
+        version = "1.0"
+        route = ModuleRouter()
 
         @route(*route_args, **route_kwargs)
         async def route_gets_called(self, _msg, **kwargs):
@@ -119,9 +121,10 @@ async def test_routing_module_simple(event, dispatcher, conn):
     class TestModule(Module):
         """Simple module for testing"""
 
-        DOC_URI = ""
-        PROTOCOL = "test_protocol"
-        VERSION = "1.0"
+        doc_uri = ""
+        protocol = "test_protocol"
+        version = "1.0"
+        route = ModuleRouter()
 
         @route
         async def testing_type(self, _msg, **kwargs):
@@ -145,9 +148,10 @@ async def test_routing_many(event, dispatcher, conn):
     class TestModule1(Module):
         """Simple module for testing"""
 
-        DOC_URI = ""
-        PROTOCOL = "test_protocol"
-        VERSION = "1.0"
+        doc_uri = ""
+        protocol = "test_protocol"
+        version = "1.0"
+        route = ModuleRouter()
 
         @route
         async def testing_type(self, _msg, **kwargs):
@@ -158,9 +162,10 @@ async def test_routing_many(event, dispatcher, conn):
     class TestModule2(Module):
         """Simple module for testing"""
 
-        DOC_URI = ""
-        PROTOCOL = "test_protocol"
-        VERSION = "2.0"
+        doc_uri = ""
+        protocol = "test_protocol"
+        version = "2.0"
+        route = ModuleRouter()
 
         @route
         async def testing_type(self, _msg, **kwargs):
@@ -199,9 +204,10 @@ async def test_routing_no_matching_version(event, dispatcher, conn):
     class TestModule(Module):
         """Simple module for testing"""
 
-        DOC_URI = ""
-        PROTOCOL = "test_protocol"
-        VERSION = "1.0"
+        doc_uri = ""
+        protocol = "test_protocol"
+        version = "1.0"
+        route = ModuleRouter()
 
         @route
         async def testing_type(self, _msg, **kwargs):
@@ -223,9 +229,10 @@ async def test_routing_minor_version_different(event, dispatcher, conn):
     class TestModule(Module):
         """Simple module for testing"""
 
-        DOC_URI = ""
-        PROTOCOL = "test_protocol"
-        VERSION = "1.4"
+        doc_uri = ""
+        protocol = "test_protocol"
+        version = "1.4"
+        route = ModuleRouter()
 
         @route
         async def testing_type(self, _msg, **kwargs):

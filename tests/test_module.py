@@ -1,7 +1,7 @@
 """ Test module module """
 import pytest
 
-from aries_staticagent.module import Module, InvalidModule, route
+from aries_staticagent.module import Module, ModuleRouter
 
 
 def test_module_def():
@@ -21,29 +21,35 @@ def test_module_missing_attrs():
     """
     # pylint: disable=unused-variable
 
-    with pytest.raises(InvalidModule):
+    with pytest.raises(TypeError):
 
         class TestModule1(Module):
             """Simple module for testing"""
 
-            DOC_URI = "test_doc_uri/"
-            PROTOCOL = "test_protocol"
+            doc_uri = "test_doc_uri/"
+            protocol = "test_protocol"
 
-    with pytest.raises(InvalidModule):
+        print(TestModule1().version)
+
+    with pytest.raises(TypeError):
 
         class TestModule2(Module):
             """Simple module for testing"""
 
-            DOC_URI = "test_doc_uri/"
-            VERSION = "1.0"
+            doc_uri = "test_doc_uri/"
+            version = "1.0"
 
-    with pytest.raises(InvalidModule):
+        TestModule2()
+
+    with pytest.raises(TypeError):
 
         class TestModule3(Module):
             """Simple module for testing"""
 
-            PROTOCOL = "test_protocol"
-            VERSION = "1.0"
+            protocol = "test_protocol"
+            version = "1.0"
+
+        TestModule3()
 
 
 def test_routes_construction():
@@ -52,9 +58,10 @@ def test_routes_construction():
     class TestModule(Module):
         """Simple module for testing"""
 
-        DOC_URI = "test_doc_uri/"
-        PROTOCOL = "test_protocol"
-        VERSION = "1.0"
+        doc_uri = "test_doc_uri/"
+        protocol = "test_protocol"
+        version = "1.0"
+        route = ModuleRouter()
 
         @route
         async def test(self, msg):
@@ -76,9 +83,10 @@ def test_module_type_helper():
     class TestModule(Module):
         """Simple module for testing"""
 
-        DOC_URI = "test_doc_uri/"
-        PROTOCOL = "test_protocol"
-        VERSION = "1.0"
+        doc_uri = "test_doc_uri/"
+        protocol = "test_protocol"
+        version = "1.0"
+        route = ModuleRouter()
 
     mod = TestModule()
     assert mod.type("test") == "test_doc_uri/test_protocol/1.0.0/test"
@@ -90,4 +98,5 @@ def test_module_type_helper():
 def test_route_bad_input():
     """Test that calling route directly with bad inputs raises error."""
     with pytest.raises(ValueError):
+        route = ModuleRouter()
         route([1, 2, "garbage"])
