@@ -1,11 +1,15 @@
 """Test included examples."""
 
 import asyncio
-from contextlib import suppress, closing
+import copy
+from contextlib import closing, suppress
+import os
 import socket
-import pytest
+
 from aiohttp import web
-from aries_staticagent import StaticConnection, Keys, crypto, utils
+import pytest
+
+from aries_staticagent import Keys, StaticConnection, crypto, utils
 
 # pylint: disable=redefined-outer-name
 
@@ -81,7 +85,9 @@ async def test_cron_example(example_keys, test_keys, connection, listening_endpo
     """Test the cron example."""
     with connection.next() as next_msg:
         process = await asyncio.create_subprocess_exec(
-            "poetry run python",
+            "poetry",
+            "run",
+            "python",
             "examples/cron.py",
             "--my-verkey",
             crypto.bytes_to_b58(example_keys.verkey),
@@ -109,7 +115,9 @@ async def test_webserver_aiohttp(
     connection.target.update(endpoint="http://localhost:{}".format(example_port))
 
     process = await asyncio.create_subprocess_exec(
-        "poetry run python",
+        "poetry",
+        "run",
+        "python",
         "examples/webserver_aiohttp.py",
         "--my-verkey",
         crypto.bytes_to_b58(example_keys.verkey),
@@ -153,7 +161,9 @@ async def test_preprocessor_example(
     connection.target.update(endpoint="http://localhost:{}".format(example_port))
 
     process = await asyncio.create_subprocess_exec(
-        "poetry run python",
+        "poetry",
+        "run",
+        "python",
         "examples/preprocessors.py",
         "--my-verkey",
         crypto.bytes_to_b58(example_keys.verkey),
@@ -182,10 +192,7 @@ async def test_preprocessor_example(
         msg = await asyncio.wait_for(next_msg, 30)
 
     assert "basicmessage" in msg.type
-    assert (
-        msg["content"]
-        == "The preprocessor validated this message and added: Something!"
-    )
+    assert msg["content"] == "The preprocessor validated this message"
     process.terminate()
     await process.wait()
 
@@ -200,7 +207,9 @@ async def test_webserver_with_websockets(
     connection_ws.target.update(endpoint="http://localhost:{}".format(example_port))
 
     process = await asyncio.create_subprocess_exec(
-        "poetry run python",
+        "poetry",
+        "run",
+        "python",
         "examples/webserver_with_websockets.py",
         "--my-verkey",
         crypto.bytes_to_b58(example_keys.verkey),
@@ -244,7 +253,9 @@ async def test_webserver_with_module(
     example_port = unused_tcp_port_factory()
     connection.target.update(endpoint="http://localhost:{}".format(example_port))
     process = await asyncio.create_subprocess_exec(
-        "poetry run python",
+        "poetry",
+        "run",
+        "python",
         "examples/webserver_with_module.py",
         "--my-verkey",
         crypto.bytes_to_b58(example_keys.verkey),
@@ -299,19 +310,23 @@ async def test_return_route_examples(unused_tcp_port_factory):
     """Test the return route client-server exapmles."""
     example_port = unused_tcp_port_factory()
     server_process = await asyncio.create_subprocess_exec(
-        "poetry run python",
+        "poetry",
+        "run",
+        "python",
         "examples/return_route_server.py",
         stdout=asyncio.subprocess.DEVNULL,
-        env={"PORT": str(example_port)},
+        env=copy.copy(os.environ).update({"PORT": str(example_port)}),
     )
 
     await server_ready("localhost", example_port)
 
     client_process = await asyncio.create_subprocess_exec(
-        "poetry run python",
+        "poetry",
+        "run",
+        "python",
         "examples/return_route_client.py",
         stdout=asyncio.subprocess.PIPE,
-        env={"PORT": str(example_port)},
+        env=copy.copy(os.environ).update({"PORT": str(example_port)}),
     )
 
     assert await client_process.wait() == 0
