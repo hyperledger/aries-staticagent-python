@@ -497,7 +497,7 @@ class StaticConnection(Keys.Mixin):
 
         if not isinstance(msg, Message):
             if isinstance(msg, dict):
-                msg = Message(msg)
+                msg = Message.parse_obj(msg)
             else:
                 raise TypeError("msg must be type Message or dict")
 
@@ -585,7 +585,7 @@ class StaticConnection(Keys.Mixin):
         """
         if not isinstance(msg, Message):
             if isinstance(msg, dict):
-                msg = Message(msg)
+                msg = Message.parse_obj(msg)
             else:
                 raise TypeError("msg must be type Message or dict")
 
@@ -627,7 +627,7 @@ class StaticConnection(Keys.Mixin):
         timeout: int = None
     ) -> Message:
         """Send a message and wait for a reply to that message."""
-        hydrated = Message(msg) if not isinstance(msg, Message) else msg
+        hydrated = Message.parse_obj(msg) if not isinstance(msg, Message) else msg
 
         def _reply_match(returned: Message):
             return hydrated.id == returned.thread["thid"]

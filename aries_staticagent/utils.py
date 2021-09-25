@@ -50,7 +50,7 @@ FORWARD = "https://didcomm.org/routing/1.0/forward"
 
 def forward_msg(to: Union[bytes, str], msg: dict):
     """Return a forward message."""
-    return Message({"@type": FORWARD, "to": ensure_key_b58(to), "msg": msg})
+    return Message.parse_obj({"@type": FORWARD, "to": ensure_key_b58(to), "msg": msg})
 
 
 def find_message_in_args(args):
