@@ -15,7 +15,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.9"
+python = "^3.7"
 aiohttp = "^3.7.4"
 base58 = "^2.1.0"
 msgpack = "^1.0.2"
