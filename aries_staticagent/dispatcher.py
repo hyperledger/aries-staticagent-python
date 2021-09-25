@@ -16,7 +16,7 @@ class Handler:  # pylint: disable=too-few-public-methods
 
     __slots__ = ("type", "handler", "context")
 
-    def __init__(self, msg_type: MsgType, handler: Callable, context=None):
+    def __init__(self, msg_type: MsgType, handler: Callable):
         if not isinstance(msg_type, MsgType):
             raise ValueError("type parameter must be MsgType object")
         if not callable(handler):
@@ -24,12 +24,10 @@ class Handler:  # pylint: disable=too-few-public-methods
 
         self.type = msg_type
         self.handler = handler
-        self.context = context
 
     async def run(self, msg, *args, **kwargs):
         """Call the handler with message."""
-        args = [msg, *args] if not self.context else [self.context, msg, *args]
-        return await self.handler(*args, **kwargs)
+        return await self.handler(msg, *args, **kwargs)
 
 
 class Dispatcher:
@@ -49,7 +47,7 @@ class Dispatcher:
 
     def add_handler(self, handler: Handler):
         """Add a handler to routing tables."""
-        self.handlers[handler.type] = handler
+        self.handlers[handler.type.normalized] = handler
 
         key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
         if key not in self.handler_versions:
