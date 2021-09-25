@@ -100,7 +100,7 @@ class Message(BaseModel, Mapping[str, Any]):
     type: MsgType = Field(alias="@type")
     id: str = Field(alias="@id", default_factory=lambda: str(uuid4()))
     _alias_dict: Mapping[str, Any] = {}
-    _mtc: Optional[MessageTrustContext] = None
+    _mtc: MessageTrustContext = MessageTrustContext()
 
     class Config:
         extra = Extra.allow
@@ -121,6 +121,21 @@ class Message(BaseModel, Mapping[str, Any]):
     @property
     def mtc(self):
         return self._mtc
+
+    @property
+    def thread(self):
+        return self.get("~thread", {"thid": None})
+
+    def with_transport(self: MessageType, return_route: str = None) -> MessageType:
+        return type(self)(
+            **{
+                **self.dict(by_alias=True),
+                "~transport": {"return_route": return_route} if return_route else {},
+            }
+        )
+
+    def with_thread(self: MessageType, thread: Mapping[str, str]) -> MessageType:
+        return type(self)(**{**self.dict(by_alias=True), "~thread": thread})
 
     @classmethod
     def deserialize(
