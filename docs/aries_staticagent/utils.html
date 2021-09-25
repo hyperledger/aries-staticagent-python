@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>aries_staticagent.utils API documentation</title>
 <meta name="description" content="General utils" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -30,7 +30,6 @@
 <pre><code class="python">&#34;&#34;&#34; General utils &#34;&#34;&#34;
 from functools import wraps
 from typing import Union, Optional, Callable
-import copy
 import datetime
 
 import aiohttp
@@ -43,15 +42,15 @@ from .mtc import (
     AUTHCRYPT_AFFIRMED,
     AUTHCRYPT_DENIED,
     ANONCRYPT_AFFIRMED,
-    ANONCRYPT_DENIED
+    ANONCRYPT_DENIED,
 )
 
 
-def timestamp():
-    &#34;&#34;&#34; return a timestamp. &#34;&#34;&#34;
-    return datetime.datetime.utcnow().replace(
-        tzinfo=datetime.timezone.utc
-    ).isoformat(&#39; &#39;)
+def timestamp():  # pragma: no cover
+    &#34;&#34;&#34;return a timestamp.&#34;&#34;&#34;
+    return (
+        datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat(&#34; &#34;)
+    )
 
 
 def ensure_key_bytes(key: Union[bytes, str]):
@@ -61,7 +60,7 @@ def ensure_key_bytes(key: Union[bytes, str]):
     if isinstance(key, str):
         return crypto.b58_to_bytes(key)
 
-    raise TypeError(&#39;key must be bytes or str&#39;)
+    raise TypeError(&#34;key must be bytes or str&#34;)
 
 
 def ensure_key_b58(key: Union[bytes, str]):
@@ -71,27 +70,15 @@ def ensure_key_b58(key: Union[bytes, str]):
     if isinstance(key, str):
         return key
 
-    raise TypeError(&#39;key must be bytes or str&#39;)
+    raise TypeError(&#34;key must be bytes or str&#34;)
 
 
-FORWARD = &#39;https://didcomm.org/routing/1.0/forward&#39;
+FORWARD = &#34;https://didcomm.org/routing/1.0/forward&#34;
 
 
 def forward_msg(to: Union[bytes, str], msg: dict):
     &#34;&#34;&#34;Return a forward message.&#34;&#34;&#34;
-    return Message({
-        &#39;@type&#39;: FORWARD,
-        &#39;to&#39;: ensure_key_b58(to),
-        &#39;msg&#39;: msg
-    })
-
-
-def find_message_in_args(args):
-    &#34;&#34;&#34;Helper for picking out message from handler arguments.&#34;&#34;&#34;
-    for index, arg in enumerate(args):
-        if isinstance(arg, Message):
-            return arg, index
-    return None
+    return Message.parse_obj({&#34;@type&#34;: FORWARD, &#34;to&#34;: ensure_key_b58(to), &#34;msg&#34;: msg})
 
 
 def preprocess(preprocessor: Callable):
@@ -106,18 +93,16 @@ def preprocess(preprocessor: Callable):
     object if modification is intended. Preprocessors should raise an error if
     preprocessing fails.
     &#34;&#34;&#34;
+
     def _preprocess_decorated(func):
         @wraps(func)
         def _wrapped(*args, **kwargs):
-            msg, index = find_message_in_args(args)
-            preprocessed = preprocessor(copy.deepcopy(msg))
+            msg, *args = args
+            msg = preprocessor(msg)
+            return func(msg, *args, **kwargs)
 
-            if preprocessed:
-                args = list(args)
-                args[index] = preprocessed
-
-            return func(*args, **kwargs)
         return _wrapped
+
     return _preprocess_decorated
 
 
@@ -127,18 +112,16 @@ def preprocess_async(preprocessor: Callable):
     This follows has the same semantics as `preprocess`, just with an async
     preprocessor.
     &#34;&#34;&#34;
+
     def _preprocess_decorated(func):
         @wraps(func)
         async def _wrapped(*args, **kwargs):
-            msg, index = find_message_in_args(args)
-            preprocessed = await preprocessor(copy.deepcopy(msg))
+            msg, *args = args
+            msg = await preprocessor(msg)
+            return await func(msg, *args, **kwargs)
 
-            if preprocessed:
-                args = list(args)
-                args[index] = preprocessed
-
-            return await func(*args, **kwargs)
         return _wrapped
+
     return _preprocess_decorated
 
 
@@ -146,25 +129,25 @@ class InsufficientMessageTrust(Exception):
     &#34;&#34;&#34;When a message does not meet the MTC requirements.&#34;&#34;&#34;
 
 
-def mtc(
-        affirmed: MTCContext = NoMTCContext,
-        denied: MTCContext = NoMTCContext
-):
+def mtc(affirmed: MTCContext = NoMTCContext, denied: MTCContext = NoMTCContext):
     &#34;&#34;&#34;
     Validate that the message passed to this handler has the expected trust
     context.
     &#34;&#34;&#34;
+
     def _mtc_preprocessor(msg):
         if msg.mtc.affirmed != affirmed:
             raise InsufficientMessageTrust(
-                f&#39;Actual affirmed {msg.mtc.affirmed} does not match &#39;
-                f&#39;expected affirmed of {affirmed}&#39;
+                f&#34;Actual affirmed {msg.mtc.affirmed} does not match &#34;
+                f&#34;expected affirmed of {affirmed}&#34;
             )
         if msg.mtc.denied != denied:
             raise InsufficientMessageTrust(
-                f&#39;Actual denied {msg.mtc.denied} does not match expected &#39;
-                f&#39;denied of {denied}&#39;
+                f&#34;Actual denied {msg.mtc.denied} does not match expected &#34;
+                f&#34;denied of {denied}&#34;
             )
+        return msg
+
     return preprocess(_mtc_preprocessor)
 
 
@@ -193,6 +176,7 @@ def validate(validator: Callable, *, coerce: Optional[Callable] = None):
     Args:
         coerce (Callable): Optionally coerce the value before validation.
     &#34;&#34;&#34;
+
     def _validate_preprocessor(msg):
         to_be_validated = msg
         if coerce:
@@ -201,9 +185,7 @@ def validate(validator: Callable, *, coerce: Optional[Callable] = None):
         try:
             return validator(to_be_validated)
         except Exception as err:
-            raise MessageValidationError(
-                &#39;Message failed to validate&#39;
-            ) from err
+            raise MessageValidationError(&#34;Message failed to validate&#34;) from err
 
     return preprocess(_validate_preprocessor)
 
@@ -211,19 +193,12 @@ def validate(validator: Callable, *, coerce: Optional[Callable] = None):
 async def http_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
     &#34;&#34;&#34;Send over HTTP.&#34;&#34;&#34;
     async with aiohttp.ClientSession() as session:
-        headers = {&#39;content-type&#39;: &#39;application/ssi-agent-wire&#39;}
-        async with session.post(
-                endpoint,
-                data=msg,
-                headers=headers) as resp:
+        headers = {&#34;content-type&#34;: &#34;application/ssi-agent-wire&#34;}
+        async with session.post(endpoint, data=msg, headers=headers) as resp:
 
             body = await resp.read()
             if resp.status != 200 and resp.status != 202:
-                raise Exception(
-                    &#39;Error while sending message: {}&#39;.format(
-                        resp.status
-                    )
-                )
+                raise Exception(&#34;Error while sending message: {}&#34;.format(resp.status))
             if resp.status == 200 and body:
                 return body
 
@@ -247,8 +222,7 @@ async def ws_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
 
                 if msg.type == aiohttp.WSMsgType.ERROR:
                     raise Exception(
-                        &#39;ws connection closed with exception %s&#39; %
-                        sock.exception()
+                        &#34;ws connection closed with exception %s&#34; % sock.exception()
                     )</code></pre>
 </details>
 </section>
@@ -303,7 +277,7 @@ async def ws_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
     if isinstance(key, str):
         return key
 
-    raise TypeError(&#39;key must be bytes or str&#39;)</code></pre>
+    raise TypeError(&#34;key must be bytes or str&#34;)</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.utils.ensure_key_bytes"><code class="name flex">
@@ -322,24 +296,7 @@ async def ws_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
     if isinstance(key, str):
         return crypto.b58_to_bytes(key)
 
-    raise TypeError(&#39;key must be bytes or str&#39;)</code></pre>
-</details>
-</dd>
-<dt id="aries_staticagent.utils.find_message_in_args"><code class="name flex">
-<span>def <span class="ident">find_message_in_args</span></span>(<span>args)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Helper for picking out message from handler arguments.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def find_message_in_args(args):
-    &#34;&#34;&#34;Helper for picking out message from handler arguments.&#34;&#34;&#34;
-    for index, arg in enumerate(args):
-        if isinstance(arg, Message):
-            return arg, index
-    return None</code></pre>
+    raise TypeError(&#34;key must be bytes or str&#34;)</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.utils.forward_msg"><code class="name flex">
@@ -353,15 +310,11 @@ async def ws_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
 </summary>
 <pre><code class="python">def forward_msg(to: Union[bytes, str], msg: dict):
     &#34;&#34;&#34;Return a forward message.&#34;&#34;&#34;
-    return Message({
-        &#39;@type&#39;: FORWARD,
-        &#39;to&#39;: ensure_key_b58(to),
-        &#39;msg&#39;: msg
-    })</code></pre>
+    return Message.parse_obj({&#34;@type&#34;: FORWARD, &#34;to&#34;: ensure_key_b58(to), &#34;msg&#34;: msg})</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.utils.http_send"><code class="name flex">
-<span>async def <span class="ident">http_send</span></span>(<span>msg: bytes, endpoint: str) ‑> Union[bytes, NoneType]</span>
+<span>async def <span class="ident">http_send</span></span>(<span>msg: bytes, endpoint: str) ‑> Optional[bytes]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send over HTTP.</p></div>
@@ -372,19 +325,12 @@ async def ws_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
 <pre><code class="python">async def http_send(msg: bytes, endpoint: str) -&gt; Optional[bytes]:
     &#34;&#34;&#34;Send over HTTP.&#34;&#34;&#34;
     async with aiohttp.ClientSession() as session:
-        headers = {&#39;content-type&#39;: &#39;application/ssi-agent-wire&#39;}
-        async with session.post(
-                endpoint,
-                data=msg,
-                headers=headers) as resp:
+        headers = {&#34;content-type&#34;: &#34;application/ssi-agent-wire&#34;}
+        async with session.post(endpoint, data=msg, headers=headers) as resp:
 
             body = await resp.read()
             if resp.status != 200 and resp.status != 202:
-                raise Exception(
-                    &#39;Error while sending message: {}&#39;.format(
-                        resp.status
-                    )
-                )
+                raise Exception(&#34;Error while sending message: {}&#34;.format(resp.status))
             if resp.status == 200 and body:
                 return body
 
@@ -401,25 +347,25 @@ context.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def mtc(
-        affirmed: MTCContext = NoMTCContext,
-        denied: MTCContext = NoMTCContext
-):
+<pre><code class="python">def mtc(affirmed: MTCContext = NoMTCContext, denied: MTCContext = NoMTCContext):
     &#34;&#34;&#34;
     Validate that the message passed to this handler has the expected trust
     context.
     &#34;&#34;&#34;
+
     def _mtc_preprocessor(msg):
         if msg.mtc.affirmed != affirmed:
             raise InsufficientMessageTrust(
-                f&#39;Actual affirmed {msg.mtc.affirmed} does not match &#39;
-                f&#39;expected affirmed of {affirmed}&#39;
+                f&#34;Actual affirmed {msg.mtc.affirmed} does not match &#34;
+                f&#34;expected affirmed of {affirmed}&#34;
             )
         if msg.mtc.denied != denied:
             raise InsufficientMessageTrust(
-                f&#39;Actual denied {msg.mtc.denied} does not match expected &#39;
-                f&#39;denied of {denied}&#39;
+                f&#34;Actual denied {msg.mtc.denied} does not match expected &#34;
+                f&#34;denied of {denied}&#34;
             )
+        return msg
+
     return preprocess(_mtc_preprocessor)</code></pre>
 </details>
 </dd>
@@ -451,18 +397,16 @@ preprocessing fails.</p></div>
     object if modification is intended. Preprocessors should raise an error if
     preprocessing fails.
     &#34;&#34;&#34;
+
     def _preprocess_decorated(func):
         @wraps(func)
         def _wrapped(*args, **kwargs):
-            msg, index = find_message_in_args(args)
-            preprocessed = preprocessor(copy.deepcopy(msg))
+            msg, *args = args
+            msg = preprocessor(msg)
+            return func(msg, *args, **kwargs)
 
-            if preprocessed:
-                args = list(args)
-                args[index] = preprocessed
-
-            return func(*args, **kwargs)
         return _wrapped
+
     return _preprocess_decorated</code></pre>
 </details>
 </dd>
@@ -483,18 +427,16 @@ preprocessor.</p></div>
     This follows has the same semantics as `preprocess`, just with an async
     preprocessor.
     &#34;&#34;&#34;
+
     def _preprocess_decorated(func):
         @wraps(func)
         async def _wrapped(*args, **kwargs):
-            msg, index = find_message_in_args(args)
-            preprocessed = await preprocessor(copy.deepcopy(msg))
+            msg, *args = args
+            msg = await preprocessor(msg)
+            return await func(msg, *args, **kwargs)
 
-            if preprocessed:
-                args = list(args)
-                args[index] = preprocessed
-
-            return await func(*args, **kwargs)
         return _wrapped
+
     return _preprocess_decorated</code></pre>
 </details>
 </dd>
@@ -507,15 +449,15 @@ preprocessor.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def timestamp():
-    &#34;&#34;&#34; return a timestamp. &#34;&#34;&#34;
-    return datetime.datetime.utcnow().replace(
-        tzinfo=datetime.timezone.utc
-    ).isoformat(&#39; &#39;)</code></pre>
+<pre><code class="python">def timestamp():  # pragma: no cover
+    &#34;&#34;&#34;return a timestamp.&#34;&#34;&#34;
+    return (
+        datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat(&#34; &#34;)
+    )</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.utils.validate"><code class="name flex">
-<span>def <span class="ident">validate</span></span>(<span>validator: Callable, *, coerce: Union[Callable, NoneType] = None)</span>
+<span>def <span class="ident">validate</span></span>(<span>validator: Callable, *, coerce: Optional[Callable] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Validate the message passed to this handler using validator.</p>
@@ -543,6 +485,7 @@ validation fails.</p>
     Args:
         coerce (Callable): Optionally coerce the value before validation.
     &#34;&#34;&#34;
+
     def _validate_preprocessor(msg):
         to_be_validated = msg
         if coerce:
@@ -551,15 +494,13 @@ validation fails.</p>
         try:
             return validator(to_be_validated)
         except Exception as err:
-            raise MessageValidationError(
-                &#39;Message failed to validate&#39;
-            ) from err
+            raise MessageValidationError(&#34;Message failed to validate&#34;) from err
 
     return preprocess(_validate_preprocessor)</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.utils.ws_send"><code class="name flex">
-<span>async def <span class="ident">ws_send</span></span>(<span>msg: bytes, endpoint: str) ‑> Union[bytes, NoneType]</span>
+<span>async def <span class="ident">ws_send</span></span>(<span>msg: bytes, endpoint: str) ‑> Optional[bytes]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send over WS.</p>
@@ -586,8 +527,7 @@ websocket after receiving only a single msg.</p></div>
 
                 if msg.type == aiohttp.WSMsgType.ERROR:
                     raise Exception(
-                        &#39;ws connection closed with exception %s&#39; %
-                        sock.exception()
+                        &#34;ws connection closed with exception %s&#34; % sock.exception()
                     )</code></pre>
 </details>
 </dd>
@@ -649,12 +589,11 @@ websocket after receiving only a single msg.</p></div>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="aries_staticagent.utils.anoncrypted" href="#aries_staticagent.utils.anoncrypted">anoncrypted</a></code></li>
 <li><code><a title="aries_staticagent.utils.authcrypted" href="#aries_staticagent.utils.authcrypted">authcrypted</a></code></li>
 <li><code><a title="aries_staticagent.utils.ensure_key_b58" href="#aries_staticagent.utils.ensure_key_b58">ensure_key_b58</a></code></li>
 <li><code><a title="aries_staticagent.utils.ensure_key_bytes" href="#aries_staticagent.utils.ensure_key_bytes">ensure_key_bytes</a></code></li>
-<li><code><a title="aries_staticagent.utils.find_message_in_args" href="#aries_staticagent.utils.find_message_in_args">find_message_in_args</a></code></li>
 <li><code><a title="aries_staticagent.utils.forward_msg" href="#aries_staticagent.utils.forward_msg">forward_msg</a></code></li>
 <li><code><a title="aries_staticagent.utils.http_send" href="#aries_staticagent.utils.http_send">http_send</a></code></li>
 <li><code><a title="aries_staticagent.utils.mtc" href="#aries_staticagent.utils.mtc">mtc</a></code></li>
@@ -679,7 +618,7 @@ websocket after receiving only a single msg.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

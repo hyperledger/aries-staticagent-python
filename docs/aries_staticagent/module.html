@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>aries_staticagent.module API documentation</title>
 <meta name="description" content="Module base class" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -29,163 +29,173 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34; Module base class &#34;&#34;&#34;
 
-from typing import Union, Callable
-from .type import Type
+from abc import ABC, abstractclassmethod
+from functools import partial
+from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Union
+
+from .message import MsgType
 
 
-class InvalidModule(Exception):
-    &#34;&#34;&#34; Thrown when module is malformed. &#34;&#34;&#34;
-
-
-class MetaModule(type):
-    &#34;&#34;&#34; MetaModule:
-        Ensures Module classes are well formed and provides convenience methods
+class PartialType(NamedTuple):
+    &#34;&#34;&#34;Class containing the type information of a route before having the
+    context of the module as is the case when statically defining routes in
+    a module definition.
     &#34;&#34;&#34;
-    def __new__(cls, name, bases, dct):
-        if &#39;DOC_URI&#39; not in dct:
-            raise InvalidModule(&#39;DOC_URI missing from module definition&#39;)
-        if &#39;PROTOCOL&#39; not in dct:
-            raise InvalidModule(&#34;PROTOCOL missing from module definition&#34;)
-        if &#39;VERSION&#39; not in dct:
-            raise InvalidModule(&#39;VERSION missing from module definition&#39;)
 
-        return type.__new__(cls, name, bases, dct)
+    name: Optional[str] = None
+    doc_uri: Optional[str] = None
+    protocol: Optional[str] = None
+    version: Optional[str] = None
+
+    def complete(
+        self,
+        doc_uri: str = None,
+        protocol: str = None,
+        version: str = None,
+        name: str = None,
+    ) -&gt; MsgType:
+        &#34;&#34;&#34;Return a complete type given the module context.&#34;&#34;&#34;
+        doc_uri = self.doc_uri or doc_uri or &#34;&#34;
+        protocol = self.protocol or protocol or &#34;&#34;
+        version = self.version or version or &#34;&#34;
+        name = self.name or name or &#34;&#34;
+        return MsgType.unparse(doc_uri, protocol, version, name)
 
 
-class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
-    &#34;&#34;&#34; Base Module class &#34;&#34;&#34;
-    DOC_URI = None
-    PROTOCOL = None
-    VERSION = None
+class ModuleRouter(Mapping[Union[PartialType, MsgType], Callable]):
+    &#34;&#34;&#34;Collect module routes.&#34;&#34;&#34;
+
+    def __init__(self):
+        self._routes: Dict[Union[MsgType, PartialType], Callable] = {}
+
+    def __getitem__(self, item: MsgType) -&gt; Callable:
+        return self._routes[item]
+
+    def __iter__(self) -&gt; Iterable:
+        return iter(self._routes)
+
+    def __len__(self):
+        return len(self._routes)
+
+    def __call__(self, *args, **kwargs):
+        &#34;&#34;&#34;Route definition decorator.
+
+        if just @route is used, type_or_func is the decorated function
+        if @route(type) is used, type_or_func is the type string.
+        &#34;&#34;&#34;
+        if args:
+            type_or_func: Union[Callable, str, MsgType] = args[0]
+            if callable(type_or_func):
+                func = type_or_func
+                self._routes[PartialType(name=func.__name__)] = func
+                return func
+
+            if isinstance(type_or_func, MsgType):
+                msg_type = type_or_func
+
+                def _route_from_type(func):
+                    self._routes[msg_type] = func
+                    return func
+
+                return _route_from_type
+
+            if isinstance(type_or_func, str):
+                msg_type_str = type_or_func
+
+                def _route_from_str(func):
+                    self._routes[MsgType(msg_type_str)] = func
+                    return func
+
+                return _route_from_str
+
+        if kwargs:
+
+            def _route_from_kwargs(func):
+                self._routes[PartialType(**kwargs)] = func
+                return func
+
+            return _route_from_kwargs
+
+        raise ValueError(
+            &#34;Expecting @route before a function or @route(msg_type) &#34;
+            &#34;before a function!&#34;
+        )
+
+    def complete(
+        self,
+        doc_uri: str = None,
+        protocol: str = None,
+        version: str = None,
+        name: str = None,
+        context: object = None,
+    ) -&gt; Dict[MsgType, Callable]:
+        routes = {}
+        for msg_type, handler in self._routes.items():
+            if isinstance(msg_type, PartialType):
+                route_type = msg_type.complete(doc_uri, protocol, version, name)
+            elif isinstance(msg_type, MsgType):
+                route_type = msg_type
+            else:
+                raise TypeError(
+                    f&#34;Route of invaild type {type(msg_type).__name__} registered&#34;
+                )
+            routes[route_type] = partial(handler, context) if context else handler
+        return routes
+
+
+class Module(ABC):  # pylint: disable=too-few-public-methods
+    &#34;&#34;&#34;Base Module class&#34;&#34;&#34;
 
     def __init__(self):
         self._routes = None
 
-    def type(
-            self,
-            name: str,
-            doc_uri: str = None,
-            protocol: str = None,
-            version: str = None
-                ):
-        &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
-        doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
-        protocol = protocol if protocol is not None else self.PROTOCOL
-        version = version if version is not None else self.VERSION
-        if doc_uri is None:
-            raise TypeError(&#39;doc_uri must be str&#39;)
-        if protocol is None:
-            raise TypeError(&#39;protocol must be str&#39;)
-        if version is None:
-            raise TypeError(&#39;version must be str&#39;)
-        return Type(doc_uri, protocol, version, name)
-
-    def _find_routes(self):
-        found = {}
-        for key in dir(self):
-            if key == &#39;routes&#39; or key.startswith(&#39;__&#39;):
-                continue
-            val = getattr(self, key)
-            if hasattr(val, &#39;handler_for&#39;):
-                msg_type = val.handler_for
-                if isinstance(msg_type, PartialType):
-                    msg_type = msg_type.complete(self)
-
-                found[msg_type] = val
-
-        return found
+    @property
+    @classmethod
+    @abstractclassmethod
+    def doc_uri(cls) -&gt; str:
+        &#34;&#34;&#34;Return doc_uri of module.&#34;&#34;&#34;
 
     @property
-    def routes(self):
-        &#34;&#34;&#34; Get the routes statically defined for this module and
-            save in instance.
+    @classmethod
+    @abstractclassmethod
+    def protocol(cls) -&gt; str:
+        &#34;&#34;&#34;Return protocol of module.&#34;&#34;&#34;
+
+    @property
+    @classmethod
+    @abstractclassmethod
+    def version(cls) -&gt; str:
+        &#34;&#34;&#34;Return protocol of module.&#34;&#34;&#34;
+
+    @property
+    @classmethod
+    @abstractclassmethod
+    def route(cls) -&gt; ModuleRouter:
+        &#34;&#34;&#34;Return router for module.&#34;&#34;&#34;
+
+    def type(
+        self, name: str, doc_uri: str = None, protocol: str = None, version: str = None
+    ):
+        &#34;&#34;&#34;Build a type string for this module.&#34;&#34;&#34;
+        # doc_url can be falsey, need explicit none check
+        doc_uri = doc_uri if doc_uri is not None else self.doc_uri
+        protocol = protocol or self.protocol
+        version = version or self.version
+        return MsgType.unparse(doc_uri, protocol, version, name)
+
+    def _finish_routes(self) -&gt; Mapping[MsgType, Callable]:
+        return self.route.complete(
+            self.doc_uri, self.protocol, self.version, context=self
+        )
+
+    @property
+    def routes(self) -&gt; Mapping[MsgType, Callable]:
+        &#34;&#34;&#34;Get the routes statically defined for this module and
+        save in instance.
         &#34;&#34;&#34;
         if self._routes is None:
-            self._routes = self._find_routes()
-        return self._routes
-
-
-class PartialType():
-    &#34;&#34;&#34; Class containing the type information of a route before having the
-        context of the module as is the case when statically defining routes in
-        a module definition.
-    &#34;&#34;&#34;
-    __slots__ = (
-        &#39;doc_uri&#39;,
-        &#39;protocol&#39;,
-        &#39;version&#39;,
-        &#39;name&#39;
-    )
-
-    def __init__(
-            self,
-            name: str,
-            doc_uri: str = None,
-            protocol: str = None,
-            version: str = None
-                ):
-        self.name = name
-        self.version = version
-        self.protocol = protocol
-        self.doc_uri = doc_uri
-
-    def complete(self, mod: Module) -&gt; Type:
-        &#34;&#34;&#34; Return a complete type given the module context. &#34;&#34;&#34;
-        doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
-        protocol = self.protocol if self.protocol else type(mod).PROTOCOL
-        version = self.version if self.version else type(mod).VERSION
-        if doc_uri is None:
-            raise TypeError(&#39;doc_uri must be str&#39;)
-        if protocol is None:
-            raise TypeError(&#39;protocol must be str&#39;)
-        if version is None:
-            raise TypeError(&#39;version must be str&#39;)
-        return Type(doc_uri, protocol, version, self.name)
-
-
-def route(*args, **kwargs):
-    &#34;&#34;&#34; Route definition decorator
-        if just @route is used, type_or_func is the decorated function
-        if @route(type) is used, type_or_func is the type string.
-    &#34;&#34;&#34;
-    if args:
-        type_or_func: Union[Callable, str, Type] = args[0]
-        if callable(type_or_func):
-            func = type_or_func
-            func.handler_for = PartialType(func.__name__)
-            return func
-
-        if isinstance(type_or_func, str):
-            msg_type = type_or_func
-
-            def _route(func):
-                func.handler_for = Type.from_str(msg_type)
-                return func
-
-            return _route
-
-        if isinstance(type_or_func, Type):
-            msg_type = type_or_func
-
-            def _route(func):
-                func.handler_for = msg_type
-                return func
-
-            return _route
-
-    if kwargs:
-        def _route(func):
-            name = kwargs.get(&#39;name&#39;, func.__name__)
-            del kwargs[&#39;name&#39;]
-            func.handler_for = PartialType(name, **kwargs)
-            return func
-
-        return _route
-
-    raise ValueError(
-        &#39;Expecting @route before a function or @route(msg_type) &#39;
-        &#39;before a function!&#39;
-    )</code></pre>
+            self._routes = self._finish_routes()
+        return self._routes</code></pre>
 </details>
 </section>
 <section>
@@ -193,118 +203,10 @@ def route(*args, **kwargs):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="aries_staticagent.module.route"><code class="name flex">
-<span>def <span class="ident">route</span></span>(<span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Route definition decorator
-if just @route is used, type_or_func is the decorated function
-if @route(type) is used, type_or_func is the type string.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def route(*args, **kwargs):
-    &#34;&#34;&#34; Route definition decorator
-        if just @route is used, type_or_func is the decorated function
-        if @route(type) is used, type_or_func is the type string.
-    &#34;&#34;&#34;
-    if args:
-        type_or_func: Union[Callable, str, Type] = args[0]
-        if callable(type_or_func):
-            func = type_or_func
-            func.handler_for = PartialType(func.__name__)
-            return func
-
-        if isinstance(type_or_func, str):
-            msg_type = type_or_func
-
-            def _route(func):
-                func.handler_for = Type.from_str(msg_type)
-                return func
-
-            return _route
-
-        if isinstance(type_or_func, Type):
-            msg_type = type_or_func
-
-            def _route(func):
-                func.handler_for = msg_type
-                return func
-
-            return _route
-
-    if kwargs:
-        def _route(func):
-            name = kwargs.get(&#39;name&#39;, func.__name__)
-            del kwargs[&#39;name&#39;]
-            func.handler_for = PartialType(name, **kwargs)
-            return func
-
-        return _route
-
-    raise ValueError(
-        &#39;Expecting @route before a function or @route(msg_type) &#39;
-        &#39;before a function!&#39;
-    )</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="aries_staticagent.module.InvalidModule"><code class="flex name class">
-<span>class <span class="ident">InvalidModule</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Thrown when module is malformed.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class InvalidModule(Exception):
-    &#34;&#34;&#34; Thrown when module is malformed. &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
-</ul>
-</dd>
-<dt id="aries_staticagent.module.MetaModule"><code class="flex name class">
-<span>class <span class="ident">MetaModule</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>MetaModule:
-Ensures Module classes are well formed and provides convenience methods</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class MetaModule(type):
-    &#34;&#34;&#34; MetaModule:
-        Ensures Module classes are well formed and provides convenience methods
-    &#34;&#34;&#34;
-    def __new__(cls, name, bases, dct):
-        if &#39;DOC_URI&#39; not in dct:
-            raise InvalidModule(&#39;DOC_URI missing from module definition&#39;)
-        if &#39;PROTOCOL&#39; not in dct:
-            raise InvalidModule(&#34;PROTOCOL missing from module definition&#34;)
-        if &#39;VERSION&#39; not in dct:
-            raise InvalidModule(&#39;VERSION missing from module definition&#39;)
-
-        return type.__new__(cls, name, bases, dct)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.type</li>
-</ul>
-</dd>
 <dt id="aries_staticagent.module.Module"><code class="flex name class">
 <span>class <span class="ident">Module</span></span>
 </code></dt>
@@ -314,76 +216,124 @@ Ensures Module classes are well formed and provides convenience methods</p></div
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Module(metaclass=MetaModule):  # pylint: disable=too-few-public-methods
-    &#34;&#34;&#34; Base Module class &#34;&#34;&#34;
-    DOC_URI = None
-    PROTOCOL = None
-    VERSION = None
+<pre><code class="python">class Module(ABC):  # pylint: disable=too-few-public-methods
+    &#34;&#34;&#34;Base Module class&#34;&#34;&#34;
 
     def __init__(self):
         self._routes = None
 
-    def type(
-            self,
-            name: str,
-            doc_uri: str = None,
-            protocol: str = None,
-            version: str = None
-                ):
-        &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
-        doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
-        protocol = protocol if protocol is not None else self.PROTOCOL
-        version = version if version is not None else self.VERSION
-        if doc_uri is None:
-            raise TypeError(&#39;doc_uri must be str&#39;)
-        if protocol is None:
-            raise TypeError(&#39;protocol must be str&#39;)
-        if version is None:
-            raise TypeError(&#39;version must be str&#39;)
-        return Type(doc_uri, protocol, version, name)
-
-    def _find_routes(self):
-        found = {}
-        for key in dir(self):
-            if key == &#39;routes&#39; or key.startswith(&#39;__&#39;):
-                continue
-            val = getattr(self, key)
-            if hasattr(val, &#39;handler_for&#39;):
-                msg_type = val.handler_for
-                if isinstance(msg_type, PartialType):
-                    msg_type = msg_type.complete(self)
-
-                found[msg_type] = val
-
-        return found
+    @property
+    @classmethod
+    @abstractclassmethod
+    def doc_uri(cls) -&gt; str:
+        &#34;&#34;&#34;Return doc_uri of module.&#34;&#34;&#34;
 
     @property
-    def routes(self):
-        &#34;&#34;&#34; Get the routes statically defined for this module and
-            save in instance.
+    @classmethod
+    @abstractclassmethod
+    def protocol(cls) -&gt; str:
+        &#34;&#34;&#34;Return protocol of module.&#34;&#34;&#34;
+
+    @property
+    @classmethod
+    @abstractclassmethod
+    def version(cls) -&gt; str:
+        &#34;&#34;&#34;Return protocol of module.&#34;&#34;&#34;
+
+    @property
+    @classmethod
+    @abstractclassmethod
+    def route(cls) -&gt; ModuleRouter:
+        &#34;&#34;&#34;Return router for module.&#34;&#34;&#34;
+
+    def type(
+        self, name: str, doc_uri: str = None, protocol: str = None, version: str = None
+    ):
+        &#34;&#34;&#34;Build a type string for this module.&#34;&#34;&#34;
+        # doc_url can be falsey, need explicit none check
+        doc_uri = doc_uri if doc_uri is not None else self.doc_uri
+        protocol = protocol or self.protocol
+        version = version or self.version
+        return MsgType.unparse(doc_uri, protocol, version, name)
+
+    def _finish_routes(self) -&gt; Mapping[MsgType, Callable]:
+        return self.route.complete(
+            self.doc_uri, self.protocol, self.version, context=self
+        )
+
+    @property
+    def routes(self) -&gt; Mapping[MsgType, Callable]:
+        &#34;&#34;&#34;Get the routes statically defined for this module and
+        save in instance.
         &#34;&#34;&#34;
         if self._routes is None:
-            self._routes = self._find_routes()
+            self._routes = self._finish_routes()
         return self._routes</code></pre>
 </details>
-<h3>Class variables</h3>
-<dl>
-<dt id="aries_staticagent.module.Module.DOC_URI"><code class="name">var <span class="ident">DOC_URI</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="aries_staticagent.module.Module.PROTOCOL"><code class="name">var <span class="ident">PROTOCOL</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="aries_staticagent.module.Module.VERSION"><code class="name">var <span class="ident">VERSION</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="aries_staticagent.module.Module.routes"><code class="name">var <span class="ident">routes</span></code></dt>
+<dt id="aries_staticagent.module.Module.doc_uri"><code class="name">var <span class="ident">doc_uri</span></code></dt>
+<dd>
+<div class="desc"><p>classmethod(function) -&gt; method</p>
+<p>Convert a function to be a class method.</p>
+<p>A class method receives the class as implicit first argument,
+just like an instance method receives the instance.
+To declare a class method, use this idiom:</p>
+<p>class C:
+@classmethod
+def f(cls, arg1, arg2, &hellip;):
+&hellip;</p>
+<p>It can be called either on the class (e.g. C.f()) or on an instance
+(e.g. C().f()).
+The instance is ignored except for its class.
+If a class method is called for a derived class, the derived class
+object is passed as the implied first argument.</p>
+<p>Class methods are different than C++ or Java static methods.
+If you want those, see the staticmethod builtin.</p></div>
+</dd>
+<dt id="aries_staticagent.module.Module.protocol"><code class="name">var <span class="ident">protocol</span></code></dt>
+<dd>
+<div class="desc"><p>classmethod(function) -&gt; method</p>
+<p>Convert a function to be a class method.</p>
+<p>A class method receives the class as implicit first argument,
+just like an instance method receives the instance.
+To declare a class method, use this idiom:</p>
+<p>class C:
+@classmethod
+def f(cls, arg1, arg2, &hellip;):
+&hellip;</p>
+<p>It can be called either on the class (e.g. C.f()) or on an instance
+(e.g. C().f()).
+The instance is ignored except for its class.
+If a class method is called for a derived class, the derived class
+object is passed as the implied first argument.</p>
+<p>Class methods are different than C++ or Java static methods.
+If you want those, see the staticmethod builtin.</p></div>
+</dd>
+<dt id="aries_staticagent.module.Module.route"><code class="name">var <span class="ident">route</span></code></dt>
+<dd>
+<div class="desc"><p>classmethod(function) -&gt; method</p>
+<p>Convert a function to be a class method.</p>
+<p>A class method receives the class as implicit first argument,
+just like an instance method receives the instance.
+To declare a class method, use this idiom:</p>
+<p>class C:
+@classmethod
+def f(cls, arg1, arg2, &hellip;):
+&hellip;</p>
+<p>It can be called either on the class (e.g. C.f()) or on an instance
+(e.g. C().f()).
+The instance is ignored except for its class.
+If a class method is called for a derived class, the derived class
+object is passed as the implied first argument.</p>
+<p>Class methods are different than C++ or Java static methods.
+If you want those, see the staticmethod builtin.</p></div>
+</dd>
+<dt id="aries_staticagent.module.Module.routes"><code class="name">var <span class="ident">routes</span> : Mapping[<a title="aries_staticagent.message.MsgType" href="message.html#aries_staticagent.message.MsgType">MsgType</a>, Callable]</code></dt>
 <dd>
 <div class="desc"><p>Get the routes statically defined for this module and
 save in instance.</p></div>
@@ -392,14 +342,33 @@ save in instance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def routes(self):
-    &#34;&#34;&#34; Get the routes statically defined for this module and
-        save in instance.
+def routes(self) -&gt; Mapping[MsgType, Callable]:
+    &#34;&#34;&#34;Get the routes statically defined for this module and
+    save in instance.
     &#34;&#34;&#34;
     if self._routes is None:
-        self._routes = self._find_routes()
+        self._routes = self._finish_routes()
     return self._routes</code></pre>
 </details>
+</dd>
+<dt id="aries_staticagent.module.Module.version"><code class="name">var <span class="ident">version</span></code></dt>
+<dd>
+<div class="desc"><p>classmethod(function) -&gt; method</p>
+<p>Convert a function to be a class method.</p>
+<p>A class method receives the class as implicit first argument,
+just like an instance method receives the instance.
+To declare a class method, use this idiom:</p>
+<p>class C:
+@classmethod
+def f(cls, arg1, arg2, &hellip;):
+&hellip;</p>
+<p>It can be called either on the class (e.g. C.f()) or on an instance
+(e.g. C().f()).
+The instance is ignored except for its class.
+If a class method is called for a derived class, the derived class
+object is passed as the implied first argument.</p>
+<p>Class methods are different than C++ or Java static methods.
+If you want those, see the staticmethod builtin.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -414,30 +383,154 @@ def routes(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def type(
+    self, name: str, doc_uri: str = None, protocol: str = None, version: str = None
+):
+    &#34;&#34;&#34;Build a type string for this module.&#34;&#34;&#34;
+    # doc_url can be falsey, need explicit none check
+    doc_uri = doc_uri if doc_uri is not None else self.doc_uri
+    protocol = protocol or self.protocol
+    version = version or self.version
+    return MsgType.unparse(doc_uri, protocol, version, name)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.module.ModuleRouter"><code class="flex name class">
+<span>class <span class="ident">ModuleRouter</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Collect module routes.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ModuleRouter(Mapping[Union[PartialType, MsgType], Callable]):
+    &#34;&#34;&#34;Collect module routes.&#34;&#34;&#34;
+
+    def __init__(self):
+        self._routes: Dict[Union[MsgType, PartialType], Callable] = {}
+
+    def __getitem__(self, item: MsgType) -&gt; Callable:
+        return self._routes[item]
+
+    def __iter__(self) -&gt; Iterable:
+        return iter(self._routes)
+
+    def __len__(self):
+        return len(self._routes)
+
+    def __call__(self, *args, **kwargs):
+        &#34;&#34;&#34;Route definition decorator.
+
+        if just @route is used, type_or_func is the decorated function
+        if @route(type) is used, type_or_func is the type string.
+        &#34;&#34;&#34;
+        if args:
+            type_or_func: Union[Callable, str, MsgType] = args[0]
+            if callable(type_or_func):
+                func = type_or_func
+                self._routes[PartialType(name=func.__name__)] = func
+                return func
+
+            if isinstance(type_or_func, MsgType):
+                msg_type = type_or_func
+
+                def _route_from_type(func):
+                    self._routes[msg_type] = func
+                    return func
+
+                return _route_from_type
+
+            if isinstance(type_or_func, str):
+                msg_type_str = type_or_func
+
+                def _route_from_str(func):
+                    self._routes[MsgType(msg_type_str)] = func
+                    return func
+
+                return _route_from_str
+
+        if kwargs:
+
+            def _route_from_kwargs(func):
+                self._routes[PartialType(**kwargs)] = func
+                return func
+
+            return _route_from_kwargs
+
+        raise ValueError(
+            &#34;Expecting @route before a function or @route(msg_type) &#34;
+            &#34;before a function!&#34;
+        )
+
+    def complete(
         self,
-        name: str,
         doc_uri: str = None,
         protocol: str = None,
-        version: str = None
-            ):
-    &#34;&#34;&#34; Build a type string for this module. &#34;&#34;&#34;
-    doc_uri = doc_uri if doc_uri is not None else self.DOC_URI
-    protocol = protocol if protocol is not None else self.PROTOCOL
-    version = version if version is not None else self.VERSION
-    if doc_uri is None:
-        raise TypeError(&#39;doc_uri must be str&#39;)
-    if protocol is None:
-        raise TypeError(&#39;protocol must be str&#39;)
-    if version is None:
-        raise TypeError(&#39;version must be str&#39;)
-    return Type(doc_uri, protocol, version, name)</code></pre>
+        version: str = None,
+        name: str = None,
+        context: object = None,
+    ) -&gt; Dict[MsgType, Callable]:
+        routes = {}
+        for msg_type, handler in self._routes.items():
+            if isinstance(msg_type, PartialType):
+                route_type = msg_type.complete(doc_uri, protocol, version, name)
+            elif isinstance(msg_type, MsgType):
+                route_type = msg_type
+            else:
+                raise TypeError(
+                    f&#34;Route of invaild type {type(msg_type).__name__} registered&#34;
+                )
+            routes[route_type] = partial(handler, context) if context else handler
+        return routes</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>collections.abc.Mapping</li>
+<li>collections.abc.Collection</li>
+<li>collections.abc.Sized</li>
+<li>collections.abc.Iterable</li>
+<li>collections.abc.Container</li>
+<li>typing.Generic</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="aries_staticagent.module.ModuleRouter.complete"><code class="name flex">
+<span>def <span class="ident">complete</span></span>(<span>self, doc_uri: str = None, protocol: str = None, version: str = None, name: str = None, context: object = None) ‑> Dict[<a title="aries_staticagent.message.MsgType" href="message.html#aries_staticagent.message.MsgType">MsgType</a>, Callable]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def complete(
+    self,
+    doc_uri: str = None,
+    protocol: str = None,
+    version: str = None,
+    name: str = None,
+    context: object = None,
+) -&gt; Dict[MsgType, Callable]:
+    routes = {}
+    for msg_type, handler in self._routes.items():
+        if isinstance(msg_type, PartialType):
+            route_type = msg_type.complete(doc_uri, protocol, version, name)
+        elif isinstance(msg_type, MsgType):
+            route_type = msg_type
+        else:
+            raise TypeError(
+                f&#34;Route of invaild type {type(msg_type).__name__} registered&#34;
+            )
+        routes[route_type] = partial(handler, context) if context else handler
+    return routes</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="aries_staticagent.module.PartialType"><code class="flex name class">
 <span>class <span class="ident">PartialType</span></span>
-<span>(</span><span>name: str, doc_uri: str = None, protocol: str = None, version: str = None)</span>
+<span>(</span><span>name: Optional[str] = None, doc_uri: Optional[str] = None, protocol: Optional[str] = None, version: Optional[str] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class containing the type information of a route before having the
@@ -447,66 +540,58 @@ a module definition.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class PartialType():
-    &#34;&#34;&#34; Class containing the type information of a route before having the
-        context of the module as is the case when statically defining routes in
-        a module definition.
+<pre><code class="python">class PartialType(NamedTuple):
+    &#34;&#34;&#34;Class containing the type information of a route before having the
+    context of the module as is the case when statically defining routes in
+    a module definition.
     &#34;&#34;&#34;
-    __slots__ = (
-        &#39;doc_uri&#39;,
-        &#39;protocol&#39;,
-        &#39;version&#39;,
-        &#39;name&#39;
-    )
 
-    def __init__(
-            self,
-            name: str,
-            doc_uri: str = None,
-            protocol: str = None,
-            version: str = None
-                ):
-        self.name = name
-        self.version = version
-        self.protocol = protocol
-        self.doc_uri = doc_uri
+    name: Optional[str] = None
+    doc_uri: Optional[str] = None
+    protocol: Optional[str] = None
+    version: Optional[str] = None
 
-    def complete(self, mod: Module) -&gt; Type:
-        &#34;&#34;&#34; Return a complete type given the module context. &#34;&#34;&#34;
-        doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
-        protocol = self.protocol if self.protocol else type(mod).PROTOCOL
-        version = self.version if self.version else type(mod).VERSION
-        if doc_uri is None:
-            raise TypeError(&#39;doc_uri must be str&#39;)
-        if protocol is None:
-            raise TypeError(&#39;protocol must be str&#39;)
-        if version is None:
-            raise TypeError(&#39;version must be str&#39;)
-        return Type(doc_uri, protocol, version, self.name)</code></pre>
+    def complete(
+        self,
+        doc_uri: str = None,
+        protocol: str = None,
+        version: str = None,
+        name: str = None,
+    ) -&gt; MsgType:
+        &#34;&#34;&#34;Return a complete type given the module context.&#34;&#34;&#34;
+        doc_uri = self.doc_uri or doc_uri or &#34;&#34;
+        protocol = self.protocol or protocol or &#34;&#34;
+        version = self.version or version or &#34;&#34;
+        name = self.name or name or &#34;&#34;
+        return MsgType.unparse(doc_uri, protocol, version, name)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.tuple</li>
+</ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="aries_staticagent.module.PartialType.doc_uri"><code class="name">var <span class="ident">doc_uri</span></code></dt>
+<dt id="aries_staticagent.module.PartialType.doc_uri"><code class="name">var <span class="ident">doc_uri</span> : Optional[str]</code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"><p>Alias for field number 1</p></div>
 </dd>
-<dt id="aries_staticagent.module.PartialType.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dt id="aries_staticagent.module.PartialType.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"><p>Alias for field number 0</p></div>
 </dd>
-<dt id="aries_staticagent.module.PartialType.protocol"><code class="name">var <span class="ident">protocol</span></code></dt>
+<dt id="aries_staticagent.module.PartialType.protocol"><code class="name">var <span class="ident">protocol</span> : Optional[str]</code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"><p>Alias for field number 2</p></div>
 </dd>
-<dt id="aries_staticagent.module.PartialType.version"><code class="name">var <span class="ident">version</span></code></dt>
+<dt id="aries_staticagent.module.PartialType.version"><code class="name">var <span class="ident">version</span> : Optional[str]</code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+<div class="desc"><p>Alias for field number 3</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
 <dt id="aries_staticagent.module.PartialType.complete"><code class="name flex">
-<span>def <span class="ident">complete</span></span>(<span>self, mod: <a title="aries_staticagent.module.Module" href="#aries_staticagent.module.Module">Module</a>) ‑> <a title="aries_staticagent.type.Type" href="type.html#aries_staticagent.type.Type">Type</a></span>
+<span>def <span class="ident">complete</span></span>(<span>self, doc_uri: str = None, protocol: str = None, version: str = None, name: str = None) ‑> <a title="aries_staticagent.message.MsgType" href="message.html#aries_staticagent.message.MsgType">MsgType</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return a complete type given the module context.</p></div>
@@ -514,18 +599,19 @@ a module definition.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def complete(self, mod: Module) -&gt; Type:
-    &#34;&#34;&#34; Return a complete type given the module context. &#34;&#34;&#34;
-    doc_uri = self.doc_uri if self.doc_uri else type(mod).DOC_URI
-    protocol = self.protocol if self.protocol else type(mod).PROTOCOL
-    version = self.version if self.version else type(mod).VERSION
-    if doc_uri is None:
-        raise TypeError(&#39;doc_uri must be str&#39;)
-    if protocol is None:
-        raise TypeError(&#39;protocol must be str&#39;)
-    if version is None:
-        raise TypeError(&#39;version must be str&#39;)
-    return Type(doc_uri, protocol, version, self.name)</code></pre>
+<pre><code class="python">def complete(
+    self,
+    doc_uri: str = None,
+    protocol: str = None,
+    version: str = None,
+    name: str = None,
+) -&gt; MsgType:
+    &#34;&#34;&#34;Return a complete type given the module context.&#34;&#34;&#34;
+    doc_uri = self.doc_uri or doc_uri or &#34;&#34;
+    protocol = self.protocol or protocol or &#34;&#34;
+    version = self.version or version or &#34;&#34;
+    name = self.name or name or &#34;&#34;
+    return MsgType.unparse(doc_uri, protocol, version, name)</code></pre>
 </details>
 </dd>
 </dl>
@@ -544,27 +630,23 @@ a module definition.</p></div>
 <li><code><a title="aries_staticagent" href="index.html">aries_staticagent</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="aries_staticagent.module.route" href="#aries_staticagent.module.route">route</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="aries_staticagent.module.InvalidModule" href="#aries_staticagent.module.InvalidModule">InvalidModule</a></code></h4>
-</li>
-<li>
-<h4><code><a title="aries_staticagent.module.MetaModule" href="#aries_staticagent.module.MetaModule">MetaModule</a></code></h4>
-</li>
-<li>
 <h4><code><a title="aries_staticagent.module.Module" href="#aries_staticagent.module.Module">Module</a></code></h4>
-<ul class="">
-<li><code><a title="aries_staticagent.module.Module.DOC_URI" href="#aries_staticagent.module.Module.DOC_URI">DOC_URI</a></code></li>
-<li><code><a title="aries_staticagent.module.Module.PROTOCOL" href="#aries_staticagent.module.Module.PROTOCOL">PROTOCOL</a></code></li>
-<li><code><a title="aries_staticagent.module.Module.VERSION" href="#aries_staticagent.module.Module.VERSION">VERSION</a></code></li>
+<ul class="two-column">
+<li><code><a title="aries_staticagent.module.Module.doc_uri" href="#aries_staticagent.module.Module.doc_uri">doc_uri</a></code></li>
+<li><code><a title="aries_staticagent.module.Module.protocol" href="#aries_staticagent.module.Module.protocol">protocol</a></code></li>
+<li><code><a title="aries_staticagent.module.Module.route" href="#aries_staticagent.module.Module.route">route</a></code></li>
 <li><code><a title="aries_staticagent.module.Module.routes" href="#aries_staticagent.module.Module.routes">routes</a></code></li>
 <li><code><a title="aries_staticagent.module.Module.type" href="#aries_staticagent.module.Module.type">type</a></code></li>
+<li><code><a title="aries_staticagent.module.Module.version" href="#aries_staticagent.module.Module.version">version</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.module.ModuleRouter" href="#aries_staticagent.module.ModuleRouter">ModuleRouter</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.module.ModuleRouter.complete" href="#aries_staticagent.module.ModuleRouter.complete">complete</a></code></li>
 </ul>
 </li>
 <li>
@@ -583,7 +665,7 @@ a module definition.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

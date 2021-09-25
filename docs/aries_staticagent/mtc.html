@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>aries_staticagent.mtc API documentation</title>
 <meta name="description" content="Message Trust Context. See Aries RFC 0029: Message Trust Contexts …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -39,11 +39,12 @@ from typing import Optional
 
 
 class ContextsConflict(Exception):
-    &#34;&#34;&#34; Thrown when the passed contexts overlap &#34;&#34;&#34;
+    &#34;&#34;&#34;Thrown when the passed contexts overlap&#34;&#34;&#34;
 
 
 class Context(Flag):
-    &#34;&#34;&#34; Flags for MTC &#34;&#34;&#34;
+    &#34;&#34;&#34;Flags for MTC&#34;&#34;&#34;
+
     NONE = 0
     SIZE_OK = auto()
     DESERIALIZE_OK = auto()
@@ -59,17 +60,17 @@ class Context(Flag):
 
 
 LABELS = {
-    Context.SIZE_OK: &#39;size_ok&#39;,
-    Context.DESERIALIZE_OK: &#39;deserialize_ok&#39;,
-    Context.KEYS_OK: &#39;keys_ok&#39;,
-    Context.VALUES_OK: &#39;values_ok&#39;,
-    Context.CONFIDENTIALITY: &#39;confidentiality&#39;,
-    Context.INTEGRITY: &#39;integrity&#39;,
-    Context.AUTHENTICATED_ORIGIN: &#39;authenticated_origin&#39;,
-    Context.NONREPUDIATION: &#39;nonrepudiation&#39;,
-    Context.PFS: &#39;pfs&#39;,
-    Context.UNIQUENESS: &#39;uniqueness&#39;,
-    Context.LIMITED_SCOPE: &#39;limited_scope&#39;
+    Context.SIZE_OK: &#34;size_ok&#34;,
+    Context.DESERIALIZE_OK: &#34;deserialize_ok&#34;,
+    Context.KEYS_OK: &#34;keys_ok&#34;,
+    Context.VALUES_OK: &#34;values_ok&#34;,
+    Context.CONFIDENTIALITY: &#34;confidentiality&#34;,
+    Context.INTEGRITY: &#34;integrity&#34;,
+    Context.AUTHENTICATED_ORIGIN: &#34;authenticated_origin&#34;,
+    Context.NONREPUDIATION: &#34;nonrepudiation&#34;,
+    Context.PFS: &#34;pfs&#34;,
+    Context.UNIQUENESS: &#34;uniqueness&#34;,
+    Context.LIMITED_SCOPE: &#34;limited_scope&#34;,
 }
 
 
@@ -88,9 +89,7 @@ UNIQUENESS = Context.UNIQUENESS
 LIMITED_SCOPE = Context.LIMITED_SCOPE
 
 # Typical MTCs
-AUTHCRYPT_AFFIRMED = (
-    CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN
-)
+AUTHCRYPT_AFFIRMED = CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK | AUTHENTICATED_ORIGIN
 AUTHCRYPT_DENIED = NONREPUDIATION
 
 ANONCRYPT_AFFIRMED = CONFIDENTIALITY | INTEGRITY | DESERIALIZE_OK
@@ -105,7 +104,8 @@ class AdditionalData:
     &#34;&#34;&#34;
     Container for data relevant to Message Trust.
     &#34;&#34;&#34;
-    __slots__ = (&#39;sender&#39;, &#39;recipient&#39;)
+
+    __slots__ = (&#34;sender&#34;, &#34;recipient&#34;)
 
     def __init__(self, sender: str = None, recipient: str = None):
         self.sender = sender
@@ -113,28 +113,28 @@ class AdditionalData:
 
 
 class MessageTrustContext:
-    &#34;&#34;&#34; Message Trust Context
+    &#34;&#34;&#34;Message Trust Context
 
-        Holds the contexts as well as data associated with message trust
-        contexts such as the keys used to encrypt the message and allowing us
-        to know that the origin is authenticated, etc.
+    Holds the contexts as well as data associated with message trust
+    contexts such as the keys used to encrypt the message and allowing us
+    to know that the origin is authenticated, etc.
     &#34;&#34;&#34;
-    __slots__ = &#39;_affirmed&#39;, &#39;_denied&#39;, &#39;additional_data&#39;
+
+    __slots__ = &#34;_affirmed&#34;, &#34;_denied&#34;, &#34;additional_data&#34;
 
     def __init__(
-            self,
-            affirmed: Context = Context.NONE,
-            denied: Context = Context.NONE,
-            additional_data: AdditionalData = None
-                ):
+        self,
+        affirmed: Context = Context.NONE,
+        denied: Context = Context.NONE,
+        additional_data: AdditionalData = None,
+    ):
 
         if affirmed &amp; denied != Context.NONE:
             raise ContextsConflict()
 
         self._affirmed = affirmed
         self._denied = denied
-        self.additional_data = additional_data \
-            if additional_data else AdditionalData()
+        self.additional_data = additional_data if additional_data else AdditionalData()
 
     @property
     def sender(self):
@@ -148,12 +148,12 @@ class MessageTrustContext:
 
     @property
     def affirmed(self):
-        &#34;&#34;&#34; Access affirmed contexts &#34;&#34;&#34;
+        &#34;&#34;&#34;Access affirmed contexts&#34;&#34;&#34;
         return self._affirmed
 
     @property
     def denied(self):
-        &#34;&#34;&#34; Access denied contexts &#34;&#34;&#34;
+        &#34;&#34;&#34;Access denied contexts&#34;&#34;&#34;
         return self._denied
 
     def __getitem__(self, context: Context):
@@ -165,7 +165,7 @@ class MessageTrustContext:
 
     def __setitem__(self, context: Context, value: Optional[bool]):
         if not isinstance(context, Context):
-            raise TypeError(&#39;index must be of type Context&#39;)
+            raise TypeError(&#34;index must be of type Context&#34;)
 
         if value is None:
             # Set undefined
@@ -178,22 +178,20 @@ class MessageTrustContext:
             self._affirmed &amp;= ~context
         else:
             raise TypeError(
-                &#39;Value of type bool or None was expected, got {}&#39;.format(
-                    type(value)
-                )
+                &#34;Value of type bool or None was expected, got {}&#34;.format(type(value))
             )
 
     def __str__(self):
-        str_repr = &#39;mtc:&#39;
+        str_repr = &#34;mtc:&#34;
         plus = []
         minus = []
         for context, label in LABELS.items():
             if self[context] is True:
-                plus.append(&#39;+{}&#39;.format(label))
+                plus.append(&#34;+{}&#34;.format(label))
             elif self[context] is False:
-                minus.append(&#39;-{}&#39;.format(label))
+                minus.append(&#34;-{}&#34;.format(label))
 
-        str_repr = &#39; &#39;.join([str_repr] + plus + minus)
+        str_repr = &#34; &#34;.join([str_repr] + plus + minus)
         return str_repr
 
     # Convenience methods
@@ -220,18 +218,15 @@ class MessageTrustContext:
 
     def is_authcrypted(self):
         &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
-        return self[AUTHCRYPT_AFFIRMED] is True and \
-            self[AUTHCRYPT_DENIED] is False
+        return self[AUTHCRYPT_AFFIRMED] is True and self[AUTHCRYPT_DENIED] is False
 
     def is_anoncrypted(self):
         &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
-        return self[ANONCRYPT_AFFIRMED] is True and \
-            self[ANONCRYPT_DENIED] is False
+        return self[ANONCRYPT_AFFIRMED] is True and self[ANONCRYPT_DENIED] is False
 
     def is_plaintext(self):
         &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
-        return self[PLAINTEXT_AFFIRMED] is True and \
-            self[PLAINTEXT_DENIED] is False</code></pre>
+        return self[PLAINTEXT_AFFIRMED] is True and self[PLAINTEXT_DENIED] is False</code></pre>
 </details>
 </section>
 <section>
@@ -257,7 +252,8 @@ class MessageTrustContext:
     &#34;&#34;&#34;
     Container for data relevant to Message Trust.
     &#34;&#34;&#34;
-    __slots__ = (&#39;sender&#39;, &#39;recipient&#39;)
+
+    __slots__ = (&#34;sender&#34;, &#34;recipient&#34;)
 
     def __init__(self, sender: str = None, recipient: str = None):
         self.sender = sender
@@ -286,7 +282,8 @@ class MessageTrustContext:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Context(Flag):
-    &#34;&#34;&#34; Flags for MTC &#34;&#34;&#34;
+    &#34;&#34;&#34;Flags for MTC&#34;&#34;&#34;
+
     NONE = 0
     SIZE_OK = auto()
     DESERIALIZE_OK = auto()
@@ -368,7 +365,7 @@ class MessageTrustContext:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ContextsConflict(Exception):
-    &#34;&#34;&#34; Thrown when the passed contexts overlap &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Thrown when the passed contexts overlap&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -390,28 +387,28 @@ to know that the origin is authenticated, etc.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MessageTrustContext:
-    &#34;&#34;&#34; Message Trust Context
+    &#34;&#34;&#34;Message Trust Context
 
-        Holds the contexts as well as data associated with message trust
-        contexts such as the keys used to encrypt the message and allowing us
-        to know that the origin is authenticated, etc.
+    Holds the contexts as well as data associated with message trust
+    contexts such as the keys used to encrypt the message and allowing us
+    to know that the origin is authenticated, etc.
     &#34;&#34;&#34;
-    __slots__ = &#39;_affirmed&#39;, &#39;_denied&#39;, &#39;additional_data&#39;
+
+    __slots__ = &#34;_affirmed&#34;, &#34;_denied&#34;, &#34;additional_data&#34;
 
     def __init__(
-            self,
-            affirmed: Context = Context.NONE,
-            denied: Context = Context.NONE,
-            additional_data: AdditionalData = None
-                ):
+        self,
+        affirmed: Context = Context.NONE,
+        denied: Context = Context.NONE,
+        additional_data: AdditionalData = None,
+    ):
 
         if affirmed &amp; denied != Context.NONE:
             raise ContextsConflict()
 
         self._affirmed = affirmed
         self._denied = denied
-        self.additional_data = additional_data \
-            if additional_data else AdditionalData()
+        self.additional_data = additional_data if additional_data else AdditionalData()
 
     @property
     def sender(self):
@@ -425,12 +422,12 @@ to know that the origin is authenticated, etc.</p></div>
 
     @property
     def affirmed(self):
-        &#34;&#34;&#34; Access affirmed contexts &#34;&#34;&#34;
+        &#34;&#34;&#34;Access affirmed contexts&#34;&#34;&#34;
         return self._affirmed
 
     @property
     def denied(self):
-        &#34;&#34;&#34; Access denied contexts &#34;&#34;&#34;
+        &#34;&#34;&#34;Access denied contexts&#34;&#34;&#34;
         return self._denied
 
     def __getitem__(self, context: Context):
@@ -442,7 +439,7 @@ to know that the origin is authenticated, etc.</p></div>
 
     def __setitem__(self, context: Context, value: Optional[bool]):
         if not isinstance(context, Context):
-            raise TypeError(&#39;index must be of type Context&#39;)
+            raise TypeError(&#34;index must be of type Context&#34;)
 
         if value is None:
             # Set undefined
@@ -455,22 +452,20 @@ to know that the origin is authenticated, etc.</p></div>
             self._affirmed &amp;= ~context
         else:
             raise TypeError(
-                &#39;Value of type bool or None was expected, got {}&#39;.format(
-                    type(value)
-                )
+                &#34;Value of type bool or None was expected, got {}&#34;.format(type(value))
             )
 
     def __str__(self):
-        str_repr = &#39;mtc:&#39;
+        str_repr = &#34;mtc:&#34;
         plus = []
         minus = []
         for context, label in LABELS.items():
             if self[context] is True:
-                plus.append(&#39;+{}&#39;.format(label))
+                plus.append(&#34;+{}&#34;.format(label))
             elif self[context] is False:
-                minus.append(&#39;-{}&#39;.format(label))
+                minus.append(&#34;-{}&#34;.format(label))
 
-        str_repr = &#39; &#39;.join([str_repr] + plus + minus)
+        str_repr = &#34; &#34;.join([str_repr] + plus + minus)
         return str_repr
 
     # Convenience methods
@@ -497,18 +492,15 @@ to know that the origin is authenticated, etc.</p></div>
 
     def is_authcrypted(self):
         &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
-        return self[AUTHCRYPT_AFFIRMED] is True and \
-            self[AUTHCRYPT_DENIED] is False
+        return self[AUTHCRYPT_AFFIRMED] is True and self[AUTHCRYPT_DENIED] is False
 
     def is_anoncrypted(self):
         &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
-        return self[ANONCRYPT_AFFIRMED] is True and \
-            self[ANONCRYPT_DENIED] is False
+        return self[ANONCRYPT_AFFIRMED] is True and self[ANONCRYPT_DENIED] is False
 
     def is_plaintext(self):
         &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
-        return self[PLAINTEXT_AFFIRMED] is True and \
-            self[PLAINTEXT_DENIED] is False</code></pre>
+        return self[PLAINTEXT_AFFIRMED] is True and self[PLAINTEXT_DENIED] is False</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -525,7 +517,7 @@ to know that the origin is authenticated, etc.</p></div>
 </summary>
 <pre><code class="python">@property
 def affirmed(self):
-    &#34;&#34;&#34; Access affirmed contexts &#34;&#34;&#34;
+    &#34;&#34;&#34;Access affirmed contexts&#34;&#34;&#34;
     return self._affirmed</code></pre>
 </details>
 </dd>
@@ -538,7 +530,7 @@ def affirmed(self):
 </summary>
 <pre><code class="python">@property
 def denied(self):
-    &#34;&#34;&#34; Access denied contexts &#34;&#34;&#34;
+    &#34;&#34;&#34;Access denied contexts&#34;&#34;&#34;
     return self._denied</code></pre>
 </details>
 </dd>
@@ -582,8 +574,7 @@ def sender(self):
 </summary>
 <pre><code class="python">def is_anoncrypted(self):
     &#34;&#34;&#34;MTC matches expected anoncrypt.&#34;&#34;&#34;
-    return self[ANONCRYPT_AFFIRMED] is True and \
-        self[ANONCRYPT_DENIED] is False</code></pre>
+    return self[ANONCRYPT_AFFIRMED] is True and self[ANONCRYPT_DENIED] is False</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.is_authcrypted"><code class="name flex">
@@ -597,8 +588,7 @@ def sender(self):
 </summary>
 <pre><code class="python">def is_authcrypted(self):
     &#34;&#34;&#34;MTC matches expected authcrypt.&#34;&#34;&#34;
-    return self[AUTHCRYPT_AFFIRMED] is True and \
-        self[AUTHCRYPT_DENIED] is False</code></pre>
+    return self[AUTHCRYPT_AFFIRMED] is True and self[AUTHCRYPT_DENIED] is False</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.is_plaintext"><code class="name flex">
@@ -612,8 +602,7 @@ def sender(self):
 </summary>
 <pre><code class="python">def is_plaintext(self):
     &#34;&#34;&#34;MTC matches expected plaintext.&#34;&#34;&#34;
-    return self[PLAINTEXT_AFFIRMED] is True and \
-        self[PLAINTEXT_DENIED] is False</code></pre>
+    return self[PLAINTEXT_AFFIRMED] is True and self[PLAINTEXT_DENIED] is False</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.mtc.MessageTrustContext.set_anoncrypted"><code class="name flex">
@@ -734,7 +723,7 @@ def sender(self):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
