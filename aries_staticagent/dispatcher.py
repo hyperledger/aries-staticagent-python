@@ -4,8 +4,7 @@ from typing import Callable, Sequence
 
 from sortedcontainers import SortedSet
 
-from .message import Message
-from .type import Type
+from .message import Message, MsgType
 
 
 class NoRegisteredHandlerException(Exception):
@@ -17,20 +16,18 @@ class Handler:  # pylint: disable=too-few-public-methods
 
     __slots__ = ("type", "handler", "context")
 
-    def __init__(self, type_: Type, handler: Callable, context=None):
-        if not isinstance(type_, Type):
-            raise ValueError("type parameter must be Type object")
+    def __init__(self, msg_type: MsgType, handler: Callable):
+        if not isinstance(msg_type, MsgType):
+            raise ValueError("type parameter must be MsgType object")
         if not callable(handler):
             raise ValueError("handler parameter must be callable")
 
-        self.type = type_
+        self.type = msg_type
         self.handler = handler
-        self.context = context
 
     async def run(self, msg, *args, **kwargs):
         """Call the handler with message."""
-        args = [msg, *args] if not self.context else [self.context, msg, *args]
-        return await self.handler(*args, **kwargs)
+        return await self.handler(msg, *args, **kwargs)
 
 
 class Dispatcher:
@@ -50,7 +47,7 @@ class Dispatcher:
 
     def add_handler(self, handler: Handler):
         """Add a handler to routing tables."""
-        self.handlers[handler.type] = handler
+        self.handlers[handler.type.normalized] = handler
 
         key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
         if key not in self.handler_versions:
@@ -75,17 +72,19 @@ class Dispatcher:
 
     def select_handler(self, msg: Message):
         """Find the closest appropriate module for a given message."""
-        key = (msg.doc_uri, msg.protocol, msg.name)
+        key = (msg.type.doc_uri, msg.type.protocol, msg.type.name)
         if key not in self.handler_versions:
             return None
 
         registered_version_set = self.handler_versions[key]
         for version in reversed(registered_version_set):
-            if msg.version_info.major == version.major:
-                handler_type = Type(msg.doc_uri, msg.protocol, version, msg.name)
+            if msg.type.version_info.major == version.major:
+                handler_type = MsgType.unparse(
+                    msg.type.doc_uri, msg.type.protocol, version, msg.type.name
+                )
                 return self.handlers[handler_type]
 
-            if msg.version_info.major > version.major:
+            if msg.type.version_info.major > version.major:
                 break
 
         return None

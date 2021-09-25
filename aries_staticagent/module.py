@@ -2,48 +2,44 @@
 
 from abc import ABC, abstractclassmethod
 from functools import partial
-from typing import Callable, Dict, Iterable, Mapping, Union
+from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Union
 
-from .type import Type
+from .message import MsgType
 
 
-class PartialType:
+class PartialType(NamedTuple):
     """Class containing the type information of a route before having the
     context of the module as is the case when statically defining routes in
     a module definition.
     """
 
-    __slots__ = ("doc_uri", "protocol", "version", "name")
+    name: Optional[str] = None
+    doc_uri: Optional[str] = None
+    protocol: Optional[str] = None
+    version: Optional[str] = None
 
-    def __init__(
-        self, name: str, doc_uri: str = None, protocol: str = None, version: str = None
-    ):
-        self.name = name
-        self.version = version
-        self.protocol = protocol
-        self.doc_uri = doc_uri
-
-    def complete(self, mod: "Module") -> Type:
+    def complete(
+        self,
+        doc_uri: str = None,
+        protocol: str = None,
+        version: str = None,
+        name: str = None,
+    ) -> MsgType:
         """Return a complete type given the module context."""
-        doc_uri = self.doc_uri if self.doc_uri else type(mod).doc_uri
-        protocol = self.protocol if self.protocol else type(mod).protocol
-        version = self.version if self.version else type(mod).version
-        if doc_uri is None:
-            raise TypeError("doc_uri must be str")
-        if protocol is None:
-            raise TypeError("protocol must be str")
-        if version is None:
-            raise TypeError("version must be str")
-        return Type(doc_uri, protocol, version, self.name)
+        doc_uri = self.doc_uri or doc_uri or ""
+        protocol = self.protocol or protocol or ""
+        version = self.version or version or ""
+        name = self.name or name or ""
+        return MsgType.unparse(doc_uri, protocol, version, name)
 
 
-class ModuleRouter(Mapping[Union[PartialType, Type], Callable]):
+class ModuleRouter(Mapping[Union[PartialType, MsgType], Callable]):
     """Collect module routes."""
 
     def __init__(self):
-        self._routes: Dict[Union[Type, PartialType], Callable] = {}
+        self._routes: Dict[Union[MsgType, PartialType], Callable] = {}
 
-    def __getitem__(self, item: Type) -> Callable:
+    def __getitem__(self, item: MsgType) -> Callable:
         return self._routes[item]
 
     def __iter__(self) -> Iterable:
@@ -59,22 +55,13 @@ class ModuleRouter(Mapping[Union[PartialType, Type], Callable]):
         if @route(type) is used, type_or_func is the type string.
         """
         if args:
-            type_or_func: Union[Callable, str, Type] = args[0]
+            type_or_func: Union[Callable, str, MsgType] = args[0]
             if callable(type_or_func):
                 func = type_or_func
-                self._routes[PartialType(func.__name__)] = func
+                self._routes[PartialType(name=func.__name__)] = func
                 return func
 
-            if isinstance(type_or_func, str):
-                msg_type_str = type_or_func
-
-                def _route_from_str(func):
-                    self._routes[Type.from_str(msg_type_str)] = func
-                    return func
-
-                return _route_from_str
-
-            if isinstance(type_or_func, Type):
+            if isinstance(type_or_func, MsgType):
                 msg_type = type_or_func
 
                 def _route_from_type(func):
@@ -83,12 +70,19 @@ class ModuleRouter(Mapping[Union[PartialType, Type], Callable]):
 
                 return _route_from_type
 
+            if isinstance(type_or_func, str):
+                msg_type_str = type_or_func
+
+                def _route_from_str(func):
+                    self._routes[MsgType(msg_type_str)] = func
+                    return func
+
+                return _route_from_str
+
         if kwargs:
 
             def _route_from_kwargs(func):
-                name = kwargs.get("name", func.__name__)
-                del kwargs["name"]
-                self._routes[PartialType(name, **kwargs)] = func
+                self._routes[PartialType(**kwargs)] = func
                 return func
 
             return _route_from_kwargs
@@ -97,6 +91,27 @@ class ModuleRouter(Mapping[Union[PartialType, Type], Callable]):
             "Expecting @route before a function or @route(msg_type) "
             "before a function!"
         )
+
+    def complete(
+        self,
+        doc_uri: str = None,
+        protocol: str = None,
+        version: str = None,
+        name: str = None,
+        context: object = None,
+    ) -> Dict[MsgType, Callable]:
+        routes = {}
+        for msg_type, handler in self._routes.items():
+            if isinstance(msg_type, PartialType):
+                route_type = msg_type.complete(doc_uri, protocol, version, name)
+            elif isinstance(msg_type, MsgType):
+                route_type = msg_type
+            else:
+                raise TypeError(
+                    f"Route of invaild type {type(msg_type).__name__} registered"
+                )
+            routes[route_type] = partial(handler, context) if context else handler
+        return routes
 
 
 class Module(ABC):  # pylint: disable=too-few-public-methods
@@ -133,33 +148,19 @@ class Module(ABC):  # pylint: disable=too-few-public-methods
         self, name: str, doc_uri: str = None, protocol: str = None, version: str = None
     ):
         """Build a type string for this module."""
+        # doc_url can be falsey, need explicit none check
         doc_uri = doc_uri if doc_uri is not None else self.doc_uri
-        protocol = protocol if protocol is not None else self.protocol
-        version = version if version is not None else self.version
-        if doc_uri is None:
-            raise TypeError("doc_uri must be str")
-        if protocol is None:
-            raise TypeError("protocol must be str")
-        if version is None:
-            raise TypeError("version must be str")
-        return Type(doc_uri, protocol, version, name)
+        protocol = protocol or self.protocol
+        version = version or self.version
+        return MsgType.unparse(doc_uri, protocol, version, name)
 
-    def _finish_routes(self) -> Mapping[Type, Callable]:
-        routes = {}
-        for typ, handler in self.route.items():
-            if isinstance(typ, PartialType):
-                msg_type = typ.complete(self)
-            elif isinstance(typ, Type):
-                msg_type = typ
-            else:
-                raise TypeError(
-                    f"Route of invaild type registered on module {type(self).__name__}"
-                )
-            routes[msg_type] = partial(handler, self)
-        return routes
+    def _finish_routes(self) -> Mapping[MsgType, Callable]:
+        return self.route.complete(
+            self.doc_uri, self.protocol, self.version, context=self
+        )
 
     @property
-    def routes(self) -> Mapping[Type, Callable]:
+    def routes(self) -> Mapping[MsgType, Callable]:
         """Get the routes statically defined for this module and
         save in instance.
         """

@@ -11,27 +11,25 @@ from aries_staticagent import StaticConnection, Target, crypto, utils
 
 def main():
     """Send a message and await the reply."""
-    their_vk, _ = crypto.create_keypair(
-        seed=hashlib.sha256(b'server').digest()
-    )
+    their_vk, _ = crypto.create_keypair(seed=hashlib.sha256(b"server").digest())
     conn = StaticConnection.from_seed(
-        hashlib.sha256(b'client').digest(),
+        hashlib.sha256(b"client").digest(),
         Target(
             their_vk=their_vk,
-            endpoint='http://localhost:{}'.format(os.environ.get('PORT', 3000))
-        )
+            endpoint="http://localhost:{}".format(os.environ.get("PORT", 3000)),
+        ),
     )
     reply = conn.send_and_await_returned(
         {
             "@type": "https://didcomm.org/basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),
-            "content": "The Cron script has been executed."
+            "content": "The Cron script has been executed.",
         },
-        return_route='all'
+        return_route="all",
     )
-    print('Msg from conn:', reply and reply.pretty_print())
+    print("Msg from conn:", reply and reply.pretty_print())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

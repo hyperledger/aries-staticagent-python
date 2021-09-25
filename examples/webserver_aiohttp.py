@@ -5,6 +5,7 @@ from aries_staticagent import StaticConnection, utils
 
 from common import config
 
+
 def main():
     """Create StaticConnection and start web server."""
     keys, target, args = config()
@@ -13,13 +14,14 @@ def main():
     @conn.route("https://didcomm.org/basicmessage/1.0/message")
     async def basic_message(msg, conn):
         """Respond to a basic message."""
-        await conn.send_async({
-            "@type": "https://didcomm.org/"
-                     "basicmessage/1.0/message",
-            "~l10n": {"locale": "en"},
-            "sent_time": utils.timestamp(),
-            "content": "You said: {}".format(msg['content'])
-        })
+        await conn.send_async(
+            {
+                "@type": "https://didcomm.org/" "basicmessage/1.0/message",
+                "~l10n": {"locale": "en"},
+                "sent_time": utils.timestamp(),
+                "content": "You said: {}".format(msg["content"]),
+            }
+        )
 
     async def handle(request):
         """aiohttp handle POST."""
@@ -33,10 +35,10 @@ def main():
         raise web.HTTPAccepted()
 
     app = web.Application()
-    app.add_routes([web.post('/', handle)])
+    app.add_routes([web.post("/", handle)])
 
     web.run_app(app, port=args.port)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

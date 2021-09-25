@@ -16,13 +16,14 @@ def main():
     @conn.route("https://didcomm.org/basicmessage/1.0/message")
     async def basic_message(msg, conn):
         """Respond to a basic message."""
-        await conn.send_async({
-            "@type": "https://didcomm.org/"
-                     "basicmessage/1.0/message",
-            "~l10n": {"locale": "en"},
-            "sent_time": utils.timestamp(),
-            "content": "You said: {}".format(msg['content'])
-        })
+        await conn.send_async(
+            {
+                "@type": "https://didcomm.org/" "basicmessage/1.0/message",
+                "~l10n": {"locale": "en"},
+                "sent_time": utils.timestamp(),
+                "content": "You said: {}".format(msg["content"]),
+            }
+        )
 
     async def ws_handle(request):
         """Handle WS requests."""
@@ -34,10 +35,7 @@ def main():
                 if msg.type == aiohttp.WSMsgType.BINARY:
                     await session.handle(msg.data)
                 elif msg.type == aiohttp.WSMsgType.ERROR:
-                    print(
-                        'ws connection closed with exception %s' %
-                        sock.exception()
-                    )
+                    print("ws connection closed with exception %s" % sock.exception())
 
                 if not session.should_return_route():
                     await sock.close()
@@ -56,13 +54,10 @@ def main():
         raise web.HTTPAccepted()
 
     app = web.Application()
-    app.add_routes([
-        web.get('/', ws_handle),
-        web.post('/', post_handle)
-    ])
+    app.add_routes([web.get("/", ws_handle), web.post("/", post_handle)])
 
     web.run_app(app, port=args.port)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

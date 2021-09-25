@@ -1,113 +1,177 @@
 """ Define Message base class. """
-import json
-import uuid
-from typing import Optional, Union
+from abc import ABC
+from functools import partial
+from operator import is_not
+import re
+from typing import Any, ClassVar, Mapping, Optional, Type, TypeVar, Union
+from uuid import uuid4
 
-from .type import Type, Semver
+from pydantic import BaseModel, Extra, Field
+from pydantic.class_validators import validator
+from semver import VersionInfo
+
 from .mtc import MessageTrustContext
 
 
-def generate_id():
-    """Generate a message id."""
-    return str(uuid.uuid4())
+MTURI_RE = re.compile(r"(.*?)([a-z0-9._-]+)/(\d[^/]*)/([a-z0-9._-]+)$")
 
 
-class InvalidMessage(Exception):
-    """Thrown when message is malformed."""
+class MsgVersion(VersionInfo):  # pylint: disable=too-few-public-methods
+    """Wrapper around the more complete VersionInfo class from semver package.
 
-
-class Message(dict):
-    """Message base class.
-    Inherits from dict meaning it behaves like a dictionary.
+    This wrapper enables abbreviated versions in message types
+    (i.e. 1.0 not 1.0.0).
     """
 
-    __slots__ = ("mtc", "_type")
+    SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\.(0|[1-9]\d*))?$")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def from_str(cls, version_str):
+        """Parse version information from a string."""
+        matches = cls.SEMVER_RE.match(version_str)
+        if matches:
+            args = list(matches.groups())
+            if not matches.group(3):
+                args.append("0")
+            return cls(*map(int, filter(partial(is_not, None), args)))
 
-        if "@type" not in self:
-            raise InvalidMessage("No @type in message")
+        parts = VersionInfo.parse(version_str)
 
-        if "@id" not in self:
-            self["@id"] = generate_id()
-        elif not isinstance(self["@id"], str):
-            raise InvalidMessage("Message @id is invalid; must be str")
+        return cls(
+            parts.major,
+            parts.minor,
+            parts.patch,
+            parts.prerelease,
+            parts.build,
+        )
 
-        if isinstance(self["@type"], Type):
-            self._type = self["@type"]
-            self["@type"] = str(self._type)
-        else:
-            self._type = Type.from_str(self.type)
-        self.mtc: Optional[MessageTrustContext] = None
+
+class InvalidType(ValueError):
+    """When type is unparsable or invalid."""
+
+
+class MsgType(str):
+    """Message type."""
+
+    def __init__(self, msg_type: str):
+        """Parse Message Type string."""
+        super().__init__()
+        matches = MTURI_RE.match(msg_type)
+        if not matches:
+            raise InvalidType(f"Invalid message type: {msg_type}")
+
+        doc_uri, protocol, version, name = matches.groups()
+        try:
+            self.version_info = MsgVersion.from_str(version)
+        except ValueError as err:
+            raise InvalidType(f"Invalid message type version {version}") from err
+
+        self.version = version
+        self.doc_uri = doc_uri
+        self.protocol = protocol
+        self.name = name
+        self.normalized = (
+            f"{self.doc_uri}{self.protocol}/{self.version_info}/{self.name}"
+        )
+        self.normalized_version = f"{self.version_info}"
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str):
+        return cls(value)
+
+    @classmethod
+    def parse(cls, msg_type: str):
+        return cls(msg_type)
+
+    @classmethod
+    def unparse(cls, doc_uri: str, protocol: str, version: str, name: str):
+        return cls(f"{doc_uri}{protocol}/{version}/{name}")
+
+
+MessageType = TypeVar("MessageType", bound="Message")
+
+
+class Message(BaseModel, Mapping[str, Any]):
+
+    type: MsgType = Field(alias="@type")
+    id: str = Field(alias="@id", default_factory=lambda: str(uuid4()))
+    _alias_dict: Mapping[str, Any] = {}
+    _mtc: MessageTrustContext = MessageTrustContext()
+
+    class Config:
+        extra = Extra.allow
+        allow_mutation = False
+        underscore_attrs_are_private = True
+        allow_population_by_field_name = True
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._alias_dict = self.dict(by_alias=True)
+
+    def __getitem__(self, item: str) -> Any:
+        return self._alias_dict[item]
+
+    def __len__(self) -> int:
+        return len(self.__dict__)
 
     @property
-    def type(self):
-        """Shortcut for msg['@type']"""
-        return self["@type"]
-
-    @property
-    def id(self):  # pylint: disable=invalid-name
-        """Shortcut for msg['@id']"""
-        return self["@id"]
+    def mtc(self):
+        return self._mtc
 
     @property
     def thread(self):
-        """Shortcut to msg['~thread'], if present."""
         return self.get("~thread", {"thid": None})
 
-    @property
-    def doc_uri(self) -> str:
-        """Get type doc_uri"""
-        return self._type.doc_uri
+    def with_transport(self: MessageType, return_route: str = None) -> MessageType:
+        return type(self)(
+            **{
+                **self.dict(by_alias=True),
+                "~transport": {"return_route": return_route} if return_route else {},
+            }
+        )
 
-    @property
-    def protocol(self) -> str:
-        """Get type protocol"""
-        return self._type.protocol
+    def with_thread(self: MessageType, thread: Mapping[str, str]) -> MessageType:
+        return type(self)(**{**self.dict(by_alias=True), "~thread": thread})
 
-    @property
-    def version(self) -> str:
-        """Get type version"""
-        return self._type.version
-
-    @property
-    def version_info(self) -> Semver:
-        """Get type version info"""
-        return self._type.version_info
-
-    @property
-    def name(self) -> str:
-        """Get type name"""
-        return self._type.name
-
-    @property
-    def normalized_version(self) -> str:
-        """Get type normalized version"""
-        return str(self._type.version_info)
-
-    # Serialization
     @classmethod
-    def deserialize(cls, serialized: Union[str, bytes]) -> "Message":
+    def deserialize(
+        cls: Type[MessageType],
+        serialized: Union[str, bytes],
+        mtc: Optional[MessageTrustContext] = None,
+    ) -> MessageType:
         """Deserialize a message from a json string."""
-        try:
-            return cls(json.loads(serialized))
-        except json.decoder.JSONDecodeError as err:
-            raise InvalidMessage("Could not deserialize message") from err
+        msg = cls.parse_raw(serialized)
+        if mtc:
+            msg._mtc = mtc
 
-    def serialize(self) -> str:
+        return msg
+
+    def serialize(self, **kwargs) -> str:
         """Serialize a message into a json string."""
-        return json.dumps(self)
+        return self.json(by_alias=True, exclude_none=True, **kwargs)
 
     def pretty_print(self) -> str:
         """return a 'pretty print' representation of this message."""
-        return json.dumps(self, indent=2)
+        return self.serialize(indent=2)
 
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, Message):
-            return False
 
-        return super().__eq__(other)
+class BaseMessage(Message, ABC):
 
-    def __hash__(self):
-        return hash(self.id)
+    msg_type: ClassVar[MsgType]
+    type: Optional[MsgType] = Field(alias="@type")
+
+    @validator("type", pre=True, always=True)
+    @classmethod
+    def _type(cls, value):
+        """Set type if not present."""
+        if not value:
+            return cls.msg_type
+        if value != cls.msg_type:
+            raise ValueError(
+                "Invalid message type for {}: {}".format(cls.__name__, value)
+            )
+        return value

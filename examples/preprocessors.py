@@ -15,10 +15,9 @@ def validate_basic_message(msg):
     library to get more sophisticated validators.
     """
     assert msg.type == TYPE
-    assert '~l10n' in msg
-    assert 'sent_time' in msg
-    assert 'content' in msg
-    msg['added_something'] = 'Something!'
+    assert "~l10n" in msg
+    assert "sent_time" in msg
+    assert "content" in msg
     return msg
 
 
@@ -31,16 +30,14 @@ def main():
     @utils.validate(validate_basic_message)
     async def basic_message(msg, conn):
         """Respond to a basic message."""
-        await conn.send_async({
-            "@type": "https://didcomm.org/"
-                     "basicmessage/1.0/message",
-            "~l10n": {"locale": "en"},
-            "sent_time": utils.timestamp(),
-            "content": (
-                "The preprocessor validated this message and added: "
-                "{}".format(msg['added_something'])
-            )
-        })
+        await conn.send_async(
+            {
+                "@type": "https://didcomm.org/" "basicmessage/1.0/message",
+                "~l10n": {"locale": "en"},
+                "sent_time": utils.timestamp(),
+                "content": "The preprocessor validated this message",
+            }
+        )
 
     async def handle(request):
         """aiohttp handle POST."""
@@ -54,10 +51,10 @@ def main():
         raise web.HTTPAccepted()
 
     app = web.Application()
-    app.add_routes([web.post('/', handle)])
+    app.add_routes([web.post("/", handle)])
 
     web.run_app(app, port=args.port)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

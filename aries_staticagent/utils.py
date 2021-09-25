@@ -1,7 +1,6 @@
 """ General utils """
 from functools import wraps
 from typing import Union, Optional, Callable
-import copy
 import datetime
 
 import aiohttp
@@ -50,15 +49,7 @@ FORWARD = "https://didcomm.org/routing/1.0/forward"
 
 def forward_msg(to: Union[bytes, str], msg: dict):
     """Return a forward message."""
-    return Message({"@type": FORWARD, "to": ensure_key_b58(to), "msg": msg})
-
-
-def find_message_in_args(args):
-    """Helper for picking out message from handler arguments."""
-    for index, arg in enumerate(args):
-        if isinstance(arg, Message):
-            return arg, index
-    return None
+    return Message.parse_obj({"@type": FORWARD, "to": ensure_key_b58(to), "msg": msg})
 
 
 def preprocess(preprocessor: Callable):
@@ -77,14 +68,9 @@ def preprocess(preprocessor: Callable):
     def _preprocess_decorated(func):
         @wraps(func)
         def _wrapped(*args, **kwargs):
-            msg, index = find_message_in_args(args)
-            preprocessed = preprocessor(copy.deepcopy(msg))
-
-            if preprocessed:
-                args = list(args)
-                args[index] = preprocessed
-
-            return func(*args, **kwargs)
+            msg, *args = args
+            msg = preprocessor(msg)
+            return func(msg, *args, **kwargs)
 
         return _wrapped
 
@@ -101,14 +87,9 @@ def preprocess_async(preprocessor: Callable):
     def _preprocess_decorated(func):
         @wraps(func)
         async def _wrapped(*args, **kwargs):
-            msg, index = find_message_in_args(args)
-            preprocessed = await preprocessor(copy.deepcopy(msg))
-
-            if preprocessed:
-                args = list(args)
-                args[index] = preprocessed
-
-            return await func(*args, **kwargs)
+            msg, *args = args
+            msg = await preprocessor(msg)
+            return await func(msg, *args, **kwargs)
 
         return _wrapped
 
@@ -136,6 +117,7 @@ def mtc(affirmed: MTCContext = NoMTCContext, denied: MTCContext = NoMTCContext):
                 f"Actual denied {msg.mtc.denied} does not match expected "
                 f"denied of {denied}"
             )
+        return msg
 
     return preprocess(_mtc_preprocessor)
 

@@ -22,7 +22,7 @@ class BasicMessageCounter(Module):
 
     @route
     async def message(self, _msg, conn):
-        """ Respond to basic messages with a count of messages received. """
+        """Respond to basic messages with a count of messages received."""
         self.count += 1
         await conn.send_async(
             {
@@ -43,7 +43,7 @@ def main():
     conn.route_module(bmc)
 
     async def handle(request):
-        """ aiohttp handle POST. """
+        """aiohttp handle POST."""
         await conn.handle(await request.read())
         raise web.HTTPAccepted()
 
