@@ -4,8 +4,7 @@ from typing import Callable, Sequence
 
 from sortedcontainers import SortedSet
 
-from .message import Message
-from .type import Type
+from .message import Message, MsgType
 
 
 class NoRegisteredHandlerException(Exception):
@@ -17,13 +16,13 @@ class Handler:  # pylint: disable=too-few-public-methods
 
     __slots__ = ("type", "handler", "context")
 
-    def __init__(self, type_: Type, handler: Callable, context=None):
-        if not isinstance(type_, Type):
-            raise ValueError("type parameter must be Type object")
+    def __init__(self, msg_type: MsgType, handler: Callable, context=None):
+        if not isinstance(msg_type, MsgType):
+            raise ValueError("type parameter must be MsgType object")
         if not callable(handler):
             raise ValueError("handler parameter must be callable")
 
-        self.type = type_
+        self.type = msg_type
         self.handler = handler
         self.context = context
 
@@ -82,7 +81,7 @@ class Dispatcher:
         registered_version_set = self.handler_versions[key]
         for version in reversed(registered_version_set):
             if msg.type.version_info.major == version.major:
-                handler_type = Type(
+                handler_type = MsgType.unparse(
                     msg.type.doc_uri, msg.type.protocol, version, msg.type.name
                 )
                 return self.handlers[handler_type]

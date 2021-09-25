@@ -1,7 +1,9 @@
 """ Test module module """
+from typing import Callable, cast
+from aries_staticagent.message import MsgType
 import pytest
 
-from aries_staticagent.module import Module, ModuleRouter
+from aries_staticagent.module import Module, ModuleRouter, PartialType
 
 
 def test_module_def():
@@ -73,8 +75,9 @@ def test_routes_construction():
 
     mod = TestModule()
     assert mod.routes
-    assert "test_doc_uri/test_protocol/1.0.0/test" in mod.routes
-    assert "test_doc_uri/test_protocol/1.0.0/test1" in mod.routes
+    assert len(TestModule.route)
+    assert "test_doc_uri/test_protocol/1.0/test" in mod.routes
+    assert "test_doc_uri/test_protocol/1.0/test1" in mod.routes
 
 
 def test_module_type_helper():
@@ -89,10 +92,10 @@ def test_module_type_helper():
         route = ModuleRouter()
 
     mod = TestModule()
-    assert mod.type("test") == "test_doc_uri/test_protocol/1.0.0/test"
-    assert mod.type("test", doc_uri="") == "test_protocol/1.0.0/test"
-    assert mod.type("test", protocol="protocol") == "test_doc_uri/protocol/1.0.0/test"
-    assert mod.type("test", version="2.0") == "test_doc_uri/test_protocol/2.0.0/test"
+    assert mod.type("test") == "test_doc_uri/test_protocol/1.0/test"
+    assert mod.type("test", doc_uri="") == "test_protocol/1.0/test"
+    assert mod.type("test", protocol="protocol") == "test_doc_uri/protocol/1.0/test"
+    assert mod.type("test", version="2.0") == "test_doc_uri/test_protocol/2.0/test"
 
 
 def test_route_bad_input():
@@ -100,3 +103,44 @@ def test_route_bad_input():
     with pytest.raises(ValueError):
         route = ModuleRouter()
         route([1, 2, "garbage"])
+
+
+def test_module_router_decorator():
+    routes = ModuleRouter()
+
+    @routes
+    def test0():
+        pass
+
+    @routes
+    def test1():
+        pass
+
+    test_type = MsgType.unparse("", "protocol", "1.0", "test")
+
+    @routes(test_type)
+    def test2():
+        pass
+
+    @routes("doc/protocol/1.0/test")
+    def test3():
+        pass
+
+    @routes(protocol="test", name="test4")
+    def test4():
+        pass
+
+    assert PartialType(name="test0") in routes
+    assert PartialType(name="test1") in routes
+    assert test_type in routes
+    assert "doc/protocol/1.0/test" in routes
+    assert MsgType("doc/protocol/1.0/test") in routes
+    assert PartialType(protocol="test", name="test4") in routes
+
+    for route in iter(routes):
+        assert route
+
+    assert routes.complete(doc_uri="doc/", protocol="test", version="1.0")
+    with pytest.raises(TypeError):
+        routes._routes[cast(MsgType, None)] = cast(Callable, None)
+        routes.complete(doc_uri="doc/", protocol="test", version="1.0")

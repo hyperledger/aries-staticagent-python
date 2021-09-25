@@ -17,10 +17,9 @@ import uuid
 
 from . import crypto
 from .dispatcher import Dispatcher, Handler
-from .message import Message
+from .message import Message, MsgType
 from .module import Module
 from .mtc import MessageTrustContext
-from .type import Type
 from .utils import ensure_key_bytes, forward_msg, http_send
 
 
@@ -399,7 +398,7 @@ class StaticConnection(Keys.Mixin):
         return cls(Keys(*crypto.create_keypair()), target, **kwargs)
 
     @classmethod
-    def from_seed(cls, seed: str, target: Target = None, **kwargs):
+    def from_seed(cls, seed: bytes, target: Target = None, **kwargs):
         """Generate connection from seed."""
         return cls(Keys(*crypto.create_keypair(seed=seed)), target, **kwargs)
 
@@ -407,7 +406,7 @@ class StaticConnection(Keys.Mixin):
         """Register route decorator."""
 
         def register_route_dec(func):
-            self._dispatcher.add_handler(Handler(Type.from_str(msg_type), func))
+            self._dispatcher.add_handler(Handler(MsgType(msg_type), func))
             return func
 
         return register_route_dec

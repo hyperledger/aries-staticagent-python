@@ -58,15 +58,13 @@ class MsgType(str):
         super().__init__()
         matches = MTURI_RE.match(msg_type)
         if not matches:
-            raise InvalidType("Invalid message type.")
+            raise InvalidType(f"Invalid message type: {msg_type}")
 
         doc_uri, protocol, version, name = matches.groups()
         try:
             self.version_info = MsgVersion.from_str(version)
         except ValueError as err:
-            raise InvalidType(
-                "Invalid message type version {}".format(version)
-            ) from err
+            raise InvalidType(f"Invalid message type version {version}") from err
 
         self.version = version
         self.doc_uri = doc_uri
