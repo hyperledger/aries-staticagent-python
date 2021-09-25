@@ -4,7 +4,7 @@ This file is intended to be run as a cron script. Upon execution, it does
 it's thing and shuts down.
 """
 
-from aries_staticagent import StaticConnection, utils
+from aries_staticagent import Connection, utils
 
 from common import config
 
@@ -12,7 +12,7 @@ from common import config
 def main():
     """Send message from cron job."""
     keys, target, _args = config()
-    conn = StaticConnection(keys, target)
+    conn = Connection(keys, target)
     conn.send(
         {
             "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" "basicmessage/1.0/message",

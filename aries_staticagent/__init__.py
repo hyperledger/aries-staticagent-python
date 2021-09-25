@@ -1,14 +1,14 @@
 """ Aries Static Agent Library.
 """
 
-from .static_connection import StaticConnection, Keys, Target, MessageDeliveryError
+from .connection import Connection, Keys, Target, MessageDeliveryError
 from .module import Module
 from .message import Message
 
 from . import crypto
 
 __all__ = [
-    "StaticConnection",
+    "Connection",
     "Keys",
     "Target",
     "MessageDeliveryError",

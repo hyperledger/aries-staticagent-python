@@ -9,7 +9,7 @@ import socket
 from aiohttp import web
 import pytest
 
-from aries_staticagent import Keys, StaticConnection, crypto, utils
+from aries_staticagent import Keys, Connection, crypto, utils
 
 # pylint: disable=redefined-outer-name
 
@@ -46,13 +46,13 @@ def test_keys():
 @pytest.fixture
 def connection(example_keys, test_keys):
     """Connection fixture."""
-    return StaticConnection.from_parts(test_keys, their_vk=example_keys.verkey)
+    return Connection.from_parts(test_keys, their_vk=example_keys.verkey)
 
 
 @pytest.fixture
 def connection_ws(example_keys, test_keys):
     """Connection fixture with ws send."""
-    return StaticConnection.from_parts(
+    return Connection.from_parts(
         test_keys, their_vk=example_keys.verkey, send=utils.ws_send
     )
 

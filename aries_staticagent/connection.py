@@ -40,7 +40,7 @@ class Session:
 
     THREAD_ALL = "all"
 
-    def __init__(self, conn: "StaticConnection", send: SessionSend, thread: str = None):
+    def __init__(self, conn: "Connection", send: SessionSend, thread: str = None):
         if send is None:
             raise TypeError("Must supply send method to Session")
 
@@ -235,7 +235,7 @@ class Target:
             self.routing_keys = list(map(ensure_key_bytes, routing_keys))
 
 
-class StaticConnection(Keys.Mixin):
+class Connection(Keys.Mixin):
     """Create a Static Agent Connection to another agent.
 
     The following will create a Static Connection with just the receiving end
@@ -243,35 +243,35 @@ class StaticConnection(Keys.Mixin):
     without yet knowing where messages will be sent.
 
     >>> my_keys = crypto.create_keypair()
-    >>> connection = StaticConnection.receiver(my_keys)
+    >>> connection = Connection.receiver(my_keys)
 
     To create a Static Agent Connection with both ends configured:
     >>> their_pretend_verkey = crypto.create_keypair()[0]
-    >>> connection = StaticConnection.from_parts(
+    >>> connection = Connection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey
     ... )
 
     Or, when there are multiple recipients:
     >>> pretend_recips = [ crypto.create_keypair()[0] for i in range(5) ]
-    >>> connection = StaticConnection.from_parts(
+    >>> connection = Connection.from_parts(
     ...     my_keys, recipients=pretend_recips
     ... )
 
     To specify mediators responsible for forwarding messages to the recipient:
     >>> pretend_mediators = [ crypto.create_keypair()[0] for i in range(5) ]
-    >>> connection = StaticConnection.from_parts(
+    >>> connection = Connection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey,
     ...     routing_keys=pretend_mediators
     ... )
 
-    By default, `StaticConnection` will POST messages to the endpoint given
+    By default, `Connection` will POST messages to the endpoint given
     over HTTP. You can, however, specify an alternative `Send` method for
-    `StaticConnection` as in the example below:
+    `Connection` as in the example below:
     >>> async def my_send(msg: bytes, endpoint: str) -> Optional[bytes]:
     ...     print('pretending to send message to', endpoint)
     ...     response = None
     ...     return response
-    >>> connection = StaticConnection.from_parts(
+    >>> connection = Connection.from_parts(
     ...     my_keys, their_vk=their_pretend_verkey,
     ...     endpoint='example.com', send=my_send
     ... )
@@ -579,7 +579,7 @@ class StaticConnection(Keys.Mixin):
         anoncrypt: bool = False,
     ):
         """
-        Send a message to the agent connected through this StaticConnection.
+        Send a message to the agent connected through this Connection.
         """
         if not isinstance(msg, Message):
             if isinstance(msg, dict):

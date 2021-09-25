@@ -1,9 +1,9 @@
-""" Test routing functions of StaticConnection. """
+""" Test routing functions of Connection. """
 
 from aries_staticagent.module import ModuleRouter
 import asyncio
 import pytest
-from aries_staticagent import StaticConnection, Message, Module
+from aries_staticagent import Connection, Message, Module
 from aries_staticagent.dispatcher import Dispatcher, NoRegisteredHandlerException
 from aries_staticagent.message import MsgType
 
@@ -22,7 +22,7 @@ def conn(dispatcher):
     """Function scoped static connection fixture. This connection isn't
     actually connected to anything.
     """
-    yield StaticConnection.from_parts((b"", b""), dispatcher=dispatcher)
+    yield Connection.from_parts((b"", b""), dispatcher=dispatcher)
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 """Webserver with module example."""
 from aiohttp import web
-from aries_staticagent import Module, StaticConnection, utils
+from aries_staticagent import Module, Connection, utils
 from aries_staticagent.module import ModuleRouter
 from common import config
 
@@ -37,7 +37,7 @@ class BasicMessageCounter(Module):
 def main():
     """Create connection and start web server."""
     keys, target, args = config()
-    conn = StaticConnection(keys, target)
+    conn = Connection(keys, target)
 
     bmc = BasicMessageCounter()
     conn.route_module(bmc)

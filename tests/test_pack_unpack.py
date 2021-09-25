@@ -3,7 +3,7 @@
 
 import pytest
 
-from aries_staticagent import StaticConnection, Keys, Message, crypto, utils
+from aries_staticagent import Connection, Keys, Message, crypto, utils
 
 
 @pytest.fixture(scope="module")
@@ -20,14 +20,14 @@ def bob_keys():
 
 @pytest.fixture(scope="module")
 def alice(alice_keys, bob_keys):
-    """Create Alice's StaticConnection."""
-    yield StaticConnection.from_parts(alice_keys, their_vk=bob_keys.verkey)
+    """Create Alice's Connection."""
+    yield Connection.from_parts(alice_keys, their_vk=bob_keys.verkey)
 
 
 @pytest.fixture(scope="module")
 def bob(bob_keys, alice_keys):
-    """Create Bob's StaticConnection."""
-    yield StaticConnection.from_parts(bob_keys, their_vk=alice_keys.verkey)
+    """Create Bob's Connection."""
+    yield Connection.from_parts(bob_keys, their_vk=alice_keys.verkey)
 
 
 def test_pack_unpack_auth(alice, bob):
@@ -58,7 +58,7 @@ def test_pack_unpack_anon(alice, bob):
     assert unpacked_msg.mtc.recipient == bob.verkey_b58
 
 
-def test_pack_unpack_plaintext(alice: StaticConnection, bob):
+def test_pack_unpack_plaintext(alice: Connection, bob):
     """Test pack/unpack in plaintext."""
     msg = {"@type": "doc;protocol/1.0/name"}
     packed_msg = alice.pack(msg, plaintext=True)
@@ -80,8 +80,8 @@ def test_plaintext_and_anoncrypt_raises_error(alice):
 
 def test_pack_unpack_with_routing_keys(alice, bob):
     """Test packing for a connection with routing keys."""
-    route1 = StaticConnection.from_parts(crypto.create_keypair())
-    route2 = StaticConnection.from_parts(crypto.create_keypair())
+    route1 = Connection.from_parts(crypto.create_keypair())
+    route2 = Connection.from_parts(crypto.create_keypair())
     alice.target.update(routing_keys=[route1.verkey, route2.verkey])
     packed_message = alice.pack({"@type": "doc;protocol/1.0/name"})
 

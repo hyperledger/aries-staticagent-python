@@ -8,13 +8,13 @@ from functools import partial
 import pytest
 
 from aries_staticagent import (
-    StaticConnection,
+    Connection,
     Keys,
     Message,
     MessageDeliveryError,
     crypto,
 )
-from aries_staticagent.static_connection import Session
+from aries_staticagent.connection import Session
 
 # pylint: disable=redefined-outer-name
 
@@ -44,7 +44,7 @@ def bob_keys():
 @pytest.fixture
 def alice_gen(alice_keys, bob_keys):
     def _gen(send=None, dispatcher=None):
-        return StaticConnection.from_parts(
+        return Connection.from_parts(
             alice_keys,
             their_vk=bob_keys.verkey,
             endpoint="asdf",
@@ -63,7 +63,7 @@ def alice(alice_gen):
 @pytest.fixture
 def bob_gen(alice_keys, bob_keys):
     def _gen(send=None, dispatcher=None):
-        return StaticConnection.from_parts(
+        return Connection.from_parts(
             bob_keys,
             their_vk=alice_keys.verkey,
             endpoint="asdf",

@@ -14,7 +14,7 @@ def environ_or_required(key):
 
 
 def config():
-    """Get StaticConnection parameters from env or command line args."""
+    """Get Connection parameters from env or command line args."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--endpoint", **environ_or_required("ARIES_ENDPOINT"))
     parser.add_argument("--their-verkey", **environ_or_required("ARIES_ENDPOINT_KEY"))
