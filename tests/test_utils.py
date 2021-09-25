@@ -4,12 +4,18 @@ import pytest
 
 from aries_staticagent import utils, Message
 from aries_staticagent.mtc import (
-    MessageTrustContext,
     AUTHCRYPT_AFFIRMED,
     AUTHCRYPT_DENIED,
     ANONCRYPT_AFFIRMED,
     ANONCRYPT_DENIED,
 )
+
+
+@pytest.fixture
+def message():
+    yield Message.parse_obj(
+        {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
+    )
 
 
 def test_preprocess():
@@ -23,11 +29,7 @@ def test_preprocess():
     def test_handler(msg):
         return msg
 
-    handled = test_handler(
-        Message(
-            {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-        )
-    )
+    handled = test_handler({})
     assert handled["preprocessed"]
 
 
@@ -43,11 +45,7 @@ async def test_preprocess_async_handler():
     async def test_handler(msg):
         return msg
 
-    handled = await test_handler(
-        Message(
-            {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-        )
-    )
+    handled = await test_handler({})
     assert handled["preprocessed"]
 
 
@@ -63,29 +61,22 @@ async def test_preprocess_async_handler_and_preprocessor():
     async def test_handler(msg):
         return msg
 
-    handled = await test_handler(
-        Message(
-            {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-        )
-    )
+    handled = await test_handler({})
     assert handled["preprocessed"]
 
 
-def test_validate():
+def test_validate(message):
     """Test validation of message"""
 
     def validator(msg):
         assert msg.id == "12345"
+        return msg
 
     @utils.validate(validator)
     def validate_test(msg):
         assert msg
 
-    validate_test(
-        Message(
-            {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-        )
-    )
+    validate_test(message)
 
 
 def test_validate_modify_msg():
@@ -99,18 +90,14 @@ def test_validate_modify_msg():
     def test_handler(msg):
         assert msg["modified"]
 
-    test_handler(
-        Message(
-            {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-        )
-    )
+    test_handler({})
 
 
 def test_validate_with_other_decorators():
     """Test validation of message"""
 
     def validator(msg):
-        assert msg.id == "12345"
+        assert msg["@id"] == "12345"
         msg["validated"] = True
         return msg
 
@@ -132,98 +119,80 @@ def test_validate_with_other_decorators():
     def validate_test2(msg):
         return msg
 
-    msg = Message(
-        {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-    )
-
-    handled = validate_test(msg)
+    handled = validate_test({"@id": "12345"})
     assert handled["validated"]
-    handled = validate_test2(msg)
+    handled = validate_test2({"@id": "12345"})
     assert handled["validated"]
 
 
-def test_mtc_decorator():
+def test_mtc_decorator(message):
     """Test the MTC decorator."""
 
     @utils.mtc(AUTHCRYPT_AFFIRMED, AUTHCRYPT_DENIED)
     def mtc_test(msg):
         assert msg
 
-    msg = Message(
-        {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-    )
-    msg.mtc = MessageTrustContext(AUTHCRYPT_AFFIRMED, AUTHCRYPT_DENIED)
-    mtc_test(msg)
+    message.mtc[AUTHCRYPT_AFFIRMED] = True
+    message.mtc[AUTHCRYPT_DENIED] = False
+    mtc_test(message)
 
 
-def test_mtc_decorator_not_met():
+def test_mtc_decorator_not_met(message):
     """Test the MTC decorator."""
 
     @utils.mtc(AUTHCRYPT_AFFIRMED)
     def mtc_test(msg):
         assert msg
 
-    msg = Message(
-        {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-    )
-    msg.mtc = MessageTrustContext(AUTHCRYPT_AFFIRMED, AUTHCRYPT_DENIED)
+    message.mtc[AUTHCRYPT_AFFIRMED] = True
+    message.mtc[AUTHCRYPT_DENIED] = False
     with pytest.raises(utils.InsufficientMessageTrust):
-        mtc_test(msg)
+        mtc_test(message)
 
 
-def test_authcrypted_decorator():
+def test_authcrypted_decorator(message):
     """Test the authcrypted decorator."""
 
     @utils.authcrypted
     def mtc_test(msg):
         assert msg
 
-    msg = Message(
-        {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-    )
-    msg.mtc = MessageTrustContext(AUTHCRYPT_AFFIRMED, AUTHCRYPT_DENIED)
-    mtc_test(msg)
+    message.mtc[AUTHCRYPT_AFFIRMED] = True
+    message.mtc[AUTHCRYPT_DENIED] = False
+    mtc_test(message)
 
 
-def test_authcrypted_decorator_not_met():
+def test_authcrypted_decorator_not_met(message):
     """Test the authcrypted decorator."""
 
     @utils.authcrypted
     def mtc_test(msg):
         assert msg
 
-    msg = Message(
-        {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-    )
-    msg.mtc = MessageTrustContext(AUTHCRYPT_AFFIRMED)
+    message.mtc[AUTHCRYPT_AFFIRMED] = True
     with pytest.raises(utils.InsufficientMessageTrust):
-        mtc_test(msg)
+        mtc_test(message)
 
 
-def test_anoncrypted_decorator():
+def test_anoncrypted_decorator(message):
     """Test the anoncrypted decorator."""
 
     @utils.anoncrypted
     def mtc_test(msg):
         assert msg
 
-    msg = Message(
-        {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-    )
-    msg.mtc = MessageTrustContext(ANONCRYPT_AFFIRMED, ANONCRYPT_DENIED)
-    mtc_test(msg)
+    message.mtc[ANONCRYPT_AFFIRMED] = True
+    message.mtc[ANONCRYPT_DENIED] = False
+    mtc_test(message)
 
 
-def test_anoncrypted_decorator_not_met():
+def test_anoncrypted_decorator_not_met(message):
     """Test the anoncrypted decorator."""
 
     @utils.anoncrypted
     def mtc_test(msg):
         assert msg
 
-    msg = Message(
-        {"@type": "doc_uri/protocol/0.1/test", "@id": "12345", "content": "test"}
-    )
-    msg.mtc = MessageTrustContext(ANONCRYPT_AFFIRMED)
+    message.mtc[ANONCRYPT_AFFIRMED] = True
     with pytest.raises(utils.InsufficientMessageTrust):
-        mtc_test(msg)
+        mtc_test(message)

@@ -32,7 +32,7 @@ def bob(bob_keys, alice_keys):
 
 def test_pack_unpack_auth(alice, bob):
     """Test the pack-unpack loop with authcrypt."""
-    msg = Message({"@type": "doc;protocol/1.0/name"})
+    msg = Message.parse_obj({"@type": "doc;protocol/1.0/name"})
     packed_msg = alice.pack(msg)
     assert isinstance(packed_msg, bytes)
 
@@ -58,7 +58,7 @@ def test_pack_unpack_anon(alice, bob):
     assert unpacked_msg.mtc.recipient == bob.verkey_b58
 
 
-def test_pack_unpack_plaintext(alice, bob):
+def test_pack_unpack_plaintext(alice: StaticConnection, bob):
     """Test pack/unpack in plaintext."""
     msg = {"@type": "doc;protocol/1.0/name"}
     packed_msg = alice.pack(msg, plaintext=True)

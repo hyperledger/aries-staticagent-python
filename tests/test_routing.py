@@ -5,7 +5,7 @@ import asyncio
 import pytest
 from aries_staticagent import StaticConnection, Message, Module
 from aries_staticagent.dispatcher import Dispatcher, NoRegisteredHandlerException
-from aries_staticagent.type import Type
+from aries_staticagent.message import MsgType
 
 # pylint: disable=redefined-outer-name
 # pylint: disable=too-few-public-methods
@@ -43,7 +43,7 @@ async def test_simple_route(event, dispatcher, conn):
         kwargs["event"].set()
 
     await dispatcher.dispatch(
-        Message({"@type": "test_protocol/1.0/testing_type", "test": "test"}),
+        Message.parse_obj({"@type": "test_protocol/1.0/testing_type", "test": "test"}),
         event=event,
     )
 
@@ -56,7 +56,7 @@ async def test_simple_route(event, dispatcher, conn):
     [
         (["test_protocol/1.0/testing_type"], {}, "test_protocol/1.0/testing_type"),
         (
-            [Type.from_str("test_protocol/1.0/testing_type")],
+            [MsgType("test_protocol/1.0/testing_type")],
             {},
             "test_protocol/1.0/testing_type",
         ),
@@ -108,7 +108,7 @@ async def test_routing_module_explicit_def(
     mod = TestModule()
     conn.route_module(mod)
 
-    test_msg = Message({"@type": send_type, "test": "test"})
+    test_msg = Message.parse_obj({"@type": send_type, "test": "test"})
     await dispatcher.dispatch(test_msg, event=event)
 
     assert event.is_set()
@@ -134,7 +134,9 @@ async def test_routing_module_simple(event, dispatcher, conn):
     mod = TestModule()
     conn.route_module(mod)
 
-    test_msg = Message({"@type": "test_protocol/1.0/testing_type", "test": "test"})
+    test_msg = Message.parse_obj(
+        {"@type": "test_protocol/1.0/testing_type", "test": "test"}
+    )
     await dispatcher.dispatch(test_msg, event=event)
 
     assert event.is_set()
@@ -176,7 +178,9 @@ async def test_routing_many(event, dispatcher, conn):
     conn.route_module(TestModule1())
     conn.route_module(TestModule2())
 
-    test_msg = Message({"@type": "test_protocol/1.0/testing_type", "test": "test"})
+    test_msg = Message.parse_obj(
+        {"@type": "test_protocol/1.0/testing_type", "test": "test"}
+    )
     await dispatcher.dispatch(test_msg, event=event, dispatcher=dispatcher)
     await event.wait()
 
@@ -185,7 +189,9 @@ async def test_routing_many(event, dispatcher, conn):
 
     event.clear()
 
-    test_msg = Message({"@type": "test_protocol/2.0/testing_type", "test": "test"})
+    test_msg = Message.parse_obj(
+        {"@type": "test_protocol/2.0/testing_type", "test": "test"}
+    )
     await dispatcher.dispatch(test_msg, event=event, dispatcher=dispatcher)
     await event.wait()
 
@@ -217,7 +223,9 @@ async def test_routing_no_matching_version(event, dispatcher, conn):
     mod = TestModule()
     conn.route_module(mod)
 
-    test_msg = Message({"@type": "test_protocol/3.0/testing_type", "test": "test"})
+    test_msg = Message.parse_obj(
+        {"@type": "test_protocol/3.0/testing_type", "test": "test"}
+    )
     with pytest.raises(NoRegisteredHandlerException):
         await dispatcher.dispatch(test_msg, event=event)
 
@@ -242,7 +250,9 @@ async def test_routing_minor_version_different(event, dispatcher, conn):
     mod = TestModule()
     conn.route_module(mod)
 
-    test_msg = Message({"@type": "test_protocol/1.0/testing_type", "test": "test"})
+    test_msg = Message.parse_obj(
+        {"@type": "test_protocol/1.0/testing_type", "test": "test"}
+    )
     await dispatcher.dispatch(test_msg, event=event)
 
     assert event.is_set()
