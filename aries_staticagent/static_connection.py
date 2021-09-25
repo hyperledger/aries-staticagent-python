@@ -19,7 +19,6 @@ from . import crypto
 from .dispatcher import Dispatcher, Handler
 from .message import Message, MsgType
 from .module import Module
-from .mtc import MessageTrustContext
 from .utils import ensure_key_bytes, forward_msg, http_send
 
 
@@ -192,7 +191,7 @@ class Target:
         endpoint: str = None,
         their_vk: Union[bytes, str] = None,
         recipients: Sequence[Union[bytes, str]] = None,
-        routing_keys: Sequence[Union[bytes, str]] = None
+        routing_keys: Sequence[Union[bytes, str]] = None,
     ):
         if their_vk and recipients:
             raise ValueError("their_vk and recipients are mutually exclusive.")
@@ -217,7 +216,7 @@ class Target:
         their_vk: Union[bytes, str] = None,
         recipients: Sequence[Union[bytes, str]] = None,
         routing_keys: Sequence[Union[bytes, str]] = None,
-        **_kwargs
+        **_kwargs,
     ):
         """Update their information."""
         if their_vk and recipients:
@@ -312,7 +311,7 @@ class StaticConnection(Keys.Mixin):
         *,
         modules: Sequence[Union[Module, type]] = None,
         send: Send = None,
-        dispatcher: Dispatcher = None
+        dispatcher: Dispatcher = None,
     ):
 
         Keys.Mixin.__init__(self, keys)
@@ -324,8 +323,8 @@ class StaticConnection(Keys.Mixin):
                     mod = mod()
                 self.route_module(mod)
 
-        self._send: Send = send if send else http_send
-        self._dispatcher = dispatcher if dispatcher else Dispatcher()
+        self._send: Send = send or http_send
+        self._dispatcher = dispatcher or Dispatcher()
 
         self._next: ConditionFutureMap = {}
         self._sessions: Set[Session] = set()
@@ -339,7 +338,7 @@ class StaticConnection(Keys.Mixin):
         their_vk: Union[bytes, str] = None,
         recipients: Sequence[Union[bytes, str]] = None,
         routing_keys: Sequence[Union[bytes, str]] = None,
-        **kwargs
+        **kwargs,
     ):
         """Construct a static connection from its parts.
 
@@ -472,7 +471,6 @@ class StaticConnection(Keys.Mixin):
                 packed_message, self.verkey, self.sigkey
             )
             msg = Message.deserialize(unpacked_msg)
-            msg.mtc = MessageTrustContext()
             if sender_vk:
                 msg.mtc.set_authcrypted(sender_vk, recip_vk)
             else:
@@ -482,7 +480,6 @@ class StaticConnection(Keys.Mixin):
             if not isinstance(packed_message, bytes):
                 raise TypeError("Expected bytes, got {}".format(type(msg).__name__))
             msg = Message.deserialize(packed_message)
-            msg.mtc = MessageTrustContext()
             msg.mtc.set_plaintext()
 
         return msg
@@ -498,10 +495,12 @@ class StaticConnection(Keys.Mixin):
             if isinstance(msg, dict):
                 msg = Message.parse_obj(msg)
             else:
-                raise TypeError("msg must be type Message or dict")
+                raise TypeError(
+                    f"msg must be type Message or dict; received {type(msg)}"
+                )
 
         if plaintext:
-            return json.dumps(msg).encode("ascii")
+            return msg.serialize().encode("ascii")
 
         if not self.target or not self.target.recipients:
             raise RuntimeError("No recipients for whom to pack this message")
@@ -577,7 +576,7 @@ class StaticConnection(Keys.Mixin):
         *,
         return_route: str = None,
         plaintext: bool = False,
-        anoncrypt: bool = False
+        anoncrypt: bool = False,
     ):
         """
         Send a message to the agent connected through this StaticConnection.
@@ -586,13 +585,13 @@ class StaticConnection(Keys.Mixin):
             if isinstance(msg, dict):
                 msg = Message.parse_obj(msg)
             else:
-                raise TypeError("msg must be type Message or dict")
+                raise TypeError(
+                    f"msg must be type Message or dict; received {type(msg)}"
+                )
 
         # TODO: Don't specify return route on messages sent to sessions?
         if return_route:
-            if "~transport" not in msg:
-                msg["~transport"] = {}
-            msg["~transport"]["return_route"] = return_route
+            msg = msg.with_transport(return_route=return_route)
 
         packed_message = self.pack(msg, anoncrypt=anoncrypt, plaintext=plaintext)
 
@@ -623,7 +622,7 @@ class StaticConnection(Keys.Mixin):
         return_route: str = "all",
         plaintext: bool = False,
         anoncrypt: bool = False,
-        timeout: int = None
+        timeout: int = None,
     ) -> Message:
         """Send a message and wait for a reply to that message."""
         hydrated = Message.parse_obj(msg) if not isinstance(msg, Message) else msg
@@ -650,7 +649,7 @@ class StaticConnection(Keys.Mixin):
         return_route: str = "all",
         plaintext: bool = False,
         anoncrypt: bool = False,
-        timeout: int = None
+        timeout: int = None,
     ) -> Message:
         """Send a message and wait for a message to be returned."""
 
@@ -671,7 +670,7 @@ class StaticConnection(Keys.Mixin):
         *,
         type_: str = None,
         condition: Callable[[Message], bool] = None,
-        timeout: int = None
+        timeout: int = None,
     ):
         """
         Wait for a message.
