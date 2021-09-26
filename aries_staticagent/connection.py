@@ -618,7 +618,6 @@ class Connection(Keys.Mixin):
         self,
         msg: Union[dict, Message],
         *,
-        type_: str = None,
         return_route: str = "all",
         plaintext: bool = False,
         anoncrypt: bool = False,
@@ -631,8 +630,7 @@ class Connection(Keys.Mixin):
             return hydrated.id == returned.thread["thid"]
 
         return await self.send_and_await_returned_async(
-            msg,
-            type_=type_,
+            hydrated,
             condition=_reply_match,
             return_route=return_route,
             plaintext=plaintext,
