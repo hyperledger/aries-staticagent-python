@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>aries_staticagent.dispatcher API documentation</title>
 <meta name="description" content="Dispatcher" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -33,55 +33,50 @@ from typing import Callable, Sequence
 
 from sortedcontainers import SortedSet
 
-from .message import Message
-from .type import Type
+from .message import Message, MsgType
 
 
 class NoRegisteredHandlerException(Exception):
-    &#34;&#34;&#34; Thrown when message has no registered handlers &#34;&#34;&#34;
+    &#34;&#34;&#34;Thrown when message has no registered handlers&#34;&#34;&#34;
 
 
 class Handler:  # pylint: disable=too-few-public-methods
-    &#34;&#34;&#34; A Message Handler. &#34;&#34;&#34;
-    __slots__ = (
-        &#39;type&#39;,
-        &#39;handler&#39;,
-        &#39;context&#39;
-    )
+    &#34;&#34;&#34;A Message Handler.&#34;&#34;&#34;
 
-    def __init__(self, type_: Type, handler: Callable, context=None):
-        if not isinstance(type_, Type):
-            raise ValueError(&#39;type parameter must be Type object&#39;)
+    __slots__ = (&#34;type&#34;, &#34;handler&#34;, &#34;context&#34;)
+
+    def __init__(self, msg_type: MsgType, handler: Callable):
+        if not isinstance(msg_type, MsgType):
+            raise ValueError(&#34;type parameter must be MsgType object&#34;)
         if not callable(handler):
-            raise ValueError(&#39;handler parameter must be callable&#39;)
+            raise ValueError(&#34;handler parameter must be callable&#34;)
 
-        self.type = type_
+        self.type = msg_type
         self.handler = handler
-        self.context = context
 
     async def run(self, msg, *args, **kwargs):
-        &#34;&#34;&#34; Call the handler with message. &#34;&#34;&#34;
-        args = [msg, *args] if not self.context else [self.context, msg, *args]
-        return await self.handler(*args, **kwargs)
+        &#34;&#34;&#34;Call the handler with message.&#34;&#34;&#34;
+        return await self.handler(msg, *args, **kwargs)
 
 
 class Dispatcher:
-    &#34;&#34;&#34; One of the fundamental aspects of an agent; responsible for dispatching
-        messages to appropriate handlers.
+    &#34;&#34;&#34;One of the fundamental aspects of an agent; responsible for dispatching
+    messages to appropriate handlers.
     &#34;&#34;&#34;
+
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.handlers = {}
         self.handler_versions = {}
 
     def clear_handlers(self):
-        &#34;&#34;&#34; Clear routes &#34;&#34;&#34;
+        &#34;&#34;&#34;Clear routes&#34;&#34;&#34;
         self.handlers.clear()
         self.handler_versions.clear()
 
     def add_handler(self, handler: Handler):
-        &#34;&#34;&#34; Add a handler to routing tables. &#34;&#34;&#34;
-        self.handlers[handler.type] = handler
+        &#34;&#34;&#34;Add a handler to routing tables.&#34;&#34;&#34;
+        self.handlers[handler.type.normalized] = handler
 
         key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
         if key not in self.handler_versions:
@@ -89,14 +84,14 @@ class Dispatcher:
         self.handler_versions[key].add(handler.type.version_info)
 
     def add_handlers(self, handlers: Sequence[Handler]):
-        &#34;&#34;&#34; Add a list of handlers to routing tables. &#34;&#34;&#34;
+        &#34;&#34;&#34;Add a list of handlers to routing tables.&#34;&#34;&#34;
         for handler in handlers:
             self.add_handler(handler)
 
     def remove_handler(self, handler):
-        &#34;&#34;&#34; Remove handler from routing tables. &#34;&#34;&#34;
+        &#34;&#34;&#34;Remove handler from routing tables.&#34;&#34;&#34;
         if handler.type not in self.handlers:
-            raise NoRegisteredHandlerException(&#39;Handler is not registered&#39;)
+            raise NoRegisteredHandlerException(&#34;Handler is not registered&#34;)
 
         del self.handlers[handler.type]
         key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
@@ -105,36 +100,30 @@ class Dispatcher:
             del self.handler_versions[key]
 
     def select_handler(self, msg: Message):
-        &#34;&#34;&#34; Find the closest appropriate module for a given message.
-        &#34;&#34;&#34;
-        key = (msg.doc_uri, msg.protocol, msg.name)
+        &#34;&#34;&#34;Find the closest appropriate module for a given message.&#34;&#34;&#34;
+        key = (msg.type.doc_uri, msg.type.protocol, msg.type.name)
         if key not in self.handler_versions:
             return None
 
         registered_version_set = self.handler_versions[key]
         for version in reversed(registered_version_set):
-            if msg.version_info.major == version.major:
-                handler_type = Type(
-                    msg.doc_uri,
-                    msg.protocol,
-                    version,
-                    msg.name
+            if msg.type.version_info.major == version.major:
+                handler_type = MsgType.unparse(
+                    msg.type.doc_uri, msg.type.protocol, version, msg.type.name
                 )
                 return self.handlers[handler_type]
 
-            if msg.version_info.major &gt; version.major:
+            if msg.type.version_info.major &gt; version.major:
                 break
 
         return None
 
     async def dispatch(self, msg: Message, *args, **kwargs):
-        &#34;&#34;&#34; Dispatch message to handler. &#34;&#34;&#34;
+        &#34;&#34;&#34;Dispatch message to handler.&#34;&#34;&#34;
         handler = self.select_handler(msg)
         if not handler:
             raise NoRegisteredHandlerException(
-                &#39;No suitable handler for message of type {}&#39;.format(
-                    msg.type
-                )
+                &#34;No suitable handler for message of type {}&#34;.format(msg.type)
             )
 
         return await handler.run(msg, *args, **kwargs)</code></pre>
@@ -160,22 +149,23 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Dispatcher:
-    &#34;&#34;&#34; One of the fundamental aspects of an agent; responsible for dispatching
-        messages to appropriate handlers.
+    &#34;&#34;&#34;One of the fundamental aspects of an agent; responsible for dispatching
+    messages to appropriate handlers.
     &#34;&#34;&#34;
+
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.handlers = {}
         self.handler_versions = {}
 
     def clear_handlers(self):
-        &#34;&#34;&#34; Clear routes &#34;&#34;&#34;
+        &#34;&#34;&#34;Clear routes&#34;&#34;&#34;
         self.handlers.clear()
         self.handler_versions.clear()
 
     def add_handler(self, handler: Handler):
-        &#34;&#34;&#34; Add a handler to routing tables. &#34;&#34;&#34;
-        self.handlers[handler.type] = handler
+        &#34;&#34;&#34;Add a handler to routing tables.&#34;&#34;&#34;
+        self.handlers[handler.type.normalized] = handler
 
         key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
         if key not in self.handler_versions:
@@ -183,14 +173,14 @@ messages to appropriate handlers.</p></div>
         self.handler_versions[key].add(handler.type.version_info)
 
     def add_handlers(self, handlers: Sequence[Handler]):
-        &#34;&#34;&#34; Add a list of handlers to routing tables. &#34;&#34;&#34;
+        &#34;&#34;&#34;Add a list of handlers to routing tables.&#34;&#34;&#34;
         for handler in handlers:
             self.add_handler(handler)
 
     def remove_handler(self, handler):
-        &#34;&#34;&#34; Remove handler from routing tables. &#34;&#34;&#34;
+        &#34;&#34;&#34;Remove handler from routing tables.&#34;&#34;&#34;
         if handler.type not in self.handlers:
-            raise NoRegisteredHandlerException(&#39;Handler is not registered&#39;)
+            raise NoRegisteredHandlerException(&#34;Handler is not registered&#34;)
 
         del self.handlers[handler.type]
         key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
@@ -199,36 +189,30 @@ messages to appropriate handlers.</p></div>
             del self.handler_versions[key]
 
     def select_handler(self, msg: Message):
-        &#34;&#34;&#34; Find the closest appropriate module for a given message.
-        &#34;&#34;&#34;
-        key = (msg.doc_uri, msg.protocol, msg.name)
+        &#34;&#34;&#34;Find the closest appropriate module for a given message.&#34;&#34;&#34;
+        key = (msg.type.doc_uri, msg.type.protocol, msg.type.name)
         if key not in self.handler_versions:
             return None
 
         registered_version_set = self.handler_versions[key]
         for version in reversed(registered_version_set):
-            if msg.version_info.major == version.major:
-                handler_type = Type(
-                    msg.doc_uri,
-                    msg.protocol,
-                    version,
-                    msg.name
+            if msg.type.version_info.major == version.major:
+                handler_type = MsgType.unparse(
+                    msg.type.doc_uri, msg.type.protocol, version, msg.type.name
                 )
                 return self.handlers[handler_type]
 
-            if msg.version_info.major &gt; version.major:
+            if msg.type.version_info.major &gt; version.major:
                 break
 
         return None
 
     async def dispatch(self, msg: Message, *args, **kwargs):
-        &#34;&#34;&#34; Dispatch message to handler. &#34;&#34;&#34;
+        &#34;&#34;&#34;Dispatch message to handler.&#34;&#34;&#34;
         handler = self.select_handler(msg)
         if not handler:
             raise NoRegisteredHandlerException(
-                &#39;No suitable handler for message of type {}&#39;.format(
-                    msg.type
-                )
+                &#34;No suitable handler for message of type {}&#34;.format(msg.type)
             )
 
         return await handler.run(msg, *args, **kwargs)</code></pre>
@@ -245,8 +229,8 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_handler(self, handler: Handler):
-    &#34;&#34;&#34; Add a handler to routing tables. &#34;&#34;&#34;
-    self.handlers[handler.type] = handler
+    &#34;&#34;&#34;Add a handler to routing tables.&#34;&#34;&#34;
+    self.handlers[handler.type.normalized] = handler
 
     key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
     if key not in self.handler_versions:
@@ -264,7 +248,7 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_handlers(self, handlers: Sequence[Handler]):
-    &#34;&#34;&#34; Add a list of handlers to routing tables. &#34;&#34;&#34;
+    &#34;&#34;&#34;Add a list of handlers to routing tables.&#34;&#34;&#34;
     for handler in handlers:
         self.add_handler(handler)</code></pre>
 </details>
@@ -279,7 +263,7 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def clear_handlers(self):
-    &#34;&#34;&#34; Clear routes &#34;&#34;&#34;
+    &#34;&#34;&#34;Clear routes&#34;&#34;&#34;
     self.handlers.clear()
     self.handler_versions.clear()</code></pre>
 </details>
@@ -294,13 +278,11 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def dispatch(self, msg: Message, *args, **kwargs):
-    &#34;&#34;&#34; Dispatch message to handler. &#34;&#34;&#34;
+    &#34;&#34;&#34;Dispatch message to handler.&#34;&#34;&#34;
     handler = self.select_handler(msg)
     if not handler:
         raise NoRegisteredHandlerException(
-            &#39;No suitable handler for message of type {}&#39;.format(
-                msg.type
-            )
+            &#34;No suitable handler for message of type {}&#34;.format(msg.type)
         )
 
     return await handler.run(msg, *args, **kwargs)</code></pre>
@@ -316,9 +298,9 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def remove_handler(self, handler):
-    &#34;&#34;&#34; Remove handler from routing tables. &#34;&#34;&#34;
+    &#34;&#34;&#34;Remove handler from routing tables.&#34;&#34;&#34;
     if handler.type not in self.handlers:
-        raise NoRegisteredHandlerException(&#39;Handler is not registered&#39;)
+        raise NoRegisteredHandlerException(&#34;Handler is not registered&#34;)
 
     del self.handlers[handler.type]
     key = (handler.type.doc_uri, handler.type.protocol, handler.type.name)
@@ -337,24 +319,20 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def select_handler(self, msg: Message):
-    &#34;&#34;&#34; Find the closest appropriate module for a given message.
-    &#34;&#34;&#34;
-    key = (msg.doc_uri, msg.protocol, msg.name)
+    &#34;&#34;&#34;Find the closest appropriate module for a given message.&#34;&#34;&#34;
+    key = (msg.type.doc_uri, msg.type.protocol, msg.type.name)
     if key not in self.handler_versions:
         return None
 
     registered_version_set = self.handler_versions[key]
     for version in reversed(registered_version_set):
-        if msg.version_info.major == version.major:
-            handler_type = Type(
-                msg.doc_uri,
-                msg.protocol,
-                version,
-                msg.name
+        if msg.type.version_info.major == version.major:
+            handler_type = MsgType.unparse(
+                msg.type.doc_uri, msg.type.protocol, version, msg.type.name
             )
             return self.handlers[handler_type]
 
-        if msg.version_info.major &gt; version.major:
+        if msg.type.version_info.major &gt; version.major:
             break
 
     return None</code></pre>
@@ -364,7 +342,7 @@ messages to appropriate handlers.</p></div>
 </dd>
 <dt id="aries_staticagent.dispatcher.Handler"><code class="flex name class">
 <span>class <span class="ident">Handler</span></span>
-<span>(</span><span>type_: <a title="aries_staticagent.type.Type" href="type.html#aries_staticagent.type.Type">Type</a>, handler: Callable, context=None)</span>
+<span>(</span><span>msg_type: <a title="aries_staticagent.message.MsgType" href="message.html#aries_staticagent.message.MsgType">MsgType</a>, handler: Callable)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A Message Handler.</p></div>
@@ -373,27 +351,22 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Handler:  # pylint: disable=too-few-public-methods
-    &#34;&#34;&#34; A Message Handler. &#34;&#34;&#34;
-    __slots__ = (
-        &#39;type&#39;,
-        &#39;handler&#39;,
-        &#39;context&#39;
-    )
+    &#34;&#34;&#34;A Message Handler.&#34;&#34;&#34;
 
-    def __init__(self, type_: Type, handler: Callable, context=None):
-        if not isinstance(type_, Type):
-            raise ValueError(&#39;type parameter must be Type object&#39;)
+    __slots__ = (&#34;type&#34;, &#34;handler&#34;, &#34;context&#34;)
+
+    def __init__(self, msg_type: MsgType, handler: Callable):
+        if not isinstance(msg_type, MsgType):
+            raise ValueError(&#34;type parameter must be MsgType object&#34;)
         if not callable(handler):
-            raise ValueError(&#39;handler parameter must be callable&#39;)
+            raise ValueError(&#34;handler parameter must be callable&#34;)
 
-        self.type = type_
+        self.type = msg_type
         self.handler = handler
-        self.context = context
 
     async def run(self, msg, *args, **kwargs):
-        &#34;&#34;&#34; Call the handler with message. &#34;&#34;&#34;
-        args = [msg, *args] if not self.context else [self.context, msg, *args]
-        return await self.handler(*args, **kwargs)</code></pre>
+        &#34;&#34;&#34;Call the handler with message.&#34;&#34;&#34;
+        return await self.handler(msg, *args, **kwargs)</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -422,9 +395,8 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def run(self, msg, *args, **kwargs):
-    &#34;&#34;&#34; Call the handler with message. &#34;&#34;&#34;
-    args = [msg, *args] if not self.context else [self.context, msg, *args]
-    return await self.handler(*args, **kwargs)</code></pre>
+    &#34;&#34;&#34;Call the handler with message.&#34;&#34;&#34;
+    return await self.handler(msg, *args, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>
@@ -440,7 +412,7 @@ messages to appropriate handlers.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NoRegisteredHandlerException(Exception):
-    &#34;&#34;&#34; Thrown when message has no registered handlers &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Thrown when message has no registered handlers&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -493,7 +465,7 @@ messages to appropriate handlers.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

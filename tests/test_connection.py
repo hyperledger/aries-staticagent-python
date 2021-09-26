@@ -1,9 +1,9 @@
-""" Test StaticConnection. """
+""" Test Connection. """
 
 import hashlib
 from collections import namedtuple
 import pytest
-from aries_staticagent import StaticConnection, Keys, MessageDeliveryError, crypto
+from aries_staticagent import Connection, Keys, MessageDeliveryError, crypto
 
 
 ConnectionInfo = namedtuple("ConnectionInfo", "keys, did")
@@ -20,9 +20,7 @@ def generate_test_info(seed=None):
 def my_test_info():
     """Get my test info."""
     return generate_test_info(
-        hashlib.sha256(
-            b"aries_staticagent.test_static_connection.my_test_info"
-        ).digest()
+        hashlib.sha256(b"aries_staticagent.test_connection.my_test_info").digest()
     )
 
 
@@ -30,9 +28,7 @@ def my_test_info():
 def their_test_info():
     """Get my test info."""
     return generate_test_info(
-        hashlib.sha256(
-            b"aries_staticagent.test_static_connection.their_test_info"
-        ).digest()
+        hashlib.sha256(b"aries_staticagent.test_connection.their_test_info").digest()
     )
 
 
@@ -48,12 +44,12 @@ def their_test_info():
 def test_bad_inputs(args):
     """Test that bad inputs raise an error."""
     with pytest.raises(TypeError):
-        StaticConnection.from_parts(*args)
+        Connection.from_parts(*args)
 
 
 def test_byte_inputs_without_their_info(my_test_info):
     """Test that valid byte inputs yield expected values."""
-    conn = StaticConnection.from_parts(my_test_info.keys)
+    conn = Connection.from_parts(my_test_info.keys)
     assert conn.verkey == my_test_info.keys.verkey
     assert conn.sigkey == my_test_info.keys.sigkey
     assert conn.verkey_b58 == my_test_info.keys.verkey_b58
@@ -62,7 +58,7 @@ def test_byte_inputs_without_their_info(my_test_info):
 
 def test_b58_inputs_without_their_info(my_test_info):
     """Test that valid b58 inputs yield expected values."""
-    conn = StaticConnection.from_parts(
+    conn = Connection.from_parts(
         (my_test_info.keys.verkey_b58, crypto.bytes_to_b58(my_test_info.keys.sigkey))
     )
     assert conn.verkey == my_test_info.keys.verkey
@@ -73,7 +69,7 @@ def test_b58_inputs_without_their_info(my_test_info):
 
 def test_byte_inputs_with_their_info(my_test_info, their_test_info):
     """Test that valid byte inputs yield expected values."""
-    conn = StaticConnection.from_parts(
+    conn = Connection.from_parts(
         my_test_info.keys, their_vk=their_test_info.keys.verkey, endpoint="endpoint"
     )
     assert conn.verkey == my_test_info.keys.verkey
@@ -86,7 +82,7 @@ def test_byte_inputs_with_their_info(my_test_info, their_test_info):
 
 def test_b58_inputs_with_their_info(my_test_info, their_test_info):
     """Test that valid b58 inputs yield expected values."""
-    conn = StaticConnection.from_parts(
+    conn = Connection.from_parts(
         my_test_info.keys, their_vk=their_test_info.keys.verkey_b58
     )
     assert conn.verkey == my_test_info.keys.verkey
@@ -99,7 +95,7 @@ def test_b58_inputs_with_their_info(my_test_info, their_test_info):
 def test_their_vk_and_recipients_raises_error(my_test_info, their_test_info):
     """Test specifying both their_vk and recipients raises an error."""
     with pytest.raises(ValueError):
-        StaticConnection.from_parts(
+        Connection.from_parts(
             my_test_info.keys,
             their_vk=their_test_info.keys.verkey,
             recipients=[their_test_info.keys.verkey],
@@ -108,7 +104,7 @@ def test_their_vk_and_recipients_raises_error(my_test_info, their_test_info):
 
 def test_give_recipients(my_test_info, their_test_info):
     """Test recipients set when specified."""
-    conn = StaticConnection.from_parts(
+    conn = Connection.from_parts(
         my_test_info.keys,
         recipients=[their_test_info.keys.verkey],
     )
@@ -117,7 +113,7 @@ def test_give_recipients(my_test_info, their_test_info):
 
 def test_give_recipients_b58(my_test_info, their_test_info):
     """Test recipients set when specified."""
-    conn = StaticConnection.from_parts(
+    conn = Connection.from_parts(
         my_test_info.keys,
         recipients=[their_test_info.keys.verkey_b58],
     )
@@ -126,7 +122,7 @@ def test_give_recipients_b58(my_test_info, their_test_info):
 
 def test_give_routing_keys(my_test_info, their_test_info):
     """Test routing_keys set when specified."""
-    conn = StaticConnection.from_parts(
+    conn = Connection.from_parts(
         my_test_info.keys,
         their_vk=their_test_info.keys.verkey,
         routing_keys=[their_test_info.keys.verkey],
@@ -137,7 +133,7 @@ def test_give_routing_keys(my_test_info, their_test_info):
 
 def test_give_routing_keys_b58(my_test_info, their_test_info):
     """Test routing_keys set when specified."""
-    conn = StaticConnection.from_parts(
+    conn = Connection.from_parts(
         my_test_info.keys,
         their_vk=their_test_info.keys.verkey,
         routing_keys=[their_test_info.keys.verkey_b58],
@@ -148,7 +144,7 @@ def test_give_routing_keys_b58(my_test_info, their_test_info):
 
 def test_update(my_test_info, their_test_info):
     their_new_info = generate_test_info()
-    conn = StaticConnection.from_parts(
+    conn = Connection.from_parts(
         my_test_info.keys,
         their_vk=their_test_info.keys.verkey,
         routing_keys=[their_test_info.keys.verkey],

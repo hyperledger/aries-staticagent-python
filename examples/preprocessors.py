@@ -1,7 +1,7 @@
 """Preprocessor usage example."""
 from aiohttp import web
 
-from aries_staticagent import StaticConnection, utils
+from aries_staticagent import Connection, utils
 
 from common import config
 
@@ -22,9 +22,9 @@ def validate_basic_message(msg):
 
 
 def main():
-    """Create StaticConnection and start web server."""
+    """Create Connection and start web server."""
     keys, target, args = config()
-    conn = StaticConnection(keys, target)
+    conn = Connection(keys, target)
 
     @conn.route(TYPE)
     @utils.validate(validate_basic_message)

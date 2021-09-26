@@ -1,15 +1,15 @@
 """Webserver example."""
 from aiohttp import web
 
-from aries_staticagent import StaticConnection, utils
+from aries_staticagent import Connection, utils
 
 from common import config
 
 
 def main():
-    """Create StaticConnection and start web server."""
+    """Create Connection and start web server."""
     keys, target, args = config()
-    conn = StaticConnection(keys, target)
+    conn = Connection(keys, target)
 
     @conn.route("https://didcomm.org/basicmessage/1.0/message")
     async def basic_message(msg, conn):

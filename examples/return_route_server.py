@@ -7,13 +7,13 @@ return routing.
 import hashlib
 import os
 from aiohttp import web
-from aries_staticagent import StaticConnection, Target, crypto, utils
+from aries_staticagent import Connection, Target, crypto, utils
 
 
 def main():
     """Start a server with a static connection."""
     their_vk, _ = crypto.create_keypair(seed=hashlib.sha256(b"client").digest())
-    conn = StaticConnection.from_seed(
+    conn = Connection.from_seed(
         hashlib.sha256(b"server").digest(), Target(their_vk=their_vk)
     )
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>aries_staticagent.message API documentation</title>
 <meta name="description" content="Define Message base class." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,120 +28,182 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34; Define Message base class. &#34;&#34;&#34;
-import json
-import uuid
-from typing import Optional, Union
+from abc import ABC
+from functools import partial
+from operator import is_not
+import re
+from typing import Any, ClassVar, Mapping, Optional, Type, TypeVar, Union
+from uuid import uuid4
 
-from .type import Type, Semver
+from pydantic import BaseModel, Extra, Field
+from pydantic.class_validators import validator
+from semver import VersionInfo
+
 from .mtc import MessageTrustContext
 
 
-def generate_id():
-    &#34;&#34;&#34; Generate a message id. &#34;&#34;&#34;
-    return str(uuid.uuid4())
+MTURI_RE = re.compile(r&#34;(.*?)([a-z0-9._-]+)/(\d[^/]*)/([a-z0-9._-]+)$&#34;)
 
 
-class InvalidMessage(Exception):
-    &#34;&#34;&#34; Thrown when message is malformed. &#34;&#34;&#34;
+class MsgVersion(VersionInfo):  # pylint: disable=too-few-public-methods
+    &#34;&#34;&#34;Wrapper around the more complete VersionInfo class from semver package.
 
-
-class Message(dict):
-    &#34;&#34;&#34; Message base class.
-        Inherits from dict meaning it behaves like a dictionary.
+    This wrapper enables abbreviated versions in message types
+    (i.e. 1.0 not 1.0.0).
     &#34;&#34;&#34;
-    __slots__ = (
-        &#39;mtc&#39;,
-        &#39;_type&#39;
-    )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    SEMVER_RE = re.compile(r&#34;^(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\.(0|[1-9]\d*))?$&#34;)
 
-        if &#39;@type&#39; not in self:
-            raise InvalidMessage(&#39;No @type in message&#39;)
+    @classmethod
+    def from_str(cls, version_str):
+        &#34;&#34;&#34;Parse version information from a string.&#34;&#34;&#34;
+        matches = cls.SEMVER_RE.match(version_str)
+        if matches:
+            args = list(matches.groups())
+            if not matches.group(3):
+                args.append(&#34;0&#34;)
+            return cls(*map(int, filter(partial(is_not, None), args)))
 
-        if &#39;@id&#39; not in self:
-            self[&#39;@id&#39;] = generate_id()
-        elif not isinstance(self[&#39;@id&#39;], str):
-            raise InvalidMessage(&#39;Message @id is invalid; must be str&#39;)
+        parts = VersionInfo.parse(version_str)
 
-        if isinstance(self[&#39;@type&#39;], Type):
-            self._type = self[&#39;@type&#39;]
-            self[&#39;@type&#39;] = str(self._type)
-        else:
-            self._type = Type.from_str(self.type)
-        self.mtc: Optional[MessageTrustContext] = None
+        return cls(
+            parts.major,
+            parts.minor,
+            parts.patch,
+            parts.prerelease,
+            parts.build,
+        )
+
+
+class InvalidType(ValueError):
+    &#34;&#34;&#34;When type is unparsable or invalid.&#34;&#34;&#34;
+
+
+class MsgType(str):
+    &#34;&#34;&#34;Message type.&#34;&#34;&#34;
+
+    def __init__(self, msg_type: str):
+        &#34;&#34;&#34;Parse Message Type string.&#34;&#34;&#34;
+        super().__init__()
+        matches = MTURI_RE.match(msg_type)
+        if not matches:
+            raise InvalidType(f&#34;Invalid message type: {msg_type}&#34;)
+
+        doc_uri, protocol, version, name = matches.groups()
+        try:
+            self.version_info = MsgVersion.from_str(version)
+        except ValueError as err:
+            raise InvalidType(f&#34;Invalid message type version {version}&#34;) from err
+
+        self.version = version
+        self.doc_uri = doc_uri
+        self.protocol = protocol
+        self.name = name
+        self.normalized = (
+            f&#34;{self.doc_uri}{self.protocol}/{self.version_info}/{self.name}&#34;
+        )
+        self.normalized_version = f&#34;{self.version_info}&#34;
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str):
+        return cls(value)
+
+    @classmethod
+    def parse(cls, msg_type: str):
+        return cls(msg_type)
+
+    @classmethod
+    def unparse(cls, doc_uri: str, protocol: str, version: str, name: str):
+        return cls(f&#34;{doc_uri}{protocol}/{version}/{name}&#34;)
+
+
+MessageType = TypeVar(&#34;MessageType&#34;, bound=&#34;Message&#34;)
+
+
+class Message(BaseModel, Mapping[str, Any]):
+
+    type: MsgType = Field(alias=&#34;@type&#34;)
+    id: str = Field(alias=&#34;@id&#34;, default_factory=lambda: str(uuid4()))
+    _alias_dict: Mapping[str, Any] = {}
+    _mtc: MessageTrustContext = MessageTrustContext()
+
+    class Config:
+        extra = Extra.allow
+        allow_mutation = False
+        underscore_attrs_are_private = True
+        allow_population_by_field_name = True
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._alias_dict = self.dict(by_alias=True)
+
+    def __getitem__(self, item: str) -&gt; Any:
+        return self._alias_dict[item]
+
+    def __len__(self) -&gt; int:
+        return len(self.__dict__)
 
     @property
-    def type(self):
-        &#34;&#34;&#34; Shortcut for msg[&#39;@type&#39;] &#34;&#34;&#34;
-        return self[&#39;@type&#39;]
-
-    @property
-    def id(self):  # pylint: disable=invalid-name
-        &#34;&#34;&#34; Shortcut for msg[&#39;@id&#39;] &#34;&#34;&#34;
-        return self[&#39;@id&#39;]
+    def mtc(self):
+        return self._mtc
 
     @property
     def thread(self):
-        &#34;&#34;&#34;Shortcut to msg[&#39;~thread&#39;], if present.&#34;&#34;&#34;
-        return self.get(&#39;~thread&#39;, {&#39;thid&#39;: None})
+        return self.get(&#34;~thread&#34;, {&#34;thid&#34;: None})
 
-    @property
-    def doc_uri(self) -&gt; str:
-        &#34;&#34;&#34; Get type doc_uri &#34;&#34;&#34;
-        return self._type.doc_uri
+    def with_transport(self: MessageType, return_route: str = None) -&gt; MessageType:
+        return type(self)(
+            **{
+                **self.dict(by_alias=True),
+                &#34;~transport&#34;: {&#34;return_route&#34;: return_route} if return_route else {},
+            }
+        )
 
-    @property
-    def protocol(self) -&gt; str:
-        &#34;&#34;&#34; Get type protocol &#34;&#34;&#34;
-        return self._type.protocol
+    def with_thread(self: MessageType, thread: Mapping[str, str]) -&gt; MessageType:
+        return type(self)(**{**self.dict(by_alias=True), &#34;~thread&#34;: thread})
 
-    @property
-    def version(self) -&gt; str:
-        &#34;&#34;&#34; Get type version &#34;&#34;&#34;
-        return self._type.version
-
-    @property
-    def version_info(self) -&gt; Semver:
-        &#34;&#34;&#34; Get type version info &#34;&#34;&#34;
-        return self._type.version_info
-
-    @property
-    def name(self) -&gt; str:
-        &#34;&#34;&#34; Get type name &#34;&#34;&#34;
-        return self._type.name
-
-    @property
-    def normalized_version(self) -&gt; str:
-        &#34;&#34;&#34; Get type normalized version &#34;&#34;&#34;
-        return str(self._type.version_info)
-
-    # Serialization
     @classmethod
-    def deserialize(cls, serialized: Union[str, bytes]) -&gt; &#39;Message&#39;:
-        &#34;&#34;&#34; Deserialize a message from a json string. &#34;&#34;&#34;
-        try:
-            return cls(json.loads(serialized))
-        except json.decoder.JSONDecodeError as err:
-            raise InvalidMessage(&#39;Could not deserialize message&#39;) from err
+    def deserialize(
+        cls: Type[MessageType],
+        serialized: Union[str, bytes],
+        mtc: Optional[MessageTrustContext] = None,
+    ) -&gt; MessageType:
+        &#34;&#34;&#34;Deserialize a message from a json string.&#34;&#34;&#34;
+        msg = cls.parse_raw(serialized)
+        if mtc:
+            msg._mtc = mtc
 
-    def serialize(self) -&gt; str:
-        &#34;&#34;&#34; Serialize a message into a json string. &#34;&#34;&#34;
-        return json.dumps(self)
+        return msg
+
+    def serialize(self, **kwargs) -&gt; str:
+        &#34;&#34;&#34;Serialize a message into a json string.&#34;&#34;&#34;
+        return self.json(by_alias=True, exclude_none=True, **kwargs)
 
     def pretty_print(self) -&gt; str:
-        &#34;&#34;&#34; return a &#39;pretty print&#39; representation of this message. &#34;&#34;&#34;
-        return json.dumps(self, indent=2)
+        &#34;&#34;&#34;return a &#39;pretty print&#39; representation of this message.&#34;&#34;&#34;
+        return self.serialize(indent=2)
 
-    def __eq__(self, other) -&gt; bool:
-        if not isinstance(other, Message):
-            return False
 
-        return super().__eq__(other)
+class BaseMessage(Message, ABC):
 
-    def __hash__(self):
-        return hash(self.id)</code></pre>
+    msg_type: ClassVar[MsgType]
+    type: Optional[MsgType] = Field(alias=&#34;@type&#34;)
+
+    @validator(&#34;type&#34;, pre=True, always=True)
+    @classmethod
+    def _type(cls, value):
+        &#34;&#34;&#34;Set type if not present.&#34;&#34;&#34;
+        if not value:
+            return cls.msg_type
+        if value != cls.msg_type:
+            raise ValueError(
+                &#34;Invalid message type for {}: {}&#34;.format(cls.__name__, value)
+            )
+        return value</code></pre>
 </details>
 </section>
 <section>
@@ -149,163 +211,201 @@ class Message(dict):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="aries_staticagent.message.generate_id"><code class="name flex">
-<span>def <span class="ident">generate_id</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Generate a message id.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def generate_id():
-    &#34;&#34;&#34; Generate a message id. &#34;&#34;&#34;
-    return str(uuid.uuid4())</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="aries_staticagent.message.InvalidMessage"><code class="flex name class">
-<span>class <span class="ident">InvalidMessage</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<dt id="aries_staticagent.message.BaseMessage"><code class="flex name class">
+<span>class <span class="ident">BaseMessage</span></span>
+<span>(</span><span>**data)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Thrown when message is malformed.</p></div>
+<div class="desc"><p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class InvalidMessage(Exception):
-    &#34;&#34;&#34; Thrown when message is malformed. &#34;&#34;&#34;</code></pre>
+<pre><code class="python">class BaseMessage(Message, ABC):
+
+    msg_type: ClassVar[MsgType]
+    type: Optional[MsgType] = Field(alias=&#34;@type&#34;)
+
+    @validator(&#34;type&#34;, pre=True, always=True)
+    @classmethod
+    def _type(cls, value):
+        &#34;&#34;&#34;Set type if not present.&#34;&#34;&#34;
+        if not value:
+            return cls.msg_type
+        if value != cls.msg_type:
+            raise ValueError(
+                &#34;Invalid message type for {}: {}&#34;.format(cls.__name__, value)
+            )
+        return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="aries_staticagent.message.Message" href="#aries_staticagent.message.Message">Message</a></li>
+<li>pydantic.main.BaseModel</li>
+<li>pydantic.utils.Representation</li>
+<li>collections.abc.Mapping</li>
+<li>collections.abc.Collection</li>
+<li>collections.abc.Sized</li>
+<li>collections.abc.Iterable</li>
+<li>collections.abc.Container</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="aries_staticagent.message.BaseMessage.msg_type"><code class="name">var <span class="ident">msg_type</span> : ClassVar[<a title="aries_staticagent.message.MsgType" href="#aries_staticagent.message.MsgType">MsgType</a>]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="aries_staticagent.message.BaseMessage.type"><code class="name">var <span class="ident">type</span> : Optional[<a title="aries_staticagent.message.MsgType" href="#aries_staticagent.message.MsgType">MsgType</a>]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="aries_staticagent.message.Message" href="#aries_staticagent.message.Message">Message</a></b></code>:
+<ul class="hlist">
+<li><code><a title="aries_staticagent.message.Message.deserialize" href="#aries_staticagent.message.Message.deserialize">deserialize</a></code></li>
+<li><code><a title="aries_staticagent.message.Message.pretty_print" href="#aries_staticagent.message.Message.pretty_print">pretty_print</a></code></li>
+<li><code><a title="aries_staticagent.message.Message.serialize" href="#aries_staticagent.message.Message.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="aries_staticagent.message.InvalidType"><code class="flex name class">
+<span>class <span class="ident">InvalidType</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>When type is unparsable or invalid.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidType(ValueError):
+    &#34;&#34;&#34;When type is unparsable or invalid.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.ValueError</li>
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
 </ul>
 </dd>
 <dt id="aries_staticagent.message.Message"><code class="flex name class">
 <span>class <span class="ident">Message</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<span>(</span><span>**data)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Message base class.
-Inherits from dict meaning it behaves like a dictionary.</p></div>
+<div class="desc"><p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Message(dict):
-    &#34;&#34;&#34; Message base class.
-        Inherits from dict meaning it behaves like a dictionary.
-    &#34;&#34;&#34;
-    __slots__ = (
-        &#39;mtc&#39;,
-        &#39;_type&#39;
-    )
+<pre><code class="python">class Message(BaseModel, Mapping[str, Any]):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    type: MsgType = Field(alias=&#34;@type&#34;)
+    id: str = Field(alias=&#34;@id&#34;, default_factory=lambda: str(uuid4()))
+    _alias_dict: Mapping[str, Any] = {}
+    _mtc: MessageTrustContext = MessageTrustContext()
 
-        if &#39;@type&#39; not in self:
-            raise InvalidMessage(&#39;No @type in message&#39;)
+    class Config:
+        extra = Extra.allow
+        allow_mutation = False
+        underscore_attrs_are_private = True
+        allow_population_by_field_name = True
 
-        if &#39;@id&#39; not in self:
-            self[&#39;@id&#39;] = generate_id()
-        elif not isinstance(self[&#39;@id&#39;], str):
-            raise InvalidMessage(&#39;Message @id is invalid; must be str&#39;)
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._alias_dict = self.dict(by_alias=True)
 
-        if isinstance(self[&#39;@type&#39;], Type):
-            self._type = self[&#39;@type&#39;]
-            self[&#39;@type&#39;] = str(self._type)
-        else:
-            self._type = Type.from_str(self.type)
-        self.mtc: Optional[MessageTrustContext] = None
+    def __getitem__(self, item: str) -&gt; Any:
+        return self._alias_dict[item]
+
+    def __len__(self) -&gt; int:
+        return len(self.__dict__)
 
     @property
-    def type(self):
-        &#34;&#34;&#34; Shortcut for msg[&#39;@type&#39;] &#34;&#34;&#34;
-        return self[&#39;@type&#39;]
-
-    @property
-    def id(self):  # pylint: disable=invalid-name
-        &#34;&#34;&#34; Shortcut for msg[&#39;@id&#39;] &#34;&#34;&#34;
-        return self[&#39;@id&#39;]
+    def mtc(self):
+        return self._mtc
 
     @property
     def thread(self):
-        &#34;&#34;&#34;Shortcut to msg[&#39;~thread&#39;], if present.&#34;&#34;&#34;
-        return self.get(&#39;~thread&#39;, {&#39;thid&#39;: None})
+        return self.get(&#34;~thread&#34;, {&#34;thid&#34;: None})
 
-    @property
-    def doc_uri(self) -&gt; str:
-        &#34;&#34;&#34; Get type doc_uri &#34;&#34;&#34;
-        return self._type.doc_uri
+    def with_transport(self: MessageType, return_route: str = None) -&gt; MessageType:
+        return type(self)(
+            **{
+                **self.dict(by_alias=True),
+                &#34;~transport&#34;: {&#34;return_route&#34;: return_route} if return_route else {},
+            }
+        )
 
-    @property
-    def protocol(self) -&gt; str:
-        &#34;&#34;&#34; Get type protocol &#34;&#34;&#34;
-        return self._type.protocol
+    def with_thread(self: MessageType, thread: Mapping[str, str]) -&gt; MessageType:
+        return type(self)(**{**self.dict(by_alias=True), &#34;~thread&#34;: thread})
 
-    @property
-    def version(self) -&gt; str:
-        &#34;&#34;&#34; Get type version &#34;&#34;&#34;
-        return self._type.version
-
-    @property
-    def version_info(self) -&gt; Semver:
-        &#34;&#34;&#34; Get type version info &#34;&#34;&#34;
-        return self._type.version_info
-
-    @property
-    def name(self) -&gt; str:
-        &#34;&#34;&#34; Get type name &#34;&#34;&#34;
-        return self._type.name
-
-    @property
-    def normalized_version(self) -&gt; str:
-        &#34;&#34;&#34; Get type normalized version &#34;&#34;&#34;
-        return str(self._type.version_info)
-
-    # Serialization
     @classmethod
-    def deserialize(cls, serialized: Union[str, bytes]) -&gt; &#39;Message&#39;:
-        &#34;&#34;&#34; Deserialize a message from a json string. &#34;&#34;&#34;
-        try:
-            return cls(json.loads(serialized))
-        except json.decoder.JSONDecodeError as err:
-            raise InvalidMessage(&#39;Could not deserialize message&#39;) from err
+    def deserialize(
+        cls: Type[MessageType],
+        serialized: Union[str, bytes],
+        mtc: Optional[MessageTrustContext] = None,
+    ) -&gt; MessageType:
+        &#34;&#34;&#34;Deserialize a message from a json string.&#34;&#34;&#34;
+        msg = cls.parse_raw(serialized)
+        if mtc:
+            msg._mtc = mtc
 
-    def serialize(self) -&gt; str:
-        &#34;&#34;&#34; Serialize a message into a json string. &#34;&#34;&#34;
-        return json.dumps(self)
+        return msg
+
+    def serialize(self, **kwargs) -&gt; str:
+        &#34;&#34;&#34;Serialize a message into a json string.&#34;&#34;&#34;
+        return self.json(by_alias=True, exclude_none=True, **kwargs)
 
     def pretty_print(self) -&gt; str:
-        &#34;&#34;&#34; return a &#39;pretty print&#39; representation of this message. &#34;&#34;&#34;
-        return json.dumps(self, indent=2)
-
-    def __eq__(self, other) -&gt; bool:
-        if not isinstance(other, Message):
-            return False
-
-        return super().__eq__(other)
-
-    def __hash__(self):
-        return hash(self.id)</code></pre>
+        &#34;&#34;&#34;return a &#39;pretty print&#39; representation of this message.&#34;&#34;&#34;
+        return self.serialize(indent=2)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>builtins.dict</li>
+<li>pydantic.main.BaseModel</li>
+<li>pydantic.utils.Representation</li>
+<li>collections.abc.Mapping</li>
+<li>collections.abc.Collection</li>
+<li>collections.abc.Sized</li>
+<li>collections.abc.Iterable</li>
+<li>collections.abc.Container</li>
+<li>typing.Generic</li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="aries_staticagent.message.BaseMessage" href="#aries_staticagent.message.BaseMessage">BaseMessage</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="aries_staticagent.message.Message.Config"><code class="name">var <span class="ident">Config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="aries_staticagent.message.Message.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="aries_staticagent.message.Message.type"><code class="name">var <span class="ident">type</span> : <a title="aries_staticagent.message.MsgType" href="#aries_staticagent.message.MsgType">MsgType</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="aries_staticagent.message.Message.deserialize"><code class="name flex">
-<span>def <span class="ident">deserialize</span></span>(<span>serialized: Union[str, bytes]) ‑> <a title="aries_staticagent.message.Message" href="#aries_staticagent.message.Message">Message</a></span>
+<span>def <span class="ident">deserialize</span></span>(<span>serialized: Union[bytes, str], mtc: Optional[<a title="aries_staticagent.mtc.MessageTrustContext" href="mtc.html#aries_staticagent.mtc.MessageTrustContext">MessageTrustContext</a>] = None) ‑> ~MessageType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Deserialize a message from a json string.</p></div>
@@ -314,136 +414,44 @@ Inherits from dict meaning it behaves like a dictionary.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def deserialize(cls, serialized: Union[str, bytes]) -&gt; &#39;Message&#39;:
-    &#34;&#34;&#34; Deserialize a message from a json string. &#34;&#34;&#34;
-    try:
-        return cls(json.loads(serialized))
-    except json.decoder.JSONDecodeError as err:
-        raise InvalidMessage(&#39;Could not deserialize message&#39;) from err</code></pre>
+def deserialize(
+    cls: Type[MessageType],
+    serialized: Union[str, bytes],
+    mtc: Optional[MessageTrustContext] = None,
+) -&gt; MessageType:
+    &#34;&#34;&#34;Deserialize a message from a json string.&#34;&#34;&#34;
+    msg = cls.parse_raw(serialized)
+    if mtc:
+        msg._mtc = mtc
+
+    return msg</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="aries_staticagent.message.Message.doc_uri"><code class="name">var <span class="ident">doc_uri</span> : str</code></dt>
-<dd>
-<div class="desc"><p>Get type doc_uri</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def doc_uri(self) -&gt; str:
-    &#34;&#34;&#34; Get type doc_uri &#34;&#34;&#34;
-    return self._type.doc_uri</code></pre>
-</details>
-</dd>
-<dt id="aries_staticagent.message.Message.id"><code class="name">var <span class="ident">id</span></code></dt>
-<dd>
-<div class="desc"><p>Shortcut for msg['@id']</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def id(self):  # pylint: disable=invalid-name
-    &#34;&#34;&#34; Shortcut for msg[&#39;@id&#39;] &#34;&#34;&#34;
-    return self[&#39;@id&#39;]</code></pre>
-</details>
-</dd>
 <dt id="aries_staticagent.message.Message.mtc"><code class="name">var <span class="ident">mtc</span></code></dt>
 <dd>
-<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
-</dd>
-<dt id="aries_staticagent.message.Message.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
-<dd>
-<div class="desc"><p>Get type name</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def name(self) -&gt; str:
-    &#34;&#34;&#34; Get type name &#34;&#34;&#34;
-    return self._type.name</code></pre>
-</details>
-</dd>
-<dt id="aries_staticagent.message.Message.normalized_version"><code class="name">var <span class="ident">normalized_version</span> : str</code></dt>
-<dd>
-<div class="desc"><p>Get type normalized version</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def normalized_version(self) -&gt; str:
-    &#34;&#34;&#34; Get type normalized version &#34;&#34;&#34;
-    return str(self._type.version_info)</code></pre>
-</details>
-</dd>
-<dt id="aries_staticagent.message.Message.protocol"><code class="name">var <span class="ident">protocol</span> : str</code></dt>
-<dd>
-<div class="desc"><p>Get type protocol</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def protocol(self) -&gt; str:
-    &#34;&#34;&#34; Get type protocol &#34;&#34;&#34;
-    return self._type.protocol</code></pre>
+def mtc(self):
+    return self._mtc</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.message.Message.thread"><code class="name">var <span class="ident">thread</span></code></dt>
 <dd>
-<div class="desc"><p>Shortcut to msg['~thread'], if present.</p></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def thread(self):
-    &#34;&#34;&#34;Shortcut to msg[&#39;~thread&#39;], if present.&#34;&#34;&#34;
-    return self.get(&#39;~thread&#39;, {&#39;thid&#39;: None})</code></pre>
-</details>
-</dd>
-<dt id="aries_staticagent.message.Message.type"><code class="name">var <span class="ident">type</span></code></dt>
-<dd>
-<div class="desc"><p>Shortcut for msg['@type']</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def type(self):
-    &#34;&#34;&#34; Shortcut for msg[&#39;@type&#39;] &#34;&#34;&#34;
-    return self[&#39;@type&#39;]</code></pre>
-</details>
-</dd>
-<dt id="aries_staticagent.message.Message.version"><code class="name">var <span class="ident">version</span> : str</code></dt>
-<dd>
-<div class="desc"><p>Get type version</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def version(self) -&gt; str:
-    &#34;&#34;&#34; Get type version &#34;&#34;&#34;
-    return self._type.version</code></pre>
-</details>
-</dd>
-<dt id="aries_staticagent.message.Message.version_info"><code class="name">var <span class="ident">version_info</span> : <a title="aries_staticagent.type.Semver" href="type.html#aries_staticagent.type.Semver">Semver</a></code></dt>
-<dd>
-<div class="desc"><p>Get type version info</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def version_info(self) -&gt; Semver:
-    &#34;&#34;&#34; Get type version info &#34;&#34;&#34;
-    return self._type.version_info</code></pre>
+    return self.get(&#34;~thread&#34;, {&#34;thid&#34;: None})</code></pre>
 </details>
 </dd>
 </dl>
@@ -459,12 +467,12 @@ def version_info(self) -&gt; Semver:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def pretty_print(self) -&gt; str:
-    &#34;&#34;&#34; return a &#39;pretty print&#39; representation of this message. &#34;&#34;&#34;
-    return json.dumps(self, indent=2)</code></pre>
+    &#34;&#34;&#34;return a &#39;pretty print&#39; representation of this message.&#34;&#34;&#34;
+    return self.serialize(indent=2)</code></pre>
 </details>
 </dd>
 <dt id="aries_staticagent.message.Message.serialize"><code class="name flex">
-<span>def <span class="ident">serialize</span></span>(<span>self) ‑> str</span>
+<span>def <span class="ident">serialize</span></span>(<span>self, **kwargs) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Serialize a message into a json string.</p></div>
@@ -472,9 +480,228 @@ def version_info(self) -&gt; Semver:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self) -&gt; str:
-    &#34;&#34;&#34; Serialize a message into a json string. &#34;&#34;&#34;
-    return json.dumps(self)</code></pre>
+<pre><code class="python">def serialize(self, **kwargs) -&gt; str:
+    &#34;&#34;&#34;Serialize a message into a json string.&#34;&#34;&#34;
+    return self.json(by_alias=True, exclude_none=True, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.message.Message.with_thread"><code class="name flex">
+<span>def <span class="ident">with_thread</span></span>(<span>self: ~MessageType, thread: Mapping[str, str]) ‑> ~MessageType</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def with_thread(self: MessageType, thread: Mapping[str, str]) -&gt; MessageType:
+    return type(self)(**{**self.dict(by_alias=True), &#34;~thread&#34;: thread})</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.message.Message.with_transport"><code class="name flex">
+<span>def <span class="ident">with_transport</span></span>(<span>self: ~MessageType, return_route: str = None) ‑> ~MessageType</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def with_transport(self: MessageType, return_route: str = None) -&gt; MessageType:
+    return type(self)(
+        **{
+            **self.dict(by_alias=True),
+            &#34;~transport&#34;: {&#34;return_route&#34;: return_route} if return_route else {},
+        }
+    )</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.message.MsgType"><code class="flex name class">
+<span>class <span class="ident">MsgType</span></span>
+<span>(</span><span>msg_type: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Message type.</p>
+<p>Parse Message Type string.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MsgType(str):
+    &#34;&#34;&#34;Message type.&#34;&#34;&#34;
+
+    def __init__(self, msg_type: str):
+        &#34;&#34;&#34;Parse Message Type string.&#34;&#34;&#34;
+        super().__init__()
+        matches = MTURI_RE.match(msg_type)
+        if not matches:
+            raise InvalidType(f&#34;Invalid message type: {msg_type}&#34;)
+
+        doc_uri, protocol, version, name = matches.groups()
+        try:
+            self.version_info = MsgVersion.from_str(version)
+        except ValueError as err:
+            raise InvalidType(f&#34;Invalid message type version {version}&#34;) from err
+
+        self.version = version
+        self.doc_uri = doc_uri
+        self.protocol = protocol
+        self.name = name
+        self.normalized = (
+            f&#34;{self.doc_uri}{self.protocol}/{self.version_info}/{self.name}&#34;
+        )
+        self.normalized_version = f&#34;{self.version_info}&#34;
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str):
+        return cls(value)
+
+    @classmethod
+    def parse(cls, msg_type: str):
+        return cls(msg_type)
+
+    @classmethod
+    def unparse(cls, doc_uri: str, protocol: str, version: str, name: str):
+        return cls(f&#34;{doc_uri}{protocol}/{version}/{name}&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="aries_staticagent.message.MsgType.parse"><code class="name flex">
+<span>def <span class="ident">parse</span></span>(<span>msg_type: str)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def parse(cls, msg_type: str):
+    return cls(msg_type)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.message.MsgType.unparse"><code class="name flex">
+<span>def <span class="ident">unparse</span></span>(<span>doc_uri: str, protocol: str, version: str, name: str)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def unparse(cls, doc_uri: str, protocol: str, version: str, name: str):
+    return cls(f&#34;{doc_uri}{protocol}/{version}/{name}&#34;)</code></pre>
+</details>
+</dd>
+<dt id="aries_staticagent.message.MsgType.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>value: str)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def validate(cls, value: str):
+    return cls(value)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="aries_staticagent.message.MsgVersion"><code class="flex name class">
+<span>class <span class="ident">MsgVersion</span></span>
+<span>(</span><span>major, minor=0, patch=0, prerelease=None, build=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Wrapper around the more complete VersionInfo class from semver package.</p>
+<p>This wrapper enables abbreviated versions in message types
+(i.e. 1.0 not 1.0.0).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MsgVersion(VersionInfo):  # pylint: disable=too-few-public-methods
+    &#34;&#34;&#34;Wrapper around the more complete VersionInfo class from semver package.
+
+    This wrapper enables abbreviated versions in message types
+    (i.e. 1.0 not 1.0.0).
+    &#34;&#34;&#34;
+
+    SEMVER_RE = re.compile(r&#34;^(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\.(0|[1-9]\d*))?$&#34;)
+
+    @classmethod
+    def from_str(cls, version_str):
+        &#34;&#34;&#34;Parse version information from a string.&#34;&#34;&#34;
+        matches = cls.SEMVER_RE.match(version_str)
+        if matches:
+            args = list(matches.groups())
+            if not matches.group(3):
+                args.append(&#34;0&#34;)
+            return cls(*map(int, filter(partial(is_not, None), args)))
+
+        parts = VersionInfo.parse(version_str)
+
+        return cls(
+            parts.major,
+            parts.minor,
+            parts.patch,
+            parts.prerelease,
+            parts.build,
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>semver.VersionInfo</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="aries_staticagent.message.MsgVersion.SEMVER_RE"><code class="name">var <span class="ident">SEMVER_RE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="aries_staticagent.message.MsgVersion.from_str"><code class="name flex">
+<span>def <span class="ident">from_str</span></span>(<span>version_str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse version information from a string.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_str(cls, version_str):
+    &#34;&#34;&#34;Parse version information from a string.&#34;&#34;&#34;
+    matches = cls.SEMVER_RE.match(version_str)
+    if matches:
+        args = list(matches.groups())
+        if not matches.group(3):
+            args.append(&#34;0&#34;)
+        return cls(*map(int, filter(partial(is_not, None), args)))
+
+    parts = VersionInfo.parse(version_str)
+
+    return cls(
+        parts.major,
+        parts.minor,
+        parts.patch,
+        parts.prerelease,
+        parts.build,
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -493,32 +720,46 @@ def version_info(self) -&gt; Semver:
 <li><code><a title="aries_staticagent" href="index.html">aries_staticagent</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="aries_staticagent.message.generate_id" href="#aries_staticagent.message.generate_id">generate_id</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="aries_staticagent.message.InvalidMessage" href="#aries_staticagent.message.InvalidMessage">InvalidMessage</a></code></h4>
+<h4><code><a title="aries_staticagent.message.BaseMessage" href="#aries_staticagent.message.BaseMessage">BaseMessage</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.message.BaseMessage.msg_type" href="#aries_staticagent.message.BaseMessage.msg_type">msg_type</a></code></li>
+<li><code><a title="aries_staticagent.message.BaseMessage.type" href="#aries_staticagent.message.BaseMessage.type">type</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.message.InvalidType" href="#aries_staticagent.message.InvalidType">InvalidType</a></code></h4>
 </li>
 <li>
 <h4><code><a title="aries_staticagent.message.Message" href="#aries_staticagent.message.Message">Message</a></code></h4>
 <ul class="two-column">
+<li><code><a title="aries_staticagent.message.Message.Config" href="#aries_staticagent.message.Message.Config">Config</a></code></li>
 <li><code><a title="aries_staticagent.message.Message.deserialize" href="#aries_staticagent.message.Message.deserialize">deserialize</a></code></li>
-<li><code><a title="aries_staticagent.message.Message.doc_uri" href="#aries_staticagent.message.Message.doc_uri">doc_uri</a></code></li>
 <li><code><a title="aries_staticagent.message.Message.id" href="#aries_staticagent.message.Message.id">id</a></code></li>
 <li><code><a title="aries_staticagent.message.Message.mtc" href="#aries_staticagent.message.Message.mtc">mtc</a></code></li>
-<li><code><a title="aries_staticagent.message.Message.name" href="#aries_staticagent.message.Message.name">name</a></code></li>
-<li><code><a title="aries_staticagent.message.Message.normalized_version" href="#aries_staticagent.message.Message.normalized_version">normalized_version</a></code></li>
 <li><code><a title="aries_staticagent.message.Message.pretty_print" href="#aries_staticagent.message.Message.pretty_print">pretty_print</a></code></li>
-<li><code><a title="aries_staticagent.message.Message.protocol" href="#aries_staticagent.message.Message.protocol">protocol</a></code></li>
 <li><code><a title="aries_staticagent.message.Message.serialize" href="#aries_staticagent.message.Message.serialize">serialize</a></code></li>
 <li><code><a title="aries_staticagent.message.Message.thread" href="#aries_staticagent.message.Message.thread">thread</a></code></li>
 <li><code><a title="aries_staticagent.message.Message.type" href="#aries_staticagent.message.Message.type">type</a></code></li>
-<li><code><a title="aries_staticagent.message.Message.version" href="#aries_staticagent.message.Message.version">version</a></code></li>
-<li><code><a title="aries_staticagent.message.Message.version_info" href="#aries_staticagent.message.Message.version_info">version_info</a></code></li>
+<li><code><a title="aries_staticagent.message.Message.with_thread" href="#aries_staticagent.message.Message.with_thread">with_thread</a></code></li>
+<li><code><a title="aries_staticagent.message.Message.with_transport" href="#aries_staticagent.message.Message.with_transport">with_transport</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.message.MsgType" href="#aries_staticagent.message.MsgType">MsgType</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.message.MsgType.parse" href="#aries_staticagent.message.MsgType.parse">parse</a></code></li>
+<li><code><a title="aries_staticagent.message.MsgType.unparse" href="#aries_staticagent.message.MsgType.unparse">unparse</a></code></li>
+<li><code><a title="aries_staticagent.message.MsgType.validate" href="#aries_staticagent.message.MsgType.validate">validate</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aries_staticagent.message.MsgVersion" href="#aries_staticagent.message.MsgVersion">MsgVersion</a></code></h4>
+<ul class="">
+<li><code><a title="aries_staticagent.message.MsgVersion.SEMVER_RE" href="#aries_staticagent.message.MsgVersion.SEMVER_RE">SEMVER_RE</a></code></li>
+<li><code><a title="aries_staticagent.message.MsgVersion.from_str" href="#aries_staticagent.message.MsgVersion.from_str">from_str</a></code></li>
 </ul>
 </li>
 </ul>
@@ -527,7 +768,7 @@ def version_info(self) -&gt; Semver:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
