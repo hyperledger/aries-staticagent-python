@@ -54,10 +54,14 @@ async def test_simple_route(event, dispatcher, conn):
 @pytest.mark.parametrize(
     "route_args, route_kwargs, send_type",
     [
-        (["test_protocol/1.0/testing_type"], {}, "test_protocol/1.0/testing_type"),
         (
-            [MsgType("test_protocol/1.0/testing_type")],
-            {},
+            [],
+            {"msg_type": "test_protocol/1.0/testing_type"},
+            "test_protocol/1.0/testing_type",
+        ),
+        (
+            [],
+            {"msg_type": MsgType("test_protocol/1.0/testing_type")},
             "test_protocol/1.0/testing_type",
         ),
         ([], {"name": "not_testing_type"}, "test_protocol/1.0/not_testing_type"),
@@ -95,10 +99,8 @@ async def test_routing_module_explicit_def(
     class TestModule(Module):
         """Simple module for testing"""
 
-        doc_uri = ""
-        protocol = "test_protocol"
-        version = "1.0"
-        route = ModuleRouter()
+        protocol = "test_protocol/1.0"
+        route = ModuleRouter(protocol)
 
         @route(*route_args, **route_kwargs)
         async def route_gets_called(self, _msg, **kwargs):
@@ -121,10 +123,8 @@ async def test_routing_module_simple(event, dispatcher, conn):
     class TestModule(Module):
         """Simple module for testing"""
 
-        doc_uri = ""
-        protocol = "test_protocol"
-        version = "1.0"
-        route = ModuleRouter()
+        protocol = "test_protocol/1.0"
+        route = ModuleRouter(protocol)
 
         @route
         async def testing_type(self, _msg, **kwargs):
@@ -150,10 +150,8 @@ async def test_routing_many(event, dispatcher, conn):
     class TestModule1(Module):
         """Simple module for testing"""
 
-        doc_uri = ""
-        protocol = "test_protocol"
-        version = "1.0"
-        route = ModuleRouter()
+        protocol = "test_protocol/1.0"
+        route = ModuleRouter(protocol)
 
         @route
         async def testing_type(self, _msg, **kwargs):
@@ -164,10 +162,8 @@ async def test_routing_many(event, dispatcher, conn):
     class TestModule2(Module):
         """Simple module for testing"""
 
-        doc_uri = ""
-        protocol = "test_protocol"
-        version = "2.0"
-        route = ModuleRouter()
+        protocol = "test_protocol/2.0"
+        route = ModuleRouter(protocol)
 
         @route
         async def testing_type(self, _msg, **kwargs):
@@ -210,10 +206,8 @@ async def test_routing_no_matching_version(event, dispatcher, conn):
     class TestModule(Module):
         """Simple module for testing"""
 
-        doc_uri = ""
-        protocol = "test_protocol"
-        version = "1.0"
-        route = ModuleRouter()
+        protocol = "test_protocol/1.0"
+        route = ModuleRouter(protocol)
 
         @route
         async def testing_type(self, _msg, **kwargs):
@@ -237,10 +231,8 @@ async def test_routing_minor_version_different(event, dispatcher, conn):
     class TestModule(Module):
         """Simple module for testing"""
 
-        doc_uri = ""
-        protocol = "test_protocol"
-        version = "1.4"
-        route = ModuleRouter()
+        protocol = "test_protocol/1.0"
+        route = ModuleRouter(protocol)
 
         @route
         async def testing_type(self, _msg, **kwargs):

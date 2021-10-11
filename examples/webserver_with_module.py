@@ -11,10 +11,8 @@ class BasicMessageCounter(Module):
     Responds with the number of messages received.
     """
 
-    doc_uri = "https://didcomm.org/"
-    protocol = "basicmessage"
-    version = "1.0"
-    route = ModuleRouter()
+    protocol = "https://didcomm.org/basicmessage/1.0"
+    route = ModuleRouter(protocol)
 
     def __init__(self):
         super().__init__()
@@ -45,7 +43,7 @@ def main():
     async def handle(request):
         """aiohttp handle POST."""
         await conn.handle(await request.read())
-        raise web.HTTPAccepted()
+        return web.Response(status=202)
 
     app = web.Application()
     app.add_routes([web.post("/", handle)])

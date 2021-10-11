@@ -13,9 +13,6 @@ from semver import VersionInfo
 from .mtc import MessageTrustContext
 
 
-MTURI_RE = re.compile(r"(.*?)([a-z0-9._-]+)/(\d[^/]*)/([a-z0-9._-]+)$")
-
-
 class MsgVersion(VersionInfo):  # pylint: disable=too-few-public-methods
     """Wrapper around the more complete VersionInfo class from semver package.
 
@@ -46,6 +43,40 @@ class MsgVersion(VersionInfo):  # pylint: disable=too-few-public-methods
         )
 
 
+class InvalidProtocolIdentifier(ValueError):
+    """Raised when protocol identifier is unparsable or invalid."""
+
+
+class ProtocolIdentifier(str):
+    """Protocol identifier."""
+
+    PIURI_RE = re.compile(r"^(.*?)([a-z0-9._-]+)/(\d[^/]*)/?$")
+
+    def __init__(self, ident: str):
+        """Parse Protocol Identifier string."""
+        super().__init__()
+        matches = self.PIURI_RE.match(ident)
+        if not matches:
+            raise InvalidProtocolIdentifier(f"Invalid protocol identifier: {ident}")
+        doc_uri, protocol, version = matches.groups()
+        try:
+            self.version_info = MsgVersion.from_str(version)
+        except ValueError as err:
+            raise InvalidProtocolIdentifier(
+                f"Invalid protocol version {version}"
+            ) from err
+
+        self.version = version
+        self.doc_uri = doc_uri
+        self.protocol = protocol
+        self.normalized = f"{self.doc_uri}{self.protocol}/{self.version_info}"
+        self.normalized_version = str(self.version_info)
+
+    @classmethod
+    def unparse(cls, doc_uri: str, protocol: str, version: str):
+        return cls(f"{doc_uri}{protocol}/{version}")
+
+
 class InvalidType(ValueError):
     """When type is unparsable or invalid."""
 
@@ -53,10 +84,12 @@ class InvalidType(ValueError):
 class MsgType(str):
     """Message type."""
 
+    MTURI_RE = re.compile(r"^(.*?)([a-z0-9._-]+)/(\d[^/]*)/([a-z0-9._-]+)$")
+
     def __init__(self, msg_type: str):
         """Parse Message Type string."""
         super().__init__()
-        matches = MTURI_RE.match(msg_type)
+        matches = self.MTURI_RE.match(msg_type)
         if not matches:
             raise InvalidType(f"Invalid message type: {msg_type}")
 
@@ -73,7 +106,7 @@ class MsgType(str):
         self.normalized = (
             f"{self.doc_uri}{self.protocol}/{self.version_info}/{self.name}"
         )
-        self.normalized_version = f"{self.version_info}"
+        self.normalized_version = str(self.version_info)
 
     @classmethod
     def __get_validators__(cls):

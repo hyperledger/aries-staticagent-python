@@ -14,7 +14,7 @@ class NoRegisteredHandlerException(Exception):
 class Handler:  # pylint: disable=too-few-public-methods
     """A Message Handler."""
 
-    __slots__ = ("type", "handler", "context")
+    __slots__ = ("type", "handler")
 
     def __init__(self, msg_type: MsgType, handler: Callable):
         if not isinstance(msg_type, MsgType):
