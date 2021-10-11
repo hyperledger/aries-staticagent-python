@@ -43,7 +43,7 @@ def main():
     async def handle(request):
         """aiohttp handle POST."""
         await conn.handle(await request.read())
-        return web.Response(status=201)
+        return web.Response(status=202)
 
     app = web.Application()
     app.add_routes([web.post("/", handle)])
