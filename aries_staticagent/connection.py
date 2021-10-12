@@ -16,7 +16,7 @@ from typing import (
 import uuid
 
 from . import crypto
-from .dispatcher import Dispatcher, Handler
+from .dispatcher import Dispatcher
 from .message import Message, MsgType
 from .module import Module
 from .utils import ensure_key_bytes, forward_msg, http_send
@@ -405,19 +405,18 @@ class Connection(Keys.Mixin):
         """Register route decorator."""
 
         def register_route_dec(func):
-            self._dispatcher.add_handler(Handler(MsgType(msg_type), func))
+            self._dispatcher.add(MsgType(msg_type), func)
             return func
 
         return register_route_dec
 
     def route_module(self, module: Module):
         """Register a module for routing."""
-        handlers = [Handler(msg_type, func) for msg_type, func in module.routes.items()]
-        return self._dispatcher.add_handlers(handlers)
+        return self._dispatcher.extend(module.routes)
 
     def clear_routes(self):
         """Clear registered routes."""
-        return self._dispatcher.clear_handlers()
+        return self._dispatcher.clear()
 
     async def dispatch(self, message):
         """
