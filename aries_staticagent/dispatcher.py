@@ -1,6 +1,6 @@
 """ Dispatcher """
 import logging
-from typing import Callable, Dict, Mapping, Optional, Union
+from typing import Callable, Dict, Mapping, Optional, Tuple, Union
 
 from sortedcontainers import SortedSet
 
@@ -14,19 +14,23 @@ class NoRegisteredHandlerException(Exception):
 class Dispatcher:
     """One of the fundamental aspects of an agent; responsible for dispatching
     messages to appropriate handlers.
+
+    This dispatcher implementation also provides a "subscriber" mechanism that
+    enables subscribers to perform some action when a message matching a regex
+    is received.
     """
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.handlers: Dict[str, Callable] = {}
-        self.handler_versions = {}
+        self.handler_versions: Dict[Tuple, SortedSet] = {}
 
-    def clear_handlers(self):
+    def clear(self):
         """Clear routes"""
         self.handlers.clear()
         self.handler_versions.clear()
 
-    def add_handler(self, msg_type: Union[str, MsgType], handler: Callable):
+    def add(self, msg_type: Union[str, MsgType], handler: Callable):
         """Add a handler to routing tables."""
         if not isinstance(msg_type, MsgType):
             msg_type = MsgType(msg_type)
@@ -38,12 +42,12 @@ class Dispatcher:
             self.handler_versions[key] = SortedSet()
         self.handler_versions[key].add(msg_type.version_info)
 
-    def add_handlers(self, handlers: Mapping[MsgType, Callable]):
+    def extend(self, handlers: Mapping[MsgType, Callable]):
         """Add a list of handlers to routing tables."""
         for msg_type, handler in handlers.items():
-            self.add_handler(msg_type, handler)
+            self.add(msg_type, handler)
 
-    def remove_handler(self, msg_type: MsgType):
+    def remove(self, msg_type: MsgType):
         """Remove handler from routing tables."""
         if msg_type.normalized not in self.handlers:
             raise NoRegisteredHandlerException("Handler is not registered")
@@ -54,8 +58,8 @@ class Dispatcher:
         if not self.handler_versions[key]:
             del self.handler_versions[key]
 
-    def select_handler(self, msg: Message) -> Optional[Callable]:
-        """Find the closest appropriate module for a given message."""
+    def select(self, msg: Message) -> Optional[Callable]:
+        """Find the closest appropriate handler for a given message."""
         key = (msg.type.doc_uri, msg.type.protocol, msg.type.name)
         if key not in self.handler_versions:
             return None
@@ -75,7 +79,7 @@ class Dispatcher:
 
     async def dispatch(self, msg: Message, *args, **kwargs):
         """Dispatch message to handler."""
-        handler = self.select_handler(msg)
+        handler = self.select(msg)
         if not handler:
             raise NoRegisteredHandlerException(
                 "No suitable handler for message of type {}".format(msg.type)

@@ -405,18 +405,18 @@ class Connection(Keys.Mixin):
         """Register route decorator."""
 
         def register_route_dec(func):
-            self._dispatcher.add_handler(MsgType(msg_type), func)
+            self._dispatcher.add(MsgType(msg_type), func)
             return func
 
         return register_route_dec
 
     def route_module(self, module: Module):
         """Register a module for routing."""
-        return self._dispatcher.add_handlers(module.routes)
+        return self._dispatcher.extend(module.routes)
 
     def clear_routes(self):
         """Clear registered routes."""
-        return self._dispatcher.clear_handlers()
+        return self._dispatcher.clear()
 
     async def dispatch(self, message):
         """
