@@ -55,7 +55,7 @@ class MsgQueue:
 
                 # Return first matching item, if present
                 match_idx = self._first_matching_index(condition)
-                if match_idx:
+                if match_idx is not None:
                     return self._queue.pop(match_idx).msg
 
     async def get(self, condition: Callable = None, *, timeout: int = 5) -> Message:
@@ -64,7 +64,7 @@ class MsgQueue:
 
     async def put(self, msg: Message, *args, **kwargs):
         """Push a message onto the queue and notify waiting tasks."""
-        if self.condition and self.condition(msg):
+        if not self.condition or self.condition(msg):
             async with self._cond:
                 self._queue.append(QueueEntry(msg, args, kwargs))
                 self._cond.notify_all()
