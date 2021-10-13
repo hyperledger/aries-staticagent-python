@@ -83,7 +83,7 @@ async def listening_endpoint(connection, unused_tcp_port):
 @pytest.mark.asyncio
 async def test_cron_example(example_keys, test_keys, connection, listening_endpoint):
     """Test the cron example."""
-    with connection.next() as next_msg:
+    async with connection.queue() as queue:
         process = await asyncio.create_subprocess_exec(
             "poetry",
             "run",
@@ -99,7 +99,7 @@ async def test_cron_example(example_keys, test_keys, connection, listening_endpo
             listening_endpoint,
         )
         assert await process.wait() == 0
-        msg = await asyncio.wait_for(next_msg, 30)
+        msg = await queue.get(timeout=30)
 
     assert "basicmessage" in msg.type
     assert msg["content"] == "The Cron script was executed."
@@ -134,7 +134,7 @@ async def test_webserver_aiohttp(
 
     await server_ready("localhost", example_port)
 
-    with connection.next() as next_msg:
+    async with connection.queue() as queue:
         await connection.send_async(
             {
                 "@type": "https://didcomm.org/" "basicmessage/1.0/message",
@@ -143,7 +143,7 @@ async def test_webserver_aiohttp(
                 "content": "Your hovercraft is full of eels.",
             }
         )
-        msg = await asyncio.wait_for(next_msg, 30)
+        msg = await queue.get(timeout=30)
 
     assert "basicmessage" in msg.type
     assert msg["content"] == "You said: Your hovercraft is full of eels."
@@ -180,7 +180,7 @@ async def test_preprocessor_example(
 
     await server_ready("localhost", example_port)
 
-    with connection.next() as next_msg:
+    async with connection.queue() as queue:
         await connection.send_async(
             {
                 "@type": "https://didcomm.org/" "basicmessage/1.0/message",
@@ -189,7 +189,7 @@ async def test_preprocessor_example(
                 "content": "Your hovercraft is full of eels.",
             }
         )
-        msg = await asyncio.wait_for(next_msg, 30)
+        msg = await queue.get(timeout=30)
 
     assert "basicmessage" in msg.type
     assert msg["content"] == "The preprocessor validated this message"
@@ -226,7 +226,7 @@ async def test_webserver_with_websockets(
 
     await server_ready("localhost", example_port)
 
-    with connection_ws.next() as next_msg:
+    async with connection_ws.queue() as queue:
         await connection_ws.send_async(
             {
                 "@type": "https://didcomm.org/" "basicmessage/1.0/message",
@@ -236,7 +236,7 @@ async def test_webserver_with_websockets(
             },
             return_route="all",
         )
-        msg = await asyncio.wait_for(next_msg, 30)
+        msg = await queue.get(timeout=30)
 
     assert "basicmessage" in msg.type
     assert msg["content"] == "You said: Your hovercraft is full of eels."
@@ -272,7 +272,7 @@ async def test_webserver_with_module(
 
     await server_ready("localhost", example_port)
 
-    with connection.next() as next_msg:
+    async with connection.queue() as queue:
         await connection.send_async(
             {
                 "@type": "https://didcomm.org/" "basicmessage/1.0/message",
@@ -281,12 +281,12 @@ async def test_webserver_with_module(
                 "content": "Your hovercraft is full of eels.",
             }
         )
-        msg = await asyncio.wait_for(next_msg, 30)
+        msg = await queue.get(timeout=30)
 
     assert "basicmessage" in msg.type
     assert msg["content"] == "1 message(s) received."
 
-    with connection.next() as next_msg:
+    async with connection.queue() as queue:
         await connection.send_async(
             {
                 "@type": "https://didcomm.org/" "basicmessage/1.0/message",
@@ -295,7 +295,7 @@ async def test_webserver_with_module(
                 "content": "My last message was nonsense.",
             }
         )
-        msg = await asyncio.wait_for(next_msg, 30)
+        msg = await queue.get(timeout=30)
 
     assert "basicmessage" in msg.type
     assert msg["content"] == "2 message(s) received."
