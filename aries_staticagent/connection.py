@@ -331,8 +331,6 @@ class Connection(Keys.Mixin):
         self._send: Send = send or http_send
         self._dispatcher: Dispatcher = dispatcher or HandlerDispatcher()
         self._router: HandlerDispatcher = self._dispatcher
-
-        self._next: ConditionFutureMap = {}
         self._sessions: Set[Session] = set()
 
     @classmethod
