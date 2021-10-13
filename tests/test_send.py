@@ -1,6 +1,5 @@
 """Test StaticConection send method."""
 import asyncio
-from asyncio import wait_for
 import uuid
 import copy
 from functools import partial
@@ -241,62 +240,44 @@ async def test_claim_next_messages(alice_gen, bob, dispatcher, message):
     """Test holding and awaiting messages."""
     alice = alice_gen(dispatcher=dispatcher)
     bob_msg = bob.pack(message)
-    with alice.next() as future_message:
+    async with alice.queue() as queue:
         await alice.handle(bob_msg)
-        assert await wait_for(future_message, 1) == message
-
-
-@pytest.mark.asyncio
-async def test_next_raises_error_on_bad_condition(alice, message):
-    """Bad condition raises error."""
-    with pytest.raises(TypeError):
-        with alice.next(condition="asdf"):
-            pass
+        assert await queue.get(timeout=1) == message
 
 
 @pytest.mark.asyncio
 async def test_next_condition(alice_gen, bob, dispatcher, message, response):
     """Test hold condtions."""
     alice = alice_gen(dispatcher=dispatcher)
-    with alice.next(condition=lambda msg: msg.type == message.type) as future_message:
+    async with alice.queue(condition=lambda msg: msg.type == message.type) as queue:
         await alice.handle(bob.pack(message))
         assert dispatcher.dispatched is None
-        assert await wait_for(future_message, 1) == message
+        assert await queue.get(timeout=1) == message
         await alice.handle(bob.pack(response))
         assert dispatcher.dispatched == response
-    assert not alice._next
 
 
 @pytest.mark.asyncio
 async def test_next_type(alice_gen, bob, dispatcher, message, response):
     """Test hold condtions."""
     alice = alice_gen(dispatcher=dispatcher)
-    with alice.next(message.type) as future_message:
+    async with alice.queue() as queue:
         await alice.handle(bob.pack(message))
         assert dispatcher.dispatched is None
-        assert await wait_for(future_message, 1) == message
+        assert await queue.with_type(message.type, timeout=1) == message
         await alice.handle(bob.pack(response))
-        assert dispatcher.dispatched == response
-    assert not alice._next
+    assert dispatcher.dispatched == response
 
 
 @pytest.mark.asyncio
 async def test_multiple_next_fulfilled_sequentially(alice, bob, message):
     """Test all matching next condtions are fulfilled."""
-    with alice.next(message.type) as next_of_type, alice.next() as next_anything:
+    async with alice.queue() as queue:
         await alice.handle(bob.pack(message))
-        first = await wait_for(next_of_type, 1)
+        first = await queue.with_type(message.type, timeout=1)
         await alice.handle(bob.pack(message))
-        second = await wait_for(next_anything, 1)
+        second = await queue.get(timeout=1)
         assert first == second
-
-
-@pytest.mark.asyncio
-async def test_next_with_type_and_cond_raises_error(alice, message):
-    """Test value error raised when both type and condition specified."""
-    with pytest.raises(ValueError):
-        with alice.next(message.type, lambda msg: True):
-            pass
 
 
 @pytest.mark.asyncio

@@ -3,8 +3,8 @@ import asyncio
 from collections import namedtuple
 import pytest
 
-from aries_staticagent.dispatcher import (
-    Dispatcher,
+from aries_staticagent.dispatcher.handler_dispatcher import (
+    HandlerDispatcher as Dispatcher,
     NoRegisteredHandlerException,
 )
 from aries_staticagent.message import Message, MsgType

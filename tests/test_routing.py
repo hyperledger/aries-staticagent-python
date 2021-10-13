@@ -4,7 +4,10 @@ from aries_staticagent.module import ModuleRouter
 import asyncio
 import pytest
 from aries_staticagent import Connection, Message, Module
-from aries_staticagent.dispatcher import Dispatcher, NoRegisteredHandlerException
+from aries_staticagent.dispatcher.handler_dispatcher import (
+    HandlerDispatcher as Dispatcher,
+    NoRegisteredHandlerException,
+)
 from aries_staticagent.message import MsgType
 
 # pylint: disable=redefined-outer-name

@@ -4,14 +4,15 @@ from typing import Callable, Dict, Mapping, Optional, Tuple, Union
 
 from sortedcontainers import SortedSet
 
-from .message import Message, MsgType
+from ..message import Message, MsgType
+from . import Dispatcher
 
 
 class NoRegisteredHandlerException(Exception):
     """Thrown when message has no registered handlers"""
 
 
-class Dispatcher:
+class HandlerDispatcher(Dispatcher):
     """One of the fundamental aspects of an agent; responsible for dispatching
     messages to appropriate handlers.
 
