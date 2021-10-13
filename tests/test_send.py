@@ -255,7 +255,6 @@ async def test_next_condition(alice_gen, bob, dispatcher, message, response):
         assert await queue.get(timeout=1) == message
         await alice.handle(bob.pack(response))
         assert dispatcher.dispatched == response
-    assert not alice._next
 
 
 @pytest.mark.asyncio
@@ -268,7 +267,6 @@ async def test_next_type(alice_gen, bob, dispatcher, message, response):
         assert await queue.with_type(message.type, timeout=1) == message
         await alice.handle(bob.pack(response))
     assert dispatcher.dispatched == response
-    assert not alice._next
 
 
 @pytest.mark.asyncio
