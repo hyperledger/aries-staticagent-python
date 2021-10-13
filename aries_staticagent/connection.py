@@ -1,6 +1,7 @@
 """Static Agent Connection."""
 import asyncio
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
+from functools import partial
 import json
 from typing import (
     Awaitable,
@@ -16,10 +17,12 @@ from typing import (
 import uuid
 
 from . import crypto
-from .dispatcher import Dispatcher
+from .dispatcher import Dispatcher, HandlerDispatcher, QueueDispatcher
+from .dispatcher.queue_dispatcher import MsgQueue
 from .message import Message, MsgType
 from .module import Module
 from .utils import ensure_key_bytes, forward_msg, http_send
+from .operators import msg_type_is, is_reply_to
 
 
 Send = Callable[[bytes, str], Awaitable[Optional[bytes]]]
@@ -304,6 +307,8 @@ class Connection(Keys.Mixin):
             `aries_staticagent.dispatcher.Dispatcher`.
     """
 
+    DEFAULT_TIMEOUT = 5
+
     def __init__(
         self,
         keys: Keys,
@@ -311,7 +316,7 @@ class Connection(Keys.Mixin):
         *,
         modules: Sequence[Union[Module, type]] = None,
         send: Send = None,
-        dispatcher: Dispatcher = None,
+        dispatcher: HandlerDispatcher = None,
     ):
 
         Keys.Mixin.__init__(self, keys)
@@ -324,7 +329,8 @@ class Connection(Keys.Mixin):
                 self.route_module(mod)
 
         self._send: Send = send or http_send
-        self._dispatcher = dispatcher or Dispatcher()
+        self._dispatcher: Dispatcher = dispatcher or HandlerDispatcher()
+        self._router: HandlerDispatcher = self._dispatcher
 
         self._next: ConditionFutureMap = {}
         self._sessions: Set[Session] = set()
@@ -405,18 +411,18 @@ class Connection(Keys.Mixin):
         """Register route decorator."""
 
         def register_route_dec(func):
-            self._dispatcher.add(MsgType(msg_type), func)
+            self._router.add(MsgType(msg_type), func)
             return func
 
         return register_route_dec
 
     def route_module(self, module: Module):
         """Register a module for routing."""
-        return self._dispatcher.extend(module.routes)
+        return self._router.extend(module.routes)
 
     def clear_routes(self):
         """Clear registered routes."""
-        return self._dispatcher.clear()
+        return self._router.clear()
 
     async def dispatch(self, message):
         """
@@ -424,44 +430,21 @@ class Connection(Keys.Mixin):
         """
         await self._dispatcher.dispatch(message, self)
 
-    @contextmanager
-    def next(self, type_: str = None, condition: Callable[[Message], bool] = None):
+    @asynccontextmanager
+    async def queue(self, condition: Callable[[Message], bool] = None):
+        """Temporarily queue messages for awaiting, bypassing regular dispatch.
+
+        All messages not claimed are processed through registerd handlers on exit.
         """
-        Context manager to claim the next message matching condtion, allowing
-        temporary bypass of regular dispatch.
-
-        This will consume only the next message matching condition. If you need
-        to consume more than one or two, consider using a standard message
-        handler or overriding the default dispatching mechanism.
-        """
-        if condition and type_:
-            raise ValueError("Expected type or condtion, not both.")
-        if condition and not callable(condition):
-            raise TypeError("condition must be Callable[[Message], bool]")
-
-        if not condition and not type_:
-            # Collect everything
-            def _default(_msg):
-                return True
-
-            selected_condition = _default
-
-        if type_:
-
-            def _matches_type(msg):
-                return msg.type == type_
-
-            selected_condition = _matches_type
-
-        if condition:
-            selected_condition = condition
-
-        next_message: asyncio.Future[Message] = asyncio.Future()
-        self._next[selected_condition] = next_message
-
-        yield next_message
-
-        del self._next[selected_condition]
+        original = self._dispatcher
+        queue = MsgQueue(condition=condition, dispatcher=original)
+        queue_dispatcher = QueueDispatcher(queue=queue)
+        self._dispatcher = queue_dispatcher
+        try:
+            yield queue
+        finally:
+            await queue.flush()
+            self._dispatcher = original
 
     def unpack(self, packed_message: Union[bytes, dict]) -> Message:
         """Unpack a message, filling out metadata in the MTC."""
@@ -477,7 +460,9 @@ class Connection(Keys.Mixin):
 
         except (ValueError, KeyError):
             if not isinstance(packed_message, bytes):
-                raise TypeError("Expected bytes, got {}".format(type(msg).__name__))
+                raise TypeError(
+                    "Expected bytes, got {}".format(type(packed_message).__name__)
+                )
             msg = Message.deserialize(packed_message)
             msg.mtc.set_plaintext()
 
@@ -562,11 +547,6 @@ class Connection(Keys.Mixin):
         if session:
             session.update_thread_from_msg(msg)
 
-        for condition, next_message_future in self._next.items():
-            if condition(msg) and not next_message_future.done():
-                next_message_future.set_result(msg)
-                return
-
         await self.dispatch(msg)
 
     async def send_async(
@@ -620,17 +600,13 @@ class Connection(Keys.Mixin):
         return_route: str = "all",
         plaintext: bool = False,
         anoncrypt: bool = False,
-        timeout: int = None,
+        timeout: int = DEFAULT_TIMEOUT,
     ) -> Message:
         """Send a message and wait for a reply to that message."""
         hydrated = Message.parse_obj(msg) if not isinstance(msg, Message) else msg
-
-        def _reply_match(returned: Message):
-            return hydrated.id == returned.thread["thid"]
-
         return await self.send_and_await_returned_async(
             hydrated,
-            condition=_reply_match,
+            condition=partial(is_reply_to, hydrated),
             return_route=return_route,
             plaintext=plaintext,
             anoncrypt=anoncrypt,
@@ -646,28 +622,24 @@ class Connection(Keys.Mixin):
         return_route: str = "all",
         plaintext: bool = False,
         anoncrypt: bool = False,
-        timeout: int = None,
+        timeout: int = DEFAULT_TIMEOUT,
     ) -> Message:
         """Send a message and wait for a message to be returned."""
+        if type_:
+            condition = partial(msg_type_is, type_)
 
-        async def _time_boxed():
-            with self.next(type_=type_, condition=condition) as next_message:
-                await self.send_async(
-                    msg,
-                    return_route=return_route,
-                    plaintext=plaintext,
-                    anoncrypt=anoncrypt,
-                )
-                return await next_message
-
-        return await asyncio.wait_for(_time_boxed(), timeout)
+        async with self.queue(condition=condition) as queue:
+            await self.send_async(
+                msg, return_route=return_route, plaintext=plaintext, anoncrypt=anoncrypt
+            )
+            return await queue.get(timeout=timeout)
 
     async def await_message(
         self,
         *,
         type_: str = None,
         condition: Callable[[Message], bool] = None,
-        timeout: int = None,
+        timeout: int = DEFAULT_TIMEOUT,
     ):
         """
         Wait for a message.
@@ -677,8 +649,11 @@ class Connection(Keys.Mixin):
         as a result of an action taken prior to calling await_message, use the
         `next` context manager instead.
         """
-        with self.next(type_, condition=condition) as next_message:
-            return await asyncio.wait_for(next_message, timeout)
+        if type_:
+            condition = partial(msg_type_is, type_)
+
+        async with self.queue(condition=condition) as queue:
+            return await queue.get(timeout=timeout)
 
     def send(self, *args, **kwargs):
         """Blocking wrapper around send_async."""
