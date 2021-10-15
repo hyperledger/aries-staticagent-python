@@ -7,7 +7,7 @@
 
 from collections import OrderedDict
 from functools import lru_cache
-from typing import Optional, Sequence, Dict, Union, Tuple
+from typing import Iterable, Optional, Sequence, Dict, Union, Tuple
 import base64
 import json
 import struct
@@ -519,6 +519,25 @@ def pack_message(
         ]
     )
     return data
+
+
+def recipients_from_packed_message(message_bytes: bytes) -> Iterable[str]:
+    """
+    Inspect the header of the packed message and extract the recipient key.
+    """
+    try:
+        wrapper = json.loads(message_bytes)
+    except Exception as error:
+        raise ValueError("Invalid packed message") from error
+
+    recips_json = b64_to_bytes(wrapper["protected"], urlsafe=True).decode("ascii")
+
+    try:
+        recips_outer = json.loads(recips_json)
+    except Exception as error:
+        raise ValueError("Invalid packed message recipients") from error
+
+    return [recip["header"]["kid"] for recip in recips_outer["recipients"]]
 
 
 def unpack_message(
