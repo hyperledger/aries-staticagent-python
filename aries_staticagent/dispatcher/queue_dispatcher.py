@@ -85,12 +85,14 @@ class MsgQueue:
         elif self.dispatcher:
             await self.dispatcher.dispatch(msg, *args, **kwargs)
 
-    async def flush(self):
+    async def flush(self) -> Sequence[Message]:
         """Clear queue, passing remaining messages to another dispatcher if present."""
         if self.dispatcher:
             for entry in self._queue:
                 await self.dispatcher.dispatch(entry.msg, *entry.args, **entry.kwargs)
+        final = self._queue.copy()
         self._queue.clear()
+        return [entry.msg for entry in final]
 
     async def with_type(self, msg_type: Union[str, MsgType], **kwargs) -> Message:
         """Retrieve a message with type matching given value."""
