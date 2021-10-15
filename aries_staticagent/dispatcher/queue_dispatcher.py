@@ -5,7 +5,7 @@ stored messages.
 
 import asyncio
 from functools import partial
-from typing import Any, Callable, List, Mapping, NamedTuple, Sequence, Union
+from typing import Any, Callable, List, Mapping, NamedTuple, Optional, Sequence, Union
 
 from . import Dispatcher
 from ..message import Message, MsgType
@@ -61,6 +61,20 @@ class MsgQueue:
     async def get(self, condition: Callable = None, *, timeout: int = 5) -> Message:
         """Retrieve a message from the queue."""
         return await asyncio.wait_for(self._get(condition), timeout)
+
+    def get_nowait(self, condition: Callable = None) -> Optional[Message]:
+        """Return a message from the queue without waiting."""
+        if not self._queue:
+            return None
+
+        if not condition:
+            return self._queue.pop().msg
+
+        match_idx = self._first_matching_index(condition)
+        if match_idx is not None:
+            return self._queue.pop(match_idx).msg
+
+        return None
 
     async def put(self, msg: Message, *args, **kwargs):
         """Push a message onto the queue and notify waiting tasks."""
