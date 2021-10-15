@@ -2,19 +2,40 @@
 """
 
 from .connection import Connection, Keys, Target, MessageDeliveryError
-from .module import Module
-from .message import Message
+from .module import Module, ModuleRouter
+from .message import (
+    Message,
+    MsgType,
+    MsgVersion,
+    ProtocolIdentifier,
+    InvalidProtocolIdentifier,
+    InvalidType,
+)
+from .dispatcher import Dispatcher, HandlerDispatcher, QueueDispatcher
+from .dispatcher.queue_dispatcher import MsgQueue
+from . import operators
 
 from . import crypto
 
 __all__ = [
     "Connection",
+    "Dispatcher",
+    "HandlerDispatcher",
+    "InvalidProtocolIdentifier",
+    "InvalidType",
     "Keys",
-    "Target",
+    "Message",
     "MessageDeliveryError",
     "Module",
-    "Message",
+    "ModuleRouter",
+    "MsgQueue",
+    "MsgType",
+    "MsgVersion",
+    "ProtocolIdentifier",
+    "QueueDispatcher",
+    "Target",
     "keygen",
+    "operators",
 ]
 
 
@@ -33,12 +54,8 @@ def keygen():
     did = crypto.bytes_to_b58(did_bytes)
 
     print(
-        "Static Agent Connection info for full agent:\n\tDID: {}\n\tVK: {}\n".format(
-            did, my_vk
-        )
+        f"Static Agent Connection info for full agent:\n\tDID: {did}\n\tVK: {my_vk}\n"
     )
     print(
-        "Static Agent Connection info for static agent:\n\tVK: {}\n\tSK: {}".format(
-            my_vk, my_sk
-        )
+        f"Static Agent Connection info for static agent:\n\tVK: {my_vk}\n\tSK: {my_sk}"
     )
