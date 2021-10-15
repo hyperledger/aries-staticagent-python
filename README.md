@@ -1,5 +1,9 @@
-Static Agent Library
-====================
+# Static Agent Library
+
+[![pypi release](https://img.shields.io/pypi/v/aries-staticagent)](https://pypi.org/project/aries-staticagent/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Tests](https://github.com/hyperledger/aries-staticagent-python/actions/workflows/tests.yml/badge.svg)](https://github.com/hyperledger/aries-staticagent-python/actions/workflows/tests.yml)
+
 
 This repo contains an example Aries Static Agent Library in Python.
 
