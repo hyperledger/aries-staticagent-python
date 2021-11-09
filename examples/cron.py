@@ -15,7 +15,7 @@ def main():
     conn = Connection(keys, target)
     conn.send(
         {
-            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" "basicmessage/1.0/message",
+            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message",
             "~l10n": {"locale": "en"},
             "sent_time": utils.timestamp(),
             "content": "The Cron script was executed.",

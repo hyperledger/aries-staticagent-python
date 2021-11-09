@@ -551,23 +551,22 @@ class Connection(Keys.Mixin):
         self,
         msg: Union[dict, Message],
         *,
-        return_route: str = None,
+        return_route: Optional[str] = None,
         plaintext: bool = False,
         anoncrypt: bool = False,
     ):
         """
         Send a message to the agent connected through this Connection.
         """
-        if not isinstance(msg, Message):
-            if isinstance(msg, dict):
-                msg = Message.parse_obj(msg)
-            else:
-                raise TypeError(
-                    f"msg must be type Message or dict; received {type(msg)}"
-                )
+        if isinstance(msg, Message):
+            pass
+        elif isinstance(msg, dict):
+            msg = Message.from_dict(msg)
+        else:
+            raise TypeError(f"msg must be type Message or dict; received {type(msg)}")
 
         # TODO: Don't specify return route on messages sent to sessions?
-        if return_route:
+        if return_route and not msg.return_route:
             msg = msg.with_transport(return_route=return_route)
 
         packed_message = self.pack(msg, anoncrypt=anoncrypt, plaintext=plaintext)
@@ -587,7 +586,7 @@ class Connection(Keys.Mixin):
             raise MessageDeliveryError(msg=str(err)) from err
 
         if response:
-            if return_route is None or return_route == "none":
+            if msg.return_route is None or msg.return_route == "none":
                 raise RuntimeError("Response received when no response was expected")
             await self.handle(response)
 
