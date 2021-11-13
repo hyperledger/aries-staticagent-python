@@ -3,7 +3,7 @@ from abc import ABC
 from functools import partial
 from operator import is_not
 import re
-from typing import Any, ClassVar, Mapping, Optional, Type, TypeVar, Union
+from typing import Any, ClassVar, Iterator, Mapping, Optional, Type, TypeVar, Union
 from uuid import uuid4
 
 from pydantic import BaseModel, Extra, Field
@@ -151,6 +151,9 @@ class Message(BaseModel, Mapping[str, Any]):
     def __len__(self) -> int:
         return len(self.__dict__)
 
+    def __iter__(self) -> Iterator[str]:
+        return self._alias_dict.__iter__()
+
     @property
     def mtc(self):
         return self._mtc
@@ -208,7 +211,7 @@ class Message(BaseModel, Mapping[str, Any]):
 
 class BaseMessage(Message, ABC):
 
-    msg_type: ClassVar[MsgType]
+    msg_type: ClassVar[Union[MsgType, str]]
     type: Optional[MsgType] = Field(alias="@type")
 
     @validator("type", pre=True, always=True)

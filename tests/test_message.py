@@ -122,7 +122,7 @@ def test_msg_version(in_str, expected):
 def test_subclass():
     class MyMessage(BaseMessage):
         msg_type = MsgType.unparse(
-            doc_uri="doc", protocol="protocol", version="1.0", name="name"
+            doc_uri="doc/", protocol="protocol", version="1.0", name="name"
         )
         my_value: str
 
@@ -131,7 +131,24 @@ def test_subclass():
     assert msg.my_value
     assert MyMessage(
         type=MsgType.unparse(
-            doc_uri="doc", protocol="protocol", version="1.0", name="name"
+            doc_uri="doc/", protocol="protocol", version="1.0", name="name"
+        ),
+        my_value="test",
+    )
+
+    class MyOtherMessage(BaseMessage):
+        msg_type = "doc/protocol/1.0/name"
+        my_value: str
+
+    msg = MyOtherMessage(my_value="test")
+    assert msg.type
+    assert msg.type == MsgType.unparse(
+        doc_uri="doc/", protocol="protocol", version="1.0", name="name"
+    )
+    assert msg.my_value
+    assert MyOtherMessage(
+        type=MsgType.unparse(
+            doc_uri="doc/", protocol="protocol", version="1.0", name="name"
         ),
         my_value="test",
     )
