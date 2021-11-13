@@ -159,6 +159,10 @@ class Message(BaseModel, Mapping[str, Any]):
     def thread(self):
         return self.get("~thread", {"thid": None})
 
+    @property
+    def return_route(self) -> Optional[str]:
+        return self.get("~transport", {}).get("return_route")
+
     def with_transport(self: MessageType, return_route: str = None) -> MessageType:
         return type(self)(
             **{
@@ -181,6 +185,16 @@ class Message(BaseModel, Mapping[str, Any]):
         if mtc:
             msg._mtc = mtc
 
+        return msg
+
+    @classmethod
+    def from_dict(
+        cls: Type[MessageType], value: dict, mtc: Optional[MessageTrustContext] = None
+    ) -> MessageType:
+        """Return a Message from a dictionary."""
+        msg = cls(**value)
+        if mtc:
+            msg._mtc = mtc
         return msg
 
     def serialize(self, **kwargs) -> str:

@@ -157,9 +157,17 @@ async def test_outbound_return_route_set(alice_gen, bob, send, message):
     assert "return_route" in sent["~transport"]
     assert sent["~transport"]["return_route"] == "all"
 
+
+@pytest.mark.asyncio
+async def test_outbound_return_route_set_by_msg(
+    alice_gen, bob, send, message, response, dispatcher
+):
+    """Test no return route or endpoint or reply raises error."""
+    alice = alice_gen(partial(send.return_response, bob.pack(response)), dispatcher)
+
     new_msg = copy.deepcopy(message)
-    new_msg.with_transport()
-    await alice.send_async(new_msg, return_route="all")
+    new_msg = new_msg.with_transport(return_route="all")
+    await alice.send_async(new_msg)
     sent = bob.unpack(send.sent_message)
     assert "~transport" in sent
     assert "return_route" in sent["~transport"]
