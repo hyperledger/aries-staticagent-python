@@ -73,15 +73,15 @@ class MsgQueue:
             self._queue.clear()
             return messages
 
-        # Store not matched in order
-        filtered = []
+        # Store messages that didn't match in the order they are seen
+        filtered: List[QueueEntry] = []
         for entry in self._queue:
             if condition(entry.msg):
                 messages.append(entry.msg)
             else:
                 filtered.append(entry)
 
-        # Original queue - matching
+        # Queue contents set to messages that didn't match condition
         self._queue[:] = filtered
         return messages
 
