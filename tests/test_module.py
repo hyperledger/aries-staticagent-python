@@ -1,5 +1,6 @@
 """ Test module module """
 import pytest
+from aries_staticagent.message import ProtocolIdentifier
 
 from aries_staticagent.module import Module, ModuleRouter
 
@@ -18,6 +19,26 @@ def test_module_bad_protocol():
             protocol = "bad protocol"
 
         TestModule1()
+
+    with pytest.raises(ValueError):
+
+        class TestModule2(Module):
+            """Simple module for testing"""
+
+            protocol = 1234
+
+        TestModule1()
+
+
+def test_module_accept_protocol_as_pi():
+    """Test that a module can use a protocol identifier for the protocol."""
+
+    class TestModule1(Module):
+        """Simple module for testing"""
+
+        protocol = ProtocolIdentifier("doc/protocol/1.0")
+
+    assert TestModule1()
 
 
 def test_routes_construction():

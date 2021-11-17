@@ -218,12 +218,16 @@ class ModuleRouter(Mapping[MsgType, Callable]):
 class Module(ABC):  # pylint: disable=too-few-public-methods
     """Base Module class."""
 
-    protocol: ClassVar[str]
+    protocol: ClassVar[Union[str, ProtocolIdentifier]]
     route: ClassVar[ModuleRouter]
 
     def __init__(self):
         self._routes = None
-        self._protocol_identifier = ProtocolIdentifier(self.protocol)
+        self._protocol_identifier = (
+            ProtocolIdentifier(self.protocol)
+            if not isinstance(self.protocol, ProtocolIdentifier)
+            else self.protocol
+        )
 
     @property
     def protocol_identifier(self) -> ProtocolIdentifier:
