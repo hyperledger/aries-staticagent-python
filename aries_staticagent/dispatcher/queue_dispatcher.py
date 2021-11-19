@@ -67,6 +67,29 @@ class MsgQueue:
         """Retrieve a message from the queue."""
         return await asyncio.wait_for(self._get(condition), timeout)
 
+    def get_all(self, condition: Callable = None) -> Sequence[Message]:
+        """Return all messages matching a given condition."""
+        messages = []
+        if not self._queue:
+            return messages
+
+        if not condition:
+            messages = [entry.msg for entry in self._queue]
+            self._queue.clear()
+            return messages
+
+        # Store messages that didn't match in the order they are seen
+        filtered: List[QueueEntry] = []
+        for entry in self._queue:
+            if condition(entry.msg):
+                messages.append(entry.msg)
+            else:
+                filtered.append(entry)
+
+        # Queue contents set to messages that didn't match condition
+        self._queue[:] = filtered
+        return messages
+
     def get_nowait(self, condition: Callable = None) -> Optional[Message]:
         """Return a message from the queue without waiting."""
         if not self._queue:
