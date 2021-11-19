@@ -57,6 +57,11 @@ class MsgQueue:
                 match_idx = self._first_matching_index(condition)
                 if match_idx is not None:
                     return self._queue.pop(match_idx).msg
+                else:
+                    # Queue is not empty but no matching elements
+                    # We need to wait for more before checking again
+                    # Otherwise, this becomes a busy loop
+                    await self._cond.wait()
 
     async def get(self, condition: Callable = None, *, timeout: int = 5) -> Message:
         """Retrieve a message from the queue."""
