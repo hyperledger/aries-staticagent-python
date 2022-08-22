@@ -23,6 +23,7 @@ PyNaCl = "^1.4.0"
 semver = "^2.13.0"
 sortedcontainers = "^2.4.0"
 pydantic = "^1.8.2"
+async-selective-queue = "^0.1.0"
 
 [tool.poetry.dev-dependencies]
 coverage = {extras = ["toml"], version = "^5.5"}
