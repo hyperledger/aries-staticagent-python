@@ -40,3 +40,19 @@ async def test_condition_msg_present_no_match(queue):
 
     tasks = (asyncio.ensure_future(consume()), asyncio.ensure_future(produce()))
     await asyncio.gather(*tasks)
+
+
+@pytest.mark.asyncio
+async def test_condition_msg_not_initially_present(queue):
+    for _ in range(3):
+        await queue.put(1)
+
+    async def consume():
+        await queue.get(lambda msg: msg == 2)
+
+    async def produce():
+        await asyncio.sleep(1)
+        await queue.put(2)
+
+    tasks = (asyncio.ensure_future(consume()), asyncio.ensure_future(produce()))
+    await asyncio.gather(*tasks)
