@@ -18,7 +18,6 @@ import uuid
 
 from . import crypto
 from .dispatcher import Dispatcher, HandlerDispatcher, QueueDispatcher
-from .dispatcher.queue_dispatcher import MsgQueue
 from .message import Message, MsgType
 from .module import Module
 from .utils import ensure_key_bytes, forward_msg, http_send
@@ -435,13 +434,12 @@ class Connection(Keys.Mixin):
         All messages not claimed are processed through registerd handlers on exit.
         """
         original = self._dispatcher
-        queue = MsgQueue(condition=condition, dispatcher=original)
-        queue_dispatcher = QueueDispatcher(queue=queue)
+        queue_dispatcher = QueueDispatcher(condition=condition, dispatcher=original)
         self._dispatcher = queue_dispatcher
         try:
-            yield queue
+            yield queue_dispatcher.accessor()
         finally:
-            await queue.flush()
+            await queue_dispatcher.flush()
             self._dispatcher = original
 
     def unpack(self, packed_message: Union[bytes, dict]) -> Message:

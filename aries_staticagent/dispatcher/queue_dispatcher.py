@@ -1,140 +1,96 @@
-"""
-Dispatcher that stores messages in a queue and provides handle to retrieve
-stored messages.
-"""
+"""Dispatcher that stores messages in a queue."""
 
-import asyncio
 from functools import partial
-from typing import Any, Callable, List, Mapping, NamedTuple, Optional, Sequence, Union
+import logging
+from typing import Any, Callable, Mapping, NamedTuple, Optional, Sequence, Union
+
+from async_selective_queue import AsyncSelectiveQueue, Select
 
 from . import Dispatcher
 from ..message import Message, MsgType
 from ..operators import is_reply_to, msg_type_is
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 class QueueEntry(NamedTuple):
+    """Entry in Queue."""
+
     msg: Message
     args: Sequence[Any]
     kwargs: Mapping[str, Any]
 
 
-class MsgQueue:
+class QueueDispatcher(Dispatcher):
+    """Dispatcher that holds messages on Queue.
+
+    This dispatcher can optionally delegate processing of messages to a "primary"
+    dispatcher when given conditions.
+    """
+
+    class QueueAccessor:
+        """Helper class for interacting with Queue."""
+
+        def __init__(self, queue: AsyncSelectiveQueue[QueueEntry]):
+            """Init accessor."""
+            self.queue = queue
+
+        async def get(self, select: Optional[Select] = None, **kwargs) -> Message:
+            """Get a message from the queue."""
+            return (await self.queue.get(select, **kwargs)).msg
+
+        def get_all(self, select: Optional[Select] = None) -> Sequence[Message]:
+            """Get all messages from the queue."""
+            return [entry.msg for entry in self.queue.get_all(select)]
+
+        def get_nowait(self, select: Optional[Select] = None) -> Optional[Message]:
+            """Get a message from the queue if there are any without waiting."""
+            entry = self.queue.get_nowait(select)
+            return entry.msg if entry else None
+
+        async def with_type(self, msg_type: Union[str, MsgType], **kwargs) -> Message:
+            """Retrieve a message with type matching given value."""
+            return (await self.queue.get(partial(msg_type_is, msg_type), **kwargs)).msg
+
+        async def reply_to(self, msg: Message, **kwargs) -> Message:
+            """Retrieve a message that is a reply to the given message."""
+            return (await self.queue.get(partial(is_reply_to, msg), **kwargs)).msg
+
     def __init__(
         self,
         *,
-        condition: Callable[[Message], bool] = None,
-        dispatcher: Dispatcher = None
+        queue: Optional[AsyncSelectiveQueue[QueueEntry]] = None,
+        dispatcher: Optional[Dispatcher] = None,
+        condition: Optional[Callable[[Message], bool]] = None
     ):
-        self._queue: List[QueueEntry] = []
-        self._cond = asyncio.Condition()
-        self.condition = condition
+        """Init dispatcher."""
+        self.queue = queue or AsyncSelectiveQueue()
         self.dispatcher = dispatcher
-
-    def _first_matching_index(self, condition: Callable):
-        for index, entry in enumerate(self._queue):
-            if condition(entry.msg):
-                return index
-        return None
-
-    async def _get(self, condition: Callable = None) -> Message:
-        """Retrieve a message from the queue."""
-        while True:
-            async with self._cond:
-                # Lock acquired
-                if not self._queue:
-                    # No items on queue yet so we need to wait for items to show up
-                    await self._cond.wait()
-
-                if not self._queue:
-                    # Another task grabbed the value before we got to it
-                    continue
-
-                if not condition:
-                    # Just get the first message
-                    return self._queue.pop().msg
-
-                # Return first matching item, if present
-                match_idx = self._first_matching_index(condition)
-                if match_idx is not None:
-                    return self._queue.pop(match_idx).msg
-                else:
-                    # Queue is not empty but no matching elements
-                    # We need to wait for more before checking again
-                    # Otherwise, this becomes a busy loop
-                    await self._cond.wait()
-
-    async def get(self, condition: Callable = None, *, timeout: int = 5) -> Message:
-        """Retrieve a message from the queue."""
-        return await asyncio.wait_for(self._get(condition), timeout)
-
-    def get_all(self, condition: Callable = None) -> Sequence[Message]:
-        """Return all messages matching a given condition."""
-        messages = []
-        if not self._queue:
-            return messages
-
-        if not condition:
-            messages = [entry.msg for entry in self._queue]
-            self._queue.clear()
-            return messages
-
-        # Store messages that didn't match in the order they are seen
-        filtered: List[QueueEntry] = []
-        for entry in self._queue:
-            if condition(entry.msg):
-                messages.append(entry.msg)
-            else:
-                filtered.append(entry)
-
-        # Queue contents set to messages that didn't match condition
-        self._queue[:] = filtered
-        return messages
-
-    def get_nowait(self, condition: Callable = None) -> Optional[Message]:
-        """Return a message from the queue without waiting."""
-        if not self._queue:
-            return None
-
-        if not condition:
-            return self._queue.pop().msg
-
-        match_idx = self._first_matching_index(condition)
-        if match_idx is not None:
-            return self._queue.pop(match_idx).msg
-
-        return None
-
-    async def put(self, msg: Message, *args, **kwargs):
-        """Push a message onto the queue and notify waiting tasks."""
-        if not self.condition or self.condition(msg):
-            async with self._cond:
-                self._queue.append(QueueEntry(msg, args, kwargs))
-                self._cond.notify_all()
-        elif self.dispatcher:
-            await self.dispatcher.dispatch(msg, *args, **kwargs)
-
-    async def flush(self) -> Sequence[Message]:
-        """Clear queue, passing remaining messages to another dispatcher if present."""
-        if self.dispatcher:
-            for entry in self._queue:
-                await self.dispatcher.dispatch(entry.msg, *entry.args, **entry.kwargs)
-        final = self._queue.copy()
-        self._queue.clear()
-        return [entry.msg for entry in final]
-
-    async def with_type(self, msg_type: Union[str, MsgType], **kwargs) -> Message:
-        """Retrieve a message with type matching given value."""
-        return await self.get(partial(msg_type_is, msg_type), **kwargs)
-
-    async def reply_to(self, msg: Message, **kwargs) -> Message:
-        """Retrieve a message that is a reply to the given message."""
-        return await self.get(partial(is_reply_to, msg), **kwargs)
-
-
-class QueueDispatcher(Dispatcher):
-    def __init__(self, queue: MsgQueue = None):
-        self.queue = queue or MsgQueue()
+        self.condition = condition
 
     async def dispatch(self, msg: Message, *args, **kwargs):
         """Store message in queue."""
-        await self.queue.put(msg, *args, **kwargs)
+        if not self.condition or self.condition(msg):
+            await self.queue.put(QueueEntry(msg, args, kwargs))
+        elif self.dispatcher:
+            await self.dispatcher.dispatch(msg, *args, **kwargs)
+        else:
+            LOGGER.warning(
+                "Message dropped because condition is unmet and no primary dispatcher. "
+                "Message: %s",
+                msg,
+            )
+
+    async def flush(self) -> Sequence[Message]:
+        """Clear queue, passing remaining messages to another dispatcher if present."""
+        final = self.queue.flush()
+        if self.dispatcher:
+            for entry in final:
+                await self.dispatcher.dispatch(entry.msg, *entry.args, **entry.kwargs)
+
+        return [entry.msg for entry in final]
+
+    def accessor(self) -> QueueAccessor:
+        """Return a new accessor over the queue."""
+        return self.QueueAccessor(self.queue)
