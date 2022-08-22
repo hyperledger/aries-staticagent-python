@@ -1,6 +1,5 @@
 """Dispatcher that stores messages in a queue."""
 
-from functools import partial
 import logging
 from typing import Any, Callable, Mapping, NamedTuple, Optional, Sequence, Union
 
@@ -51,11 +50,19 @@ class QueueDispatcher(Dispatcher):
 
         async def with_type(self, msg_type: Union[str, MsgType], **kwargs) -> Message:
             """Retrieve a message with type matching given value."""
-            return (await self.queue.get(partial(msg_type_is, msg_type), **kwargs)).msg
+            return (
+                await self.queue.get(
+                    lambda entry: msg_type_is(msg_type, entry.msg), **kwargs
+                )
+            ).msg
 
         async def reply_to(self, msg: Message, **kwargs) -> Message:
             """Retrieve a message that is a reply to the given message."""
-            return (await self.queue.get(partial(is_reply_to, msg), **kwargs)).msg
+            return (
+                await self.queue.get(
+                    lambda entry: is_reply_to(msg, entry.msg), **kwargs
+                )
+            ).msg
 
     def __init__(
         self,
