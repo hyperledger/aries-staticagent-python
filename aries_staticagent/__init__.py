@@ -12,7 +12,6 @@ from .message import (
     InvalidType,
 )
 from .dispatcher import Dispatcher, HandlerDispatcher, QueueDispatcher
-from .dispatcher.queue_dispatcher import MsgQueue
 from . import operators
 
 from . import crypto
@@ -28,7 +27,6 @@ __all__ = [
     "MessageDeliveryError",
     "Module",
     "ModuleRouter",
-    "MsgQueue",
     "MsgType",
     "MsgVersion",
     "ProtocolIdentifier",
