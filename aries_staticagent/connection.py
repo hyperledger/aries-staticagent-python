@@ -32,7 +32,7 @@ ConditionFutureMap = Dict[Callable[[Message], bool], asyncio.Future]
 class MessageDeliveryError(Exception):
     """When a message cannot be delivered."""
 
-    def __init__(self, *, status: int = None, msg: str = None):
+    def __init__(self, *, status: Optional[int] = None, msg: Optional[str] = None):
         super().__init__(msg)
         self.status = status
 
@@ -42,7 +42,9 @@ class Session:
 
     THREAD_ALL = "all"
 
-    def __init__(self, conn: "Connection", send: SessionSend, thread: str = None):
+    def __init__(
+        self, conn: "Connection", send: SessionSend, thread: Optional[str] = None
+    ):
         if send is None:
             raise TypeError("Must supply send method to Session")
 
@@ -190,10 +192,10 @@ class Target:
     def __init__(
         self,
         *,
-        endpoint: str = None,
-        their_vk: Union[bytes, str] = None,
-        recipients: Sequence[Union[bytes, str]] = None,
-        routing_keys: Sequence[Union[bytes, str]] = None,
+        endpoint: Optional[str] = None,
+        their_vk: Optional[Union[bytes, str]] = None,
+        recipients: Optional[Sequence[Union[bytes, str]]] = None,
+        routing_keys: Optional[Sequence[Union[bytes, str]]] = None,
     ):
         if their_vk and recipients:
             raise ValueError("their_vk and recipients are mutually exclusive.")
@@ -214,10 +216,10 @@ class Target:
     def update(
         self,
         *,
-        endpoint: str = None,
-        their_vk: Union[bytes, str] = None,
-        recipients: Sequence[Union[bytes, str]] = None,
-        routing_keys: Sequence[Union[bytes, str]] = None,
+        endpoint: Optional[str] = None,
+        their_vk: Optional[Union[bytes, str]] = None,
+        recipients: Optional[Sequence[Union[bytes, str]]] = None,
+        routing_keys: Optional[Sequence[Union[bytes, str]]] = None,
         **_kwargs,
     ):
         """Update their information."""
@@ -311,11 +313,11 @@ class Connection(Keys.Mixin):
     def __init__(
         self,
         keys: Keys,
-        target: Target = None,
+        target: Optional[Target] = None,
         *,
-        modules: Sequence[Union[Module, type]] = None,
-        send: Send = None,
-        dispatcher: HandlerDispatcher = None,
+        modules: Optional[Sequence[Union[Module, type]]] = None,
+        send: Optional[Send] = None,
+        dispatcher: Optional[HandlerDispatcher] = None,
     ):
 
         Keys.Mixin.__init__(self, keys)
@@ -337,10 +339,10 @@ class Connection(Keys.Mixin):
         cls,
         keys: Union[Keys, Tuple[Keys.Key, Keys.Key]],
         *,
-        endpoint: str = None,
-        their_vk: Union[bytes, str] = None,
-        recipients: Sequence[Union[bytes, str]] = None,
-        routing_keys: Sequence[Union[bytes, str]] = None,
+        endpoint: Optional[str] = None,
+        their_vk: Optional[Union[bytes, str]] = None,
+        recipients: Optional[Sequence[Union[bytes, str]]] = None,
+        routing_keys: Optional[Sequence[Union[bytes, str]]] = None,
         **kwargs,
     ):
         """Construct a static connection from its parts.
@@ -395,12 +397,12 @@ class Connection(Keys.Mixin):
         return cls(keys, **kwargs)
 
     @classmethod
-    def random(cls, target: Target = None, **kwargs):
+    def random(cls, target: Optional[Target] = None, **kwargs):
         """Generate connection with random keys."""
         return cls(Keys(*crypto.create_keypair()), target, **kwargs)
 
     @classmethod
-    def from_seed(cls, seed: bytes, target: Target = None, **kwargs):
+    def from_seed(cls, seed: bytes, target: Optional[Target] = None, **kwargs):
         """Generate connection from seed."""
         return cls(Keys(*crypto.create_keypair(seed=seed)), target, **kwargs)
 
@@ -428,7 +430,7 @@ class Connection(Keys.Mixin):
         await self._dispatcher.dispatch(message, self)
 
     @asynccontextmanager
-    async def queue(self, condition: Callable[[Message], bool] = None):
+    async def queue(self, condition: Optional[Callable[[Message], bool]] = None):
         """Temporarily queue messages for awaiting, bypassing regular dispatch.
 
         All messages not claimed are processed through registerd handlers on exit.
@@ -522,7 +524,9 @@ class Connection(Keys.Mixin):
         """Check whether connection has sessions open."""
         return bool(self._sessions)
 
-    async def send_to_session(self, message: bytes, thread: str = None) -> bool:
+    async def send_to_session(
+        self, message: bytes, thread: Optional[str] = None
+    ) -> bool:
         """Send a message to all sessions with a matching thread."""
         if not self._sessions:
             raise RuntimeError("Cannot send message to session; no open sessions")
@@ -537,7 +541,7 @@ class Connection(Keys.Mixin):
                 sent = True
         return sent
 
-    async def handle(self, packed_message: bytes, session: Session = None):
+    async def handle(self, packed_message: bytes, session: Optional[Session] = None):
         """Unpack and dispatch message to handler."""
         msg = self.unpack(packed_message)
         if session:
@@ -553,9 +557,7 @@ class Connection(Keys.Mixin):
         plaintext: bool = False,
         anoncrypt: bool = False,
     ):
-        """
-        Send a message to the agent connected through this Connection.
-        """
+        """Send a message to the agent connected through this Connection."""
         if isinstance(msg, Message):
             pass
         elif isinstance(msg, dict):
@@ -612,8 +614,8 @@ class Connection(Keys.Mixin):
         self,
         msg: Union[dict, Message],
         *,
-        type_: str = None,
-        condition: Callable[[Message], bool] = None,
+        type_: Optional[str] = None,
+        condition: Optional[Callable[[Message], bool]] = None,
         return_route: str = "all",
         plaintext: bool = False,
         anoncrypt: bool = False,
@@ -632,8 +634,8 @@ class Connection(Keys.Mixin):
     async def await_message(
         self,
         *,
-        type_: str = None,
-        condition: Callable[[Message], bool] = None,
+        type_: Optional[str] = None,
+        condition: Optional[Callable[[Message], bool]] = None,
         timeout: int = DEFAULT_TIMEOUT,
     ):
         """

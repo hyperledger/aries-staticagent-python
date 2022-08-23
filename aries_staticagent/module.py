@@ -8,6 +8,7 @@ from typing import (
     Dict,
     Iterable,
     Mapping,
+    Optional,
     TypeVar,
     Union,
     overload,
@@ -44,11 +45,11 @@ class ModuleRouter(Mapping[MsgType, Callable]):
         self,
         func: RouteFunc,
         *,
-        doc_uri: str = None,
-        protocol: str = None,
-        version: str = None,
-        name: str = None,
-        msg_type: Union[str, MsgType] = None
+        doc_uri: Optional[str] = None,
+        protocol: Optional[str] = None,
+        version: Optional[str] = None,
+        name: Optional[str] = None,
+        msg_type: Optional[Union[str, MsgType]] = None
     ) -> RouteFunc:
         """Collect route."""
         if msg_type:
@@ -102,11 +103,11 @@ class ModuleRouter(Mapping[MsgType, Callable]):
     def route(
         self,
         *,
-        doc_uri: str = None,
-        protocol: str = None,
-        version: str = None,
-        name: str = None,
-        msg_type: Union[str, MsgType] = None
+        doc_uri: Optional[str] = None,
+        protocol: Optional[str] = None,
+        version: Optional[str] = None,
+        name: Optional[str] = None,
+        msg_type: Optional[Union[str, MsgType]] = None
     ) -> Callable[..., RouteFunc]:
         """Decorator for defining routes within a module.
 
@@ -147,24 +148,24 @@ class ModuleRouter(Mapping[MsgType, Callable]):
         self,
         func_or_name: RouteFunc,
         *,
-        doc_uri: str = None,
-        protocol: str = None,
-        version: str = None,
-        name: str = None,
-        msg_type: Union[str, MsgType] = None
+        doc_uri: Optional[str] = None,
+        protocol: Optional[str] = None,
+        version: Optional[str] = None,
+        name: Optional[str] = None,
+        msg_type: Optional[Union[str, MsgType]] = None
     ) -> RouteFunc:
         """Decorator for defining routes within a module."""
         ...
 
     def route(
         self,
-        func_or_name: Union[RouteFunc, str] = None,
+        func_or_name: Optional[Union[RouteFunc, str]] = None,
         *,
-        doc_uri: str = None,
-        protocol: str = None,
-        version: str = None,
-        name: str = None,
-        msg_type: Union[str, MsgType] = None
+        doc_uri: Optional[str] = None,
+        protocol: Optional[str] = None,
+        version: Optional[str] = None,
+        name: Optional[str] = None,
+        msg_type: Optional[Union[str, MsgType]] = None
     ) -> Union[Callable[..., RouteFunc], RouteFunc]:
         """Decorator for defining routes within a module."""
 
@@ -255,7 +256,11 @@ class Module(ABC):  # pylint: disable=too-few-public-methods
         return self.protocol_identifier.version
 
     def type(
-        self, name: str, doc_uri: str = None, protocol: str = None, version: str = None
+        self,
+        name: str,
+        doc_uri: Optional[str] = None,
+        protocol: Optional[str] = None,
+        version: Optional[str] = None,
     ):
         """Build a type string for this module."""
         # doc_url can be falsey, need explicit none check
