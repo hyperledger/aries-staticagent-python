@@ -166,7 +166,9 @@ class Message(BaseModel, Mapping[str, Any]):
     def return_route(self) -> Optional[str]:
         return self.get("~transport", {}).get("return_route")
 
-    def with_transport(self: MessageType, return_route: str = None) -> MessageType:
+    def with_transport(
+        self: MessageType, return_route: Optional[str] = None
+    ) -> MessageType:
         return type(self)(
             **{
                 **self.dict(by_alias=True),

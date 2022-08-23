@@ -187,11 +187,11 @@ async def ws_send(msg: bytes, endpoint: str) -> Optional[bytes]:
     async with aiohttp.ClientSession() as session:
         async with session.ws_connect(endpoint) as sock:
             await sock.send_bytes(msg)
-            async for msg in sock:
-                if msg.type == aiohttp.WSMsgType.BINARY:
-                    return msg.data
+            async for ws_msg in sock:
+                if ws_msg.type == aiohttp.WSMsgType.BINARY:
+                    return ws_msg.data
 
-                if msg.type == aiohttp.WSMsgType.ERROR:
+                if ws_msg.type == aiohttp.WSMsgType.ERROR:
                     raise Exception(
                         "ws connection closed with exception %s" % sock.exception()
                     )

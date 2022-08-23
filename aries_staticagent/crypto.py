@@ -67,7 +67,7 @@ def bytes_to_b58(val: bytes) -> str:
     return base58.b58encode(val).decode("ascii")
 
 
-def create_keypair(seed: bytes = None) -> Tuple[bytes, bytes]:
+def create_keypair(seed: Union[str, bytes, None] = None) -> Tuple[bytes, bytes]:
     """
     Create a public and private signing keypair from a seed value.
 
@@ -79,7 +79,7 @@ def create_keypair(seed: bytes = None) -> Tuple[bytes, bytes]:
 
     """
     if seed:
-        validate_seed(seed)
+        seed = validate_seed(seed)
     else:
         seed = random_seed()
     pk, sk = nacl.bindings.crypto_sign_seed_keypair(seed)
@@ -97,7 +97,7 @@ def random_seed() -> bytes:
     return nacl.utils.random(nacl.bindings.crypto_secretbox_KEYBYTES)
 
 
-def validate_seed(seed: Union[str, bytes]) -> Optional[bytes]:
+def validate_seed(seed: Union[str, bytes]) -> bytes:
     """
     Convert a seed parameter to standard format and check length.
 
@@ -108,8 +108,6 @@ def validate_seed(seed: Union[str, bytes]) -> Optional[bytes]:
         The validated and encoded seed
 
     """
-    if not seed:
-        return None
     if isinstance(seed, str):
         if "=" in seed:
             seed = b64_to_bytes(seed)
@@ -289,7 +287,9 @@ def auth_decrypt_message(
 
 
 def prepare_pack_recipient_keys(
-    to_verkeys: Sequence[bytes], from_verkey: bytes = None, from_sigkey: bytes = None
+    to_verkeys: Sequence[bytes],
+    from_verkey: Optional[bytes] = None,
+    from_sigkey: Optional[bytes] = None,
 ) -> Tuple[str, bytes]:
     """
     Assemble the recipients block of a packed message.
@@ -318,7 +318,7 @@ def prepare_pack_recipient_keys(
 
     for target_vk in to_verkeys:
         target_pk = nacl.bindings.crypto_sign_ed25519_pk_to_curve25519(target_vk)
-        if from_verkey:
+        if from_verkey and from_sigkey:
             sender_vk = bytes_to_b58(from_verkey).encode("ascii")
             enc_sender = nacl.bindings.crypto_box_seal(sender_vk, target_pk)
             sk = nacl.bindings.crypto_sign_ed25519_sk_to_curve25519(from_sigkey)
@@ -371,7 +371,7 @@ def prepare_pack_recipient_keys(
 
 def locate_pack_recipient_key(
     recipients: Sequence[dict], my_verkey: bytes, my_sigkey: bytes
-) -> Tuple[bytes, str, str]:
+) -> Tuple[bytes, Optional[str], str]:
     """
     Locate pack recipient key.
 
@@ -488,8 +488,8 @@ def decrypt_plaintext(
 def pack_message(
     message: str,
     to_verkeys: Sequence[bytes],
-    from_verkey: bytes = None,
-    from_sigkey: bytes = None,
+    from_verkey: Optional[bytes] = None,
+    from_sigkey: Optional[bytes] = None,
 ) -> OrderedDict:
     """
     Assemble a packed message for a set of recipients, optionally including

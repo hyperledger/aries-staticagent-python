@@ -76,7 +76,7 @@ class AdditionalData:
 
     __slots__ = ("sender", "recipient")
 
-    def __init__(self, sender: str = None, recipient: str = None):
+    def __init__(self, sender: Optional[str] = None, recipient: Optional[str] = None):
         self.sender = sender
         self.recipient = recipient
 
@@ -95,7 +95,7 @@ class MessageTrustContext:
         self,
         affirmed: Context = Context.NONE,
         denied: Context = Context.NONE,
-        additional_data: AdditionalData = None,
+        additional_data: Optional[AdditionalData] = None,
     ):
 
         if affirmed & denied != Context.NONE:
