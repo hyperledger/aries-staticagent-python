@@ -7,13 +7,12 @@
 | Name             | Github           | LFID             |
 | ---------------- | ---------------- | ---------------- |
 | Daniel Bluhm     | dbluhm           | dbluhm           |
-| Sam Curren       | TelegramSam      | TelegramSam      |
 
 ## Emeritus Maintainers
 
 | Name         | Github  | LFID    |
 |--------------|---------|---------|
-|   |  |  |
+| Sam Curren       | TelegramSam      | TelegramSam      |
 
 ## Becoming a Maintainer
 
