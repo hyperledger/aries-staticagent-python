@@ -27,11 +27,11 @@ async-selective-queue = "^0.1.0"
 
 [tool.poetry.dev-dependencies]
 coverage = {extras = ["toml"], version = "^5.5"}
-flake8 = "^3.9.2"
+flake8 = "^5.0.4"
 pytest = "^6.2.4"
 pytest-asyncio = "^0.15.1"
 pre-commit = "^2.13.0"
-black = "^22.3.0"
+black = "^23.3.0"
 pytest-coverage = "^0.0"
 
 [build-system]
