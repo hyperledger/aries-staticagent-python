@@ -1,9 +1,14 @@
+# DEPRECATED Static Agent Library
+
+## Deprecation Notice
+
+This library is deprecated. The Aries and DIDComm community are pursing support for DIDComm v2, which this library does not support. Much of how we think about DIDComm connections and how to manage those connections has evolved since this library was in use. It is therefore recommended to seek out other libraries.
+
+One such library can be found here: https://github.com/Indicio-tech/didcomm-messaging-python
+
+The didcomm-messaging-python library is focused on DIDComm v2 but contains an updated version of the `crypto` module of this library, providing the core pack and unpack operations for DIDComm v1. It also contains more complete interfaces for building out a more complete DIDComm v1 agent. These interfaces may be deprecated in the future as DIDComm v2 is adopted.
+
 # Static Agent Library
-
-[![pypi release](https://img.shields.io/pypi/v/aries-staticagent)](https://pypi.org/project/aries-staticagent/)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![Tests](https://github.com/hyperledger/aries-staticagent-python/actions/workflows/tests.yml/badge.svg)](https://github.com/hyperledger/aries-staticagent-python/actions/workflows/tests.yml)
-
 
 This repo contains an example Aries Static Agent Library in Python.
 
@@ -31,14 +36,13 @@ few dependencies, assumptions about web frameworks, etc.
 
 [1]: https://github.com/hyperledger/aries-rfcs/tree/master/concepts/0046-mediators-and-relays#summary
 
-Quick Start Guide
------------------
+## Quick Start Guide
 
-#### Requirements
+### Requirements
 
 - Python 3.6 or higher
 
-#### Running the included examples
+### Running the included examples
 
 You will need to pair the static agent with a full agent capable of basic DIDComm to complete the
 examples. The [Indy Python Reference Agent][3] can be used as the full agent for these examples.
@@ -99,8 +103,7 @@ In the full agent's BasicMessages, you should now see a message sent from the st
 [2]: https://download.libsodium.org/doc/installation
 [3]: https://github.com/hyperledger/indy-agent/tree/master/python
 
-Using the library
------------------
+## Using the library
 
 Refer to the `examples` directory for complete working examples of using this library.
 
@@ -188,10 +191,6 @@ As seen in this example, registering a handler for a DIDComm message is done usi
 connection over the decoupled transport mechanism is done by calling `conn.handle(<raw message>)`.
 
 Static agents can only unpack messages sent by the full agent.
-
-### Unresolved Questions
-* Are we allowing Agent routing between a static agent and it's full agent?
-  * We're starting with no and will revisit in the future.
 
 ## License
 
